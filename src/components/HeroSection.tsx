@@ -1,0 +1,84 @@
+import { Button } from "@/components/ui/button";
+import { Droplets, Clock, Shield, Smartphone } from "lucide-react";
+
+export function HeroSection() {
+  return (
+    <section className="relative min-h-screen flex items-center justify-center bg-gradient-hero overflow-hidden">
+      {/* Animated wave background */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 bg-gradient-wave animate-wave"></div>
+        <div className="absolute inset-0 bg-gradient-wave animate-wave" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute inset-0 bg-gradient-wave animate-wave" style={{ animationDelay: '2s' }}></div>
+      </div>
+      
+      {/* Floating elements */}
+      <div className="absolute top-20 left-20 animate-float">
+        <Droplets className="h-8 w-8 text-primary-lighter opacity-60" />
+      </div>
+      <div className="absolute top-40 right-20 animate-float" style={{ animationDelay: '1s' }}>
+        <Droplets className="h-12 w-12 text-primary-light opacity-40" />
+      </div>
+      <div className="absolute bottom-40 left-40 animate-float" style={{ animationDelay: '2s' }}>
+        <Droplets className="h-6 w-6 text-primary-lighter opacity-80" />
+      </div>
+
+      <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
+        {/* Logo section */}
+        <div className="mb-8 flex items-center justify-center gap-4">
+          <div className="relative">
+            <Droplets className="h-16 w-16 text-primary-lighter" />
+            <div className="absolute inset-0 animate-ripple bg-primary-lighter rounded-full opacity-30"></div>
+          </div>
+          <div>
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-2">
+              FreshDrop
+            </h1>
+          </div>
+        </div>
+
+        <h2 className="text-2xl md:text-4xl font-semibold text-white/90 mb-6">
+          Laundry made easy
+        </h2>
+        
+        <p className="text-lg md:text-xl text-white/80 mb-12 max-w-2xl mx-auto leading-relaxed">
+          Professional laundry service with 24-hour turnaround. 
+          Drop off at any locker or schedule pickup & delivery. 
+          Eco-friendly, secure, and contactless.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
+          <Button variant="hero" size="xl" className="min-w-64">
+            Schedule a Pickup
+          </Button>
+          <Button variant="outline" size="xl" className="min-w-64 border-white text-white hover:bg-white hover:text-primary">
+            Find a Locker
+          </Button>
+        </div>
+
+        {/* Features grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-white/90">
+          <div className="text-center">
+            <Clock className="h-8 w-8 mx-auto mb-3 text-primary-lighter" />
+            <div className="text-2xl font-bold">24hr</div>
+            <div className="text-sm">Turnaround</div>
+          </div>
+          <div className="text-center">
+            <Shield className="h-8 w-8 mx-auto mb-3 text-primary-lighter" />
+            <div className="text-2xl font-bold">Secure</div>
+            <div className="text-sm">& Trusted</div>
+          </div>
+          <div className="text-center">
+            <Smartphone className="h-8 w-8 mx-auto mb-3 text-primary-lighter" />
+            <div className="text-2xl font-bold">Easy</div>
+            <div className="text-sm">App Control</div>
+          </div>
+          <div className="text-center">
+            <Droplets className="h-8 w-8 mx-auto mb-3 text-primary-lighter" />
+            <div className="text-2xl font-bold">Eco</div>
+            <div className="text-sm">Friendly</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
