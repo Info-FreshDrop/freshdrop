@@ -222,31 +222,63 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
   const handleApplicationAction = async (applicationId: string, action: 'approved' | 'rejected') => {
     try {
       if (action === 'approved') {
-        // Create an operator invite in the new invites table
-        const token = crypto.randomUUID();
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
+        // Get the application details first
+        const { data: application, error: fetchError } = await supabase
+          .from('operator_applications')
+          .select('*')
+          .eq('id', applicationId)
+          .single();
 
-        const { error: createError } = await supabase
-          .from('operator_invites')
+        if (fetchError || !application) {
+          throw new Error('Could not fetch application details');
+        }
+
+        // Create user account with email and phone as password
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: application.email,
+          password: application.phone, // Use phone number as password
+          options: {
+            data: {
+              first_name: application.first_name,
+              last_name: application.last_name,
+              phone: application.phone,
+              address: `${application.address}, ${application.city}, ${application.state}`
+            }
+          }
+        });
+
+        if (authError) throw authError;
+
+        if (!authData.user) {
+          throw new Error('Failed to create user account');
+        }
+
+        // Assign operator role
+        const { error: roleError } = await supabase
+          .from('user_roles')
           .insert([{
-            application_id: applicationId,
-            signup_token: token,
-            signup_expires_at: expiresAt.toISOString(),
-            zip_codes: [],
-            locker_access: []
+            user_id: authData.user.id,
+            role: 'operator'
           }]);
 
-        if (createError) throw createError;
+        if (roleError) throw roleError;
 
-        const inviteUrl = `${window.location.origin}/operator-signup?token=${token}`;
-        
-        // Copy link to clipboard
-        navigator.clipboard.writeText(inviteUrl);
-        
+        // Create operator record in washers table
+        const { error: washerError } = await supabase
+          .from('washers')
+          .insert([{
+            user_id: authData.user.id,
+            approval_status: 'approved',
+            is_active: true,
+            zip_codes: [application.zip_code], // Use their zip code
+            locker_access: [] // Can be updated later by admin
+          }]);
+
+        if (washerError) throw washerError;
+
         toast({
-          title: "Application Approved",
-          description: "Operator invite created and link copied to clipboard. Send this link to the applicant.",
+          title: "Application Approved!",
+          description: `${application.first_name} ${application.last_name} is now an operator. They can sign in with email: ${application.email} and password: ${application.phone}`,
         });
       }
 
@@ -263,7 +295,7 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
       console.error('Error updating application status:', error);
       toast({
         title: "Error",
-        description: "Failed to update application status",
+        description: `Failed to update application status: ${error.message}`,
         variant: "destructive"
       });
     }
