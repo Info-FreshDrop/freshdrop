@@ -111,26 +111,32 @@ export function OperatorDashboard() {
           .from('orders')
           .select(`
             *,
-            profiles!orders_customer_id_fkey(first_name, last_name, phone)
+            profiles!inner(first_name, last_name, phone)
           `)
           .eq('status', 'unclaimed')
           .in('zip_code', washer.zip_codes)
           .order('created_at', { ascending: true });
 
+        if (availableError) {
+          console.error('Error loading available orders:', availableError);
+        }
         console.log('Available orders query result:', { available, availableError });
         setAvailableOrders((available as any) || []);
 
         // Load operator's claimed orders
-        const { data: claimed } = await supabase
+        const { data: claimed, error: claimedError } = await supabase
           .from('orders')
           .select(`
             *,
-            profiles!orders_customer_id_fkey(first_name, last_name, phone)
+            profiles!inner(first_name, last_name, phone)
           `)
           .eq('washer_id', washer.id)
           .in('status', ['claimed', 'in_progress'])
           .order('claimed_at', { ascending: true });
 
+        if (claimedError) {
+          console.error('Error loading claimed orders:', claimedError);
+        }
         setMyOrders((claimed as any) || []);
       }
     } catch (error) {
