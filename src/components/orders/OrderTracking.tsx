@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { OrderHistory } from "@/components/orders/OrderHistory";
 import { 
   Package, 
   Clock, 
@@ -11,7 +13,10 @@ import {
   Truck,
   CheckCircle,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Camera,
+  History,
+  Image as ImageIcon
 } from "lucide-react";
 
 interface Order {
@@ -31,6 +36,9 @@ interface Order {
   pickup_window_end?: string;
   delivery_window_start?: string;
   delivery_window_end?: string;
+  pickup_photo_url?: string;
+  delivery_photo_url?: string;
+  step_photos?: any;
   lockers?: {
     name: string;
     address: string;
@@ -44,7 +52,13 @@ interface OrderTrackingProps {
 export function OrderTracking({ onBack }: OrderTrackingProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const { user } = useAuth();
+
+  if (showHistory) {
+    return <OrderHistory onBack={() => setShowHistory(false)} />;
+  }
 
   useEffect(() => {
     loadOrders();
@@ -153,15 +167,21 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Order History
+              Active Orders
             </h1>
             <p className="text-muted-foreground">
-              Track your current and past orders
+              Track your current orders
             </p>
           </div>
-          <Button variant="outline" onClick={onBack}>
-            Back to Dashboard
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowHistory(true)}>
+              <History className="h-4 w-4 mr-2" />
+              View All History
+            </Button>
+            <Button variant="outline" onClick={onBack}>
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
 
         {orders.length === 0 ? (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +21,9 @@ import {
   AlertTriangle,
   DollarSign,
   Star,
-  Truck
+  Truck,
+  Upload,
+  X
 } from "lucide-react";
 
 interface Order {
@@ -79,6 +81,10 @@ export function OperatorDashboard() {
   const [confirmOrder, setConfirmOrder] = useState<Order | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [photoStep, setPhotoStep] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -273,6 +279,87 @@ export function OperatorDashboard() {
     } catch (error) {
       console.error('Error completing step:', error);
     }
+  };
+
+  const uploadPhoto = async (file: File, orderId: string, stepNumber: number) => {
+    if (!file || !user) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${orderId}/step-${stepNumber}-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('order-photos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data } = supabase.storage
+        .from('order-photos')
+        .getPublicUrl(fileName);
+
+      const photoUrl = data.publicUrl;
+
+      // Update order with photo URL
+      const updateData: any = {};
+      if (stepNumber === 4) {
+        updateData.pickup_photo_url = photoUrl;
+      } else if (stepNumber === 13) {
+        updateData.delivery_photo_url = photoUrl;
+      } else {
+        // Store in step_photos JSON object
+        const { data: currentOrder } = await supabase
+          .from('orders')
+          .select('step_photos')
+          .eq('id', orderId)
+          .single();
+
+        const stepPhotos = currentOrder?.step_photos || {};
+        stepPhotos[`step_${stepNumber}`] = photoUrl;
+        updateData.step_photos = stepPhotos;
+      }
+
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', orderId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Photo Uploaded",
+        description: `Step ${stepNumber} photo uploaded successfully.`,
+      });
+
+      setShowPhotoUpload(false);
+      setPhotoStep(null);
+      loadDashboardData(); // Refresh data
+
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload photo. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && selectedOrder && photoStep) {
+      uploadPhoto(file, selectedOrder.id, photoStep);
+    }
+  };
+
+  const triggerPhotoUpload = (stepNumber: number) => {
+    setPhotoStep(stepNumber);
+    setShowPhotoUpload(true);
+    setTimeout(() => fileInputRef.current?.click(), 100);
   };
 
   const toggleOnlineStatus = async (isOnline: boolean) => {
@@ -807,19 +894,31 @@ export function OperatorDashboard() {
                         }`}>
                           {isCompleted ? '✓' : step.num}
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{step.title}</h4>
-                          <p className="text-sm text-muted-foreground">{step.desc}</p>
-                          {isActive && (
-                            <Button 
-                              size="sm" 
-                              className="mt-2"
-                              onClick={() => selectedOrder && completeStep(selectedOrder.id, step.num)}
-                            >
-                              Complete Step
-                            </Button>
-                          )}
-                        </div>
+                         <div className="flex-1">
+                           <h4 className="font-medium">{step.title}</h4>
+                           <p className="text-sm text-muted-foreground">{step.desc}</p>
+                           <div className="flex gap-2 mt-2">
+                             {isActive && (
+                               <Button 
+                                 size="sm" 
+                                 onClick={() => selectedOrder && completeStep(selectedOrder.id, step.num)}
+                               >
+                                 Complete Step
+                               </Button>
+                             )}
+                             {(step.num === 4 || step.num === 13) && (
+                               <Button 
+                                 size="sm" 
+                                 variant="outline"
+                                 onClick={() => triggerPhotoUpload(step.num)}
+                                 disabled={uploading}
+                               >
+                                 <Camera className="h-3 w-3 mr-1" />
+                                 {uploading && photoStep === step.num ? "Uploading..." : "Take Photo"}
+                               </Button>
+                             )}
+                           </div>
+                         </div>
                       </div>
                     );
                   })}
@@ -860,6 +959,16 @@ export function OperatorDashboard() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Hidden File Input for Photo Upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={handleFileSelect}
+        />
       </div>
     </div>
   );

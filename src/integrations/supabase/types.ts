@@ -291,6 +291,7 @@ export type Database = {
           service_type: Database["public"]["Enums"]["service_type"]
           special_instructions: string | null
           status: Database["public"]["Enums"]["order_status"] | null
+          step_photos: Json | null
           stripe_session_id: string | null
           total_amount_cents: number
           updated_at: string
@@ -323,6 +324,7 @@ export type Database = {
           service_type: Database["public"]["Enums"]["service_type"]
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
+          step_photos?: Json | null
           stripe_session_id?: string | null
           total_amount_cents: number
           updated_at?: string
@@ -355,6 +357,7 @@ export type Database = {
           service_type?: Database["public"]["Enums"]["service_type"]
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
+          step_photos?: Json | null
           stripe_session_id?: string | null
           total_amount_cents?: number
           updated_at?: string
