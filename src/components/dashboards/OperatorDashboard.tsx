@@ -1123,7 +1123,7 @@ export function OperatorDashboard() {
                     { num: 12, title: "RETURN & TAKE PHOTO", desc: "Deliver on time and document (PHOTO REQUIRED)", completed: false }
                   ].map((step) => {
                     const currentStep = selectedOrder ? (orderSteps[selectedOrder.id] || 1) : 1;
-                    const isActive = step.num === currentStep && selectedOrder.status === 'claimed';
+                    const isActive = step.num === currentStep;
                     const isCompleted = step.completed || step.num < currentStep;
                     const stepCanComplete = canCompleteStep(step.num, selectedOrder.id);
                     const hasPhoto = photoUploaded[`${selectedOrder.id}-${step.num}`];
