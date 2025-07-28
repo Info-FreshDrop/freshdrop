@@ -505,7 +505,11 @@ export function OwnerDashboard() {
                 >
                   Edit Items
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('shop')}
+                >
                   Update Pricing
                 </Button>
               </div>

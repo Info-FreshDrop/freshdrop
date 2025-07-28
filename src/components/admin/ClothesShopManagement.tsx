@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -18,7 +19,9 @@ import {
   ArrowLeft,
   Save,
   Eye,
-  EyeOff
+  EyeOff,
+  Percent,
+  Calculator
 } from "lucide-react";
 
 interface ClothesShopManagementProps {
@@ -40,8 +43,14 @@ interface ClothesItem {
 export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
   const [items, setItems] = useState<ClothesItem[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showBulkPricing, setShowBulkPricing] = useState(false);
   const [editingItem, setEditingItem] = useState<ClothesItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [bulkPricingData, setBulkPricingData] = useState({
+    category: '',
+    priceAdjustment: '',
+    adjustmentType: 'percentage' // 'percentage' or 'fixed'
+  });
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -212,6 +221,74 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
     }
   };
 
+  const handleBulkPricing = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const adjustment = parseFloat(bulkPricingData.priceAdjustment);
+      if (isNaN(adjustment)) {
+        throw new Error('Invalid price adjustment value');
+      }
+
+      const itemsToUpdate = bulkPricingData.category === 'all' 
+        ? items 
+        : items.filter(item => item.category === bulkPricingData.category);
+
+      const updates = itemsToUpdate.map(item => {
+        let newPriceCents: number;
+        
+        if (bulkPricingData.adjustmentType === 'percentage') {
+          // Apply percentage change
+          newPriceCents = Math.round(item.price_cents * (1 + adjustment / 100));
+        } else {
+          // Apply fixed amount change
+          newPriceCents = Math.round(item.price_cents + (adjustment * 100));
+        }
+
+        // Ensure price is not negative
+        newPriceCents = Math.max(0, newPriceCents);
+
+        return {
+          id: item.id,
+          price_cents: newPriceCents
+        };
+      });
+
+      // Update all items in batch
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('clothes_items')
+          .update({ price_cents: update.price_cents })
+          .eq('id', update.id);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Bulk Pricing Updated",
+        description: `Updated prices for ${updates.length} items successfully.`,
+      });
+
+      setShowBulkPricing(false);
+      setBulkPricingData({
+        category: '',
+        priceAdjustment: '',
+        adjustmentType: 'percentage'
+      });
+      loadItems();
+    } catch (error) {
+      console.error('Error updating bulk pricing:', error);
+      toast({
+        title: "Bulk Pricing Failed",
+        description: "Failed to update pricing. Please try again.",
+        variant: "destructive",
+      });
+    }
+    
+    setIsLoading(false);
+  };
+
   const categories = Array.from(new Set(items.map(item => item.category)));
 
   return (
@@ -236,17 +313,28 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
             </p>
           </div>
           
-          <Button
-            variant="hero"
-            onClick={() => {
-              resetForm();
-              setShowCreateForm(true);
-            }}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Add New Item
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="hero"
+              onClick={() => {
+                resetForm();
+                setShowCreateForm(true);
+              }}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add New Item
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => setShowBulkPricing(true)}
+              className="flex items-center gap-2"
+            >
+              <Calculator className="h-4 w-4" />
+              Bulk Pricing
+            </Button>
+          </div>
         </div>
 
         {/* Quick Stats */}
@@ -399,6 +487,117 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
                     onClick={() => {
                       setShowCreateForm(false);
                       resetForm();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {showBulkPricing && (
+          <Card className="border-0 shadow-soft mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calculator className="h-5 w-5 text-primary" />
+                Bulk Pricing Update
+              </CardTitle>
+              <CardDescription>
+                Apply price changes to multiple items at once
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleBulkPricing} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bulk-category">Category</Label>
+                    <Select 
+                      value={bulkPricingData.category} 
+                      onValueChange={(value) => setBulkPricingData(prev => ({ ...prev, category: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {categories.map(category => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="adjustment-type">Adjustment Type</Label>
+                    <Select 
+                      value={bulkPricingData.adjustmentType} 
+                      onValueChange={(value) => setBulkPricingData(prev => ({ ...prev, adjustmentType: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percentage">
+                          <div className="flex items-center gap-2">
+                            <Percent className="h-4 w-4" />
+                            Percentage
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="fixed">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="h-4 w-4" />
+                            Fixed Amount
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="adjustment-value">
+                      {bulkPricingData.adjustmentType === 'percentage' ? 'Percentage Change' : 'Amount Change ($)'}
+                    </Label>
+                    <Input
+                      id="adjustment-value"
+                      type="number"
+                      step={bulkPricingData.adjustmentType === 'percentage' ? '1' : '0.01'}
+                      value={bulkPricingData.priceAdjustment}
+                      onChange={(e) => setBulkPricingData(prev => ({ ...prev, priceAdjustment: e.target.value }))}
+                      placeholder={bulkPricingData.adjustmentType === 'percentage' ? '10 (for +10%)' : '5.00 (for +$5.00)'}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {bulkPricingData.adjustmentType === 'percentage' 
+                        ? 'Use negative values to decrease prices (e.g., -10 for -10%)'
+                        : 'Use negative values to decrease prices (e.g., -2.50 for -$2.50)'
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    type="submit"
+                    variant="hero"
+                    disabled={isLoading || !bulkPricingData.category || !bulkPricingData.priceAdjustment}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {isLoading ? "Updating..." : "Apply Bulk Changes"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowBulkPricing(false);
+                      setBulkPricingData({
+                        category: '',
+                        priceAdjustment: '',
+                        adjustmentType: 'percentage'
+                      });
                     }}
                   >
                     Cancel
