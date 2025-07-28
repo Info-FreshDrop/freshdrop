@@ -87,31 +87,30 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Reverse geocoding function to convert coordinates to address
+  // Reverse geocoding function using Supabase edge function
   const reverseGeocode = async (latitude: number, longitude: number) => {
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
-      );
-      const data = await response.json();
-      
-      if (data && data.display_name) {
+      const { data, error } = await supabase.functions.invoke('geocoding', {
+        body: { 
+          query: `${longitude},${latitude}`,
+          type: 'reverse'
+        }
+      });
+
+      if (error) {
+        console.error('Reverse geocoding error:', error);
+        throw error;
+      }
+
+      if (data && data.suggestions && data.suggestions.length > 0) {
+        const suggestion = data.suggestions[0];
         // Extract zip code from the address
-        const zipCode = data.address?.postcode || '';
-        
-        // Format the address nicely
-        const addressParts = [
-          data.address?.house_number,
-          data.address?.road,
-          data.address?.city || data.address?.town || data.address?.village,
-          data.address?.state,
-          zipCode
-        ].filter(Boolean);
-        
-        const formattedAddress = addressParts.join(', ');
+        const zipRegex = /\b\d{5}(-\d{4})?\b/;
+        const zipMatch = suggestion.formatted.match(zipRegex);
+        const zipCode = zipMatch ? zipMatch[0] : '';
         
         return {
-          address: formattedAddress,
+          address: suggestion.formatted,
           zipCode: zipCode
         };
       }
@@ -122,7 +121,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     }
   };
 
-  // Address autocomplete function
+  // Address autocomplete function using Supabase edge function
   const searchAddresses = async (query: string) => {
     if (query.length < 3) {
       setAddressSuggestions([]);
@@ -131,25 +130,25 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     }
 
     try {
-      // Use a CORS-friendly geocoding service
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw&country=US&limit=5&types=address`
-      );
-      const data = await response.json();
-      
-      if (data.features) {
-        const suggestions = data.features.map((item: any) => ({
-          display_name: item.place_name,
-          formatted: item.place_name,
-          coordinates: item.center
-        }));
-        
-        setAddressSuggestions(suggestions);
-        setShowSuggestions(true);
+      const { data, error } = await supabase.functions.invoke('geocoding', {
+        body: { 
+          query: query,
+          type: 'search'
+        }
+      });
+
+      if (error) {
+        console.error('Geocoding error:', error);
+        return;
+      }
+
+      if (data && data.suggestions) {
+        setAddressSuggestions(data.suggestions);
+        setShowSuggestions(data.suggestions.length > 0);
       }
     } catch (error) {
       console.error('Address search failed:', error);
-      // Fallback: don't show suggestions but don't show error to user
+      // Silently fail - don't show error to user
       setAddressSuggestions([]);
       setShowSuggestions(false);
     }
@@ -171,7 +170,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     setAddressSuggestions([]);
   };
 
-  // Handle location detection with better error handling
+  // Handle location detection with better error handling and fallback
   const handleDetectLocation = async () => {
     setIsDetectingLocation(true);
     console.log('Starting location detection...');
@@ -183,8 +182,38 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
       }
 
       console.log('Requesting current position...');
-      const location = await getCurrentLocation();
-      console.log('Location received:', location);
+      
+      let location;
+      try {
+        // Try Capacitor first (for mobile apps)
+        location = await getCurrentLocation();
+        console.log('Location received from Capacitor:', location);
+      } catch (capacitorError) {
+        console.log('Capacitor geolocation failed, trying browser API:', capacitorError);
+        
+        // Fallback to browser geolocation API
+        location = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              resolve({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy
+              });
+            },
+            (error) => {
+              console.error('Browser geolocation error:', error);
+              reject(error);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 60000
+            }
+          );
+        });
+        console.log('Location received from browser API:', location);
+      }
       
       const addressData = await reverseGeocode(location.latitude, location.longitude);
       console.log('Address data:', addressData);
@@ -206,11 +235,11 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
       // More specific error messages
       let errorMessage = "Unable to detect your location. Please enter your address manually.";
       if (error instanceof Error) {
-        if (error.message.includes('Permission denied')) {
+        if (error.message.includes('Permission denied') || (error as any).code === 1) {
           errorMessage = "Location access denied. Please allow location permissions and try again.";
-        } else if (error.message.includes('Position unavailable')) {
+        } else if (error.message.includes('Position unavailable') || (error as any).code === 2) {
           errorMessage = "Your location is currently unavailable. Please enter your address manually.";
-        } else if (error.message.includes('Timeout')) {
+        } else if (error.message.includes('Timeout') || (error as any).code === 3) {
           errorMessage = "Location request timed out. Please try again or enter your address manually.";
         }
       }
