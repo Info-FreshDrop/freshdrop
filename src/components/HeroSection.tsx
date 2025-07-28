@@ -47,7 +47,7 @@ export function HeroSection() {
           <Button variant="hero" size="xl" className="min-w-64">
             Schedule a Pickup
           </Button>
-          <Button variant="outline" size="xl" className="min-w-64 border-white text-white hover:bg-white hover:text-primary">
+          <Button variant="default" size="xl" className="min-w-64 bg-primary text-primary-foreground hover:bg-primary/90">
             Find a Locker
           </Button>
         </div>
