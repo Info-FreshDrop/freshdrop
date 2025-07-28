@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { WasherManagement } from "@/components/washers/WasherManagement";
 import { ClothesShopManagement } from "@/components/admin/ClothesShopManagement";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Users, 
   Package, 
@@ -21,6 +22,62 @@ import {
 export function OwnerDashboard() {
   const { signOut } = useAuth();
   const [currentView, setCurrentView] = useState<'dashboard' | 'washers' | 'shop' | 'analytics'>('dashboard');
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    activeWashers: 0,
+    totalLockers: 0,
+    activeLockers: 0,
+    totalRevenue: 0
+  });
+
+  useEffect(() => {
+    loadDashboardStats();
+  }, []);
+
+  const loadDashboardStats = async () => {
+    try {
+      // Get total orders count
+      const { count: ordersCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true });
+
+      // Get total revenue (sum of all completed orders)
+      const { data: revenueData } = await supabase
+        .from('orders')
+        .select('total_amount_cents')
+        .eq('status', 'completed');
+
+      const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.total_amount_cents || 0), 0) || 0;
+
+      // Get active washers count
+      const { count: washersCount } = await supabase
+        .from('washers')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+
+      // Get lockers stats
+      const { count: totalLockersCount } = await supabase
+        .from('lockers')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+
+      const { count: activeLockersCount } = await supabase
+        .from('lockers')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .eq('status', 'available');
+
+      setStats({
+        totalOrders: ordersCount || 0,
+        activeWashers: washersCount || 0,
+        totalLockers: totalLockersCount || 0,
+        activeLockers: activeLockersCount || 0,
+        totalRevenue: totalRevenue
+      });
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    }
+  };
 
   if (currentView === 'washers') {
     return <WasherManagement onBack={() => setCurrentView('dashboard')} />;
@@ -72,7 +129,7 @@ export function OwnerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Orders</p>
-                  <p className="text-2xl font-bold">156</p>
+                  <p className="text-2xl font-bold">{stats.totalOrders}</p>
                 </div>
                 <Package className="h-8 w-8 text-primary" />
               </div>
@@ -84,7 +141,7 @@ export function OwnerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Active Washers</p>
-                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-2xl font-bold">{stats.activeWashers}</p>
                 </div>
                 <Users className="h-8 w-8 text-accent" />
               </div>
@@ -96,7 +153,7 @@ export function OwnerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Lockers Online</p>
-                  <p className="text-2xl font-bold">8/10</p>
+                  <p className="text-2xl font-bold">{stats.activeLockers}/{stats.totalLockers}</p>
                 </div>
                 <MapPin className="h-8 w-8 text-secondary" />
               </div>
@@ -108,7 +165,7 @@ export function OwnerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Revenue</p>
-                  <p className="text-2xl font-bold">$2,340</p>
+                  <p className="text-2xl font-bold">${(stats.totalRevenue / 100).toFixed(2)}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-success" />
               </div>
