@@ -183,7 +183,27 @@ export function OperatorDashboard() {
         if (claimedError) {
           console.error('Error loading claimed orders:', claimedError);
         }
-        setMyOrders((claimed as any) || []);
+        const claimedOrders = (claimed as any) || [];
+        setMyOrders(claimedOrders);
+        
+        // Initialize orderSteps state from database current_step values
+        const stepState: Record<string, number> = {};
+        const photoState: Record<string, boolean> = {};
+        claimedOrders.forEach((order: any) => {
+          stepState[order.id] = order.current_step || 1;
+          
+          // Initialize photo upload state from existing step_photos
+          if (order.step_photos) {
+            Object.keys(order.step_photos).forEach(stepKey => {
+              if (order.step_photos[stepKey]) {
+                const stepNum = stepKey.replace('step_', '');
+                photoState[`${order.id}-${stepNum}`] = true;
+              }
+            });
+          }
+        });
+        setOrderSteps(stepState);
+        setPhotoUploaded(photoState);
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
