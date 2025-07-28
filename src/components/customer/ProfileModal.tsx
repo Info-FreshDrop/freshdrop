@@ -7,16 +7,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Save, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onProfileUpdate?: () => void;
 }
 
-export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
+export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [existingProfileId, setExistingProfileId] = useState<string | null>(null);
   const [profile, setProfile] = useState({
     first_name: '',
     last_name: '',
@@ -36,44 +39,79 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         .from('profiles')
         .select('*')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         throw error;
       }
 
       if (data) {
+        setExistingProfileId(data.id);
         setProfile({
           first_name: data.first_name || '',
           last_name: data.last_name || '',
           phone: data.phone || '',
           avatar_url: data.avatar_url || ''
         });
+      } else {
+        // No profile exists yet, initialize with user metadata
+        setProfile({
+          first_name: user?.user_metadata?.first_name || '',
+          last_name: user?.user_metadata?.last_name || '',
+          phone: user?.user_metadata?.phone || '',
+          avatar_url: ''
+        });
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      toast.error('Failed to load profile');
+      toast({
+        title: "Error",
+        description: "Failed to load profile",
+        variant: "destructive",
+      });
     }
   };
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user?.id,
-          ...profile,
-          updated_at: new Date().toISOString()
-        });
+      let result;
+      
+      if (existingProfileId) {
+        // Update existing profile
+        result = await supabase
+          .from('profiles')
+          .update({
+            ...profile,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingProfileId);
+      } else {
+        // Insert new profile
+        result = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user?.id,
+            ...profile,
+            updated_at: new Date().toISOString()
+          });
+      }
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
-      toast.success('Profile updated successfully');
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+      onProfileUpdate?.(); // Refresh profile in parent component
       onClose();
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -100,10 +138,17 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         .getPublicUrl(fileName);
 
       setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
-      toast.success('Avatar uploaded successfully');
+      toast({
+        title: "Success",
+        description: "Avatar uploaded successfully",
+      });
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload avatar');
+      toast({
+        title: "Error",
+        description: "Failed to upload avatar",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

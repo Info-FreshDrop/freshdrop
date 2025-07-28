@@ -62,7 +62,11 @@ export function CustomerDashboard() {
         .from('profiles')
         .select('*')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
 
       if (data) {
         setUserProfile(data);
@@ -379,7 +383,8 @@ export function CustomerDashboard() {
       {/* Modals */}
       <ProfileModal 
         isOpen={showProfileModal} 
-        onClose={() => setShowProfileModal(false)} 
+        onClose={() => setShowProfileModal(false)}
+        onProfileUpdate={loadUserProfile}
       />
       
       {selectedOrder && (
