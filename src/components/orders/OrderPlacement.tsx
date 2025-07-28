@@ -131,27 +131,37 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     }
 
     try {
+      // Use a CORS-friendly geocoding service
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=US&limit=5&addressdetails=1`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw&country=US&limit=5&types=address`
       );
       const data = await response.json();
       
-      const suggestions = data.map((item: any) => ({
-        display_name: item.display_name,
-        address: item.address,
-        formatted: `${item.address?.house_number || ''} ${item.address?.road || ''}, ${item.address?.city || item.address?.town || ''}, ${item.address?.state || ''} ${item.address?.postcode || ''}`.trim()
-      }));
-      
-      setAddressSuggestions(suggestions);
-      setShowSuggestions(true);
+      if (data.features) {
+        const suggestions = data.features.map((item: any) => ({
+          display_name: item.place_name,
+          formatted: item.place_name,
+          coordinates: item.center
+        }));
+        
+        setAddressSuggestions(suggestions);
+        setShowSuggestions(true);
+      }
     } catch (error) {
       console.error('Address search failed:', error);
+      // Fallback: don't show suggestions but don't show error to user
+      setAddressSuggestions([]);
+      setShowSuggestions(false);
     }
   };
 
   // Handle address suggestion selection
   const handleAddressSelect = (suggestion: any) => {
-    const zipCode = suggestion.address?.postcode || '';
+    // Extract zip code from the formatted address or use a regex
+    const zipRegex = /\b\d{5}(-\d{4})?\b/;
+    const zipMatch = suggestion.formatted.match(zipRegex);
+    const zipCode = zipMatch ? zipMatch[0] : '';
+    
     handleInputChange('pickupAddress', suggestion.formatted);
     handleInputChange('deliveryAddress', suggestion.formatted);
     if (zipCode) {
@@ -430,7 +440,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                           )}
                         </Button>
                       </div>
-                      <Textarea
+                      <Input
                         id="service-address"
                         placeholder="Enter your address for both pickup and delivery, or use auto-detect"
                         value={formData.pickupAddress}
@@ -450,7 +460,6 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                           setTimeout(() => setShowSuggestions(false), 200);
                         }}
                         required={orderType === 'pickup_delivery'}
-                        rows={3}
                       />
                       
                       {/* Address Suggestions Dropdown */}
