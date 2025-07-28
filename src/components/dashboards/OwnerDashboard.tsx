@@ -7,6 +7,7 @@ import { OperatorManagement } from "@/components/admin/OperatorManagement";
 import { ServiceAreasManagement } from "@/components/admin/ServiceAreasManagement";
 import { ClothesShopManagement } from "@/components/admin/ClothesShopManagement";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
+import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Users, 
@@ -21,7 +22,7 @@ import {
 } from "lucide-react";
 
 export function OwnerDashboard() {
-  const { signOut } = useAuth();
+  const { user, userRole, signOut } = useAuth();
   const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics'>('dashboard');
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -102,6 +103,42 @@ export function OwnerDashboard() {
       console.error('Error loading dashboard stats:', error);
     }
   };
+
+  // Check authentication and role
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
+              Owner Dashboard
+            </h1>
+            <p className="text-muted-foreground">Please sign in to access the owner dashboard</p>
+          </div>
+          <AuthForms onOperatorLogin={() => {}} />
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole !== 'owner') {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <h3 className="text-lg font-medium mb-2">Access Denied</h3>
+              <p className="text-muted-foreground mb-4">You need owner privileges to access this dashboard.</p>
+              <p className="text-sm text-muted-foreground mb-4">Current role: {userRole}</p>
+              <Button onClick={signOut} variant="outline">
+                Sign Out
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (currentView === 'operators') {
     return <OperatorManagement onBack={() => setCurrentView('dashboard')} />;

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { Plus, MapPin, Trash2 } from 'lucide-react';
 
 interface ServiceAreasManagementProps {
@@ -33,6 +34,10 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
     allows_express: true
   });
   const { toast } = useToast();
+  const { user, userRole } = useAuth();
+
+  // Check if user has proper permissions
+  const hasManagementAccess = userRole === 'owner' || userRole === 'operator';
 
   useEffect(() => {
     loadServiceAreas();
@@ -89,7 +94,10 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
         .from('service_areas')
         .insert([newArea]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('RLS Error:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -103,11 +111,41 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
         allows_express: true
       });
       setShowAddForm(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding service area:', error);
       toast({
         title: "Error",
-        description: "Failed to add service area",
+        description: error.message?.includes('row-level security') 
+          ? "Access denied. Please ensure you're logged in as an owner or operator."
+          : "Failed to add service area",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteArea = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('service_areas')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Delete Error:', error);
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Service area deleted successfully"
+      });
+    } catch (error: any) {
+      console.error('Error deleting service area:', error);
+      toast({
+        title: "Error", 
+        description: error.message?.includes('row-level security')
+          ? "Access denied. Please ensure you're logged in as an owner or operator."
+          : "Failed to delete service area",
         variant: "destructive"
       });
     }
@@ -120,17 +158,22 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
         .update({ is_active })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Update Error:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
         description: `Service area ${is_active ? 'activated' : 'deactivated'}`
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating service area:', error);
       toast({
         title: "Error",
-        description: "Failed to update service area",
+        description: error.message?.includes('row-level security')
+          ? "Access denied. Please ensure you're logged in as an owner or operator."
+          : "Failed to update service area",
         variant: "destructive"
       });
     }
@@ -143,17 +186,22 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
         .update({ [field]: value })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Update Capabilities Error:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
         description: "Service area updated successfully"
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating service area:', error);
       toast({
         title: "Error",
-        description: "Failed to update service area",
+        description: error.message?.includes('row-level security')
+          ? "Access denied. Please ensure you're logged in as an owner or operator."
+          : "Failed to update service area",
         variant: "destructive"
       });
     }
@@ -161,6 +209,43 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="p-6">
+        <Button onClick={onBack} variant="outline" className="mb-4">
+          ← Back to Dashboard
+        </Button>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
+              <p className="text-muted-foreground">Please log in to access service area management.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!hasManagementAccess) {
+    return (
+      <div className="p-6">
+        <Button onClick={onBack} variant="outline" className="mb-4">
+          ← Back to Dashboard
+        </Button>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <h3 className="text-lg font-medium mb-2">Access Denied</h3>
+              <p className="text-muted-foreground">You need owner or operator privileges to manage service areas.</p>
+              <p className="text-sm text-muted-foreground mt-2">Current role: {userRole}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -284,6 +369,15 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
                   </div>
                   
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteArea(area.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    
                     <Label className="text-sm">Active</Label>
                     <Switch
                       checked={area.is_active}
