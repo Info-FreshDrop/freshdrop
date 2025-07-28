@@ -11,7 +11,7 @@ import { OrderTracking } from "@/components/orders/OrderTracking";
 import { ClothesShop } from "@/components/customer/ClothesShop";
 import { ReferralInterface } from "@/components/customer/ReferralInterface";
 import { WalletInterface } from "@/components/customer/WalletInterface";
-import { OrderPlacement } from "@/components/orders/OrderPlacement";
+import { MobileOrderWizard } from "@/components/mobile/MobileOrderWizard";
 import { OrderHistory } from "@/components/orders/OrderHistory";
 import { ProfileModal } from "@/components/customer/ProfileModal";
 import { TipModal } from "@/components/customer/TipModal";
@@ -127,7 +127,7 @@ export function CustomerDashboard() {
 
   // Show OrderPlacement component if requested
   if (showOrderPlacement) {
-    return <OrderPlacement onBack={() => setShowOrderPlacement(false)} />;
+    return <MobileOrderWizard onBack={() => setShowOrderPlacement(false)} />;
   }
 
   // Show OrderHistory component if requested
