@@ -1,56 +1,48 @@
 import { Button } from "@/components/ui/button";
-import { Droplets, Clock, Shield, Smartphone } from "lucide-react";
+import { Droplets } from "lucide-react";
 import freshDropLogo from "@/assets/freshdrop-logo.png";
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-hero overflow-hidden">
-      {/* Animated wave background */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0 bg-gradient-wave animate-wave"></div>
-        <div className="absolute inset-0 bg-gradient-wave animate-wave" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute inset-0 bg-gradient-wave animate-wave" style={{ animationDelay: '2s' }}></div>
-      </div>
-      
-      {/* Floating elements */}
-      <div className="absolute top-20 left-20 animate-float">
-        <Droplets className="h-8 w-8 text-primary-lighter opacity-60" />
-      </div>
-      <div className="absolute top-40 right-20 animate-float" style={{ animationDelay: '1s' }}>
-        <Droplets className="h-12 w-12 text-primary-light opacity-40" />
-      </div>
-      <div className="absolute bottom-40 left-40 animate-float" style={{ animationDelay: '2s' }}>
-        <Droplets className="h-6 w-6 text-primary-lighter opacity-80" />
-      </div>
-
-      <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-        {/* Logo section - Enhanced */}
-        <div className="mb-8 flex items-center justify-center">
-          <img 
-            src={freshDropLogo} 
-            alt="FreshDrop Logo" 
-            className="h-48 md:h-72 w-auto drop-shadow-lg"
-            style={{ 
-              filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))'
-            }}
-          />
+    <section className="relative min-h-screen flex flex-col bg-white overflow-hidden">
+      {/* Clean white background with wave at bottom */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-20 pb-32">
+        {/* Logo section */}
+        <div className="mb-12 flex flex-col items-center">
+          <div className="mb-6">
+            <Droplets className="h-16 w-16 mx-auto text-primary mb-4" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">
+            FreshDrop
+          </h1>
         </div>
 
-        <h2 className="text-2xl md:text-4xl font-semibold text-white/90 mb-6">
-          Laundry made easy
+        <h2 className="text-3xl md:text-4xl font-semibold text-primary mb-16 text-center">
+          Laundry<br />made easy
         </h2>
-        
-        <p className="text-lg md:text-xl text-white/80 mb-12 max-w-2xl mx-auto leading-relaxed">
-          Professional laundry service with 24-hour turnaround. 
-          Drop off at any locker or schedule pickup & delivery. 
-          Eco-friendly, secure, and contactless.
-        </p>
+      </div>
 
-        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
+      {/* Wave gradient background at bottom */}
+      <div className="relative h-64 bg-gradient-to-t from-primary to-primary/80">
+        {/* Wave shape */}
+        <div className="absolute top-0 left-0 w-full overflow-hidden leading-none">
+          <svg 
+            className="relative block w-full h-16" 
+            viewBox="0 0 1200 120" 
+            preserveAspectRatio="none"
+          >
+            <path 
+              d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" 
+              className="fill-white"
+            />
+          </svg>
+        </div>
+        
+        {/* Content area */}
+        <div className="flex items-center justify-center h-full pt-16">
           <Button 
-            variant="hero" 
             size="xl" 
-            className="min-w-64"
+            className="bg-white/20 text-white border-2 border-white/30 hover:bg-white/30 min-w-64 h-14 text-lg font-semibold rounded-full backdrop-blur-sm"
             onClick={() => {
               const authSection = document.querySelector('#auth-section');
               if (authSection) {
@@ -60,43 +52,6 @@ export function HeroSection() {
           >
             Schedule a Pickup
           </Button>
-          <Button 
-            variant="default" 
-            size="xl" 
-            className="min-w-64 bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={() => {
-              const authSection = document.querySelector('#auth-section');
-              if (authSection) {
-                authSection.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-          >
-            Find a Locker
-          </Button>
-        </div>
-
-        {/* Features grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-white/90">
-          <div className="text-center">
-            <Clock className="h-8 w-8 mx-auto mb-3 text-primary-lighter" />
-            <div className="text-2xl font-bold">24hr</div>
-            <div className="text-sm">Turnaround</div>
-          </div>
-          <div className="text-center">
-            <Shield className="h-8 w-8 mx-auto mb-3 text-primary-lighter" />
-            <div className="text-2xl font-bold">Secure</div>
-            <div className="text-sm">& Trusted</div>
-          </div>
-          <div className="text-center">
-            <Smartphone className="h-8 w-8 mx-auto mb-3 text-primary-lighter" />
-            <div className="text-2xl font-bold">Easy</div>
-            <div className="text-sm">App Control</div>
-          </div>
-          <div className="text-center">
-            <Droplets className="h-8 w-8 mx-auto mb-3 text-primary-lighter" />
-            <div className="text-2xl font-bold">Eco</div>
-            <div className="text-sm">Friendly</div>
-          </div>
         </div>
       </div>
     </section>
