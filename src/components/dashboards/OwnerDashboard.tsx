@@ -29,6 +29,7 @@ export function OwnerDashboard() {
     totalOrders: 0,
     activeOperators: 0,
     pendingApprovals: 0,
+    pendingApplications: 0,
     totalLockers: 0,
     activeLockers: 0,
     totalRevenue: 0
@@ -66,6 +67,12 @@ export function OwnerDashboard() {
         .select('*', { count: 'exact', head: true })
         .eq('approval_status', 'pending');
 
+      // Get pending applications count
+      const { count: pendingApplicationsCount } = await supabase
+        .from('operator_applications')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
       // Get lockers stats
       const { count: totalLockersCount } = await supabase
         .from('lockers')
@@ -82,12 +89,13 @@ export function OwnerDashboard() {
         totalOrders: ordersCount || 0,
         activeOperators: operatorsCount || 0,
         pendingApprovals: pendingCount || 0,
+        pendingApplications: pendingApplicationsCount || 0,
         totalLockers: totalLockersCount || 0,
         activeLockers: activeLockersCount || 0,
         totalRevenue: totalRevenue
       });
 
-      // Set up real-time subscription for pending approvals
+      // Set up real-time subscription for pending approvals and applications
       const channel = supabase
         .channel('dashboard-stats')
         .on('postgres_changes', 
@@ -96,6 +104,14 @@ export function OwnerDashboard() {
         )
         .on('postgres_changes', 
           { event: 'UPDATE', schema: 'public', table: 'washers' },
+          () => loadDashboardStats()
+        )
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'operator_applications' },
+          () => loadDashboardStats()
+        )
+        .on('postgres_changes', 
+          { event: 'UPDATE', schema: 'public', table: 'operator_applications' },
           () => loadDashboardStats()
         )
         .subscribe();
@@ -212,9 +228,11 @@ export function OwnerDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground">Active Operators</p>
                   <p className="text-2xl font-bold">{stats.activeOperators}</p>
-                  {stats.pendingApprovals > 0 && (
+                  {(stats.pendingApprovals > 0 || stats.pendingApplications > 0) && (
                     <p className="text-xs text-yellow-600 font-medium">
-                      +{stats.pendingApprovals} pending approval
+                      {stats.pendingApplications > 0 && `${stats.pendingApplications} new applications`}
+                      {stats.pendingApplications > 0 && stats.pendingApprovals > 0 && ', '}
+                      {stats.pendingApprovals > 0 && `${stats.pendingApprovals} pending approval`}
                     </p>
                   )}
                 </div>
@@ -255,14 +273,14 @@ export function OwnerDashboard() {
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
                 Manage Operators
-                {stats.pendingApprovals > 0 && (
+                {(stats.pendingApprovals > 0 || stats.pendingApplications > 0) && (
                   <Badge variant="outline" className="ml-auto text-yellow-600 border-yellow-600">
-                    {stats.pendingApprovals} pending
+                    {stats.pendingApplications + stats.pendingApprovals} pending
                   </Badge>
                 )}
               </CardTitle>
               <CardDescription>
-                Invite, approve, and manage operators
+                Review applications, invite and manage operators
               </CardDescription>
             </CardHeader>
             <CardContent>

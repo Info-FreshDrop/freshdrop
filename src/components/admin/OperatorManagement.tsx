@@ -45,8 +45,28 @@ interface ServiceArea {
   zip_code: string;
 }
 
+interface OperatorApplication {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  drivers_license: string;
+  vehicle_type: string;
+  availability: string;
+  experience: string | null;
+  motivation: string;
+  status: string;
+  created_at: string;
+}
+
 export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }) => {
   const [operators, setOperators] = useState<Operator[]>([]);
+  const [applications, setApplications] = useState<OperatorApplication[]>([]);
   const [lockers, setLockers] = useState<Locker[]>([]);
   const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +76,7 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
     selectedLockers: [] as string[],
   });
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'applications' | 'operators' | 'invite'>('applications');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,6 +100,14 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
 
   const loadData = async () => {
     try {
+      // Load applications
+      const { data: applicationsData, error: applicationsError } = await supabase
+        .from('operator_applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (applicationsError) throw applicationsError;
+
       // Load operators
       const { data: operatorsData, error: operatorsError } = await supabase
         .from('washers')
@@ -119,6 +148,7 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
 
       if (serviceAreasError) throw serviceAreasError;
 
+      setApplications(applicationsData || []);
       setOperators(operatorsWithProfiles);
       setLockers(lockersData || []);
       setServiceAreas(serviceAreasData || []);
@@ -190,6 +220,59 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
       toast({
         title: "Success",
         description: "Invite link copied to clipboard"
+      });
+    }
+  };
+
+  const handleApplicationAction = async (applicationId: string, action: 'approved' | 'rejected') => {
+    try {
+      if (action === 'approved') {
+        // Create an operator invite
+        const token = crypto.randomUUID();
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+        const placeholderUserId = crypto.randomUUID();
+
+        const { error: createError } = await supabase
+          .from('washers')
+          .insert([{
+            signup_token: token,
+            signup_expires_at: expiresAt.toISOString(),
+            zip_codes: [],
+            locker_access: [],
+            approval_status: 'pending',
+            is_active: false,
+            user_id: placeholderUserId
+          }]);
+
+        if (createError) throw createError;
+
+        const inviteUrl = `${window.location.origin}/operator-signup?token=${token}`;
+        
+        // Copy link to clipboard
+        navigator.clipboard.writeText(inviteUrl);
+        
+        toast({
+          title: "Application Approved",
+          description: "Operator invite created and link copied to clipboard. Send this link to the applicant.",
+        });
+      }
+
+      // Update application status
+      const { error } = await supabase
+        .from('operator_applications')
+        .update({ status: action })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      loadData(); // Reload data to update the UI
+    } catch (error) {
+      console.error('Error updating application status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update application status",
+        variant: "destructive"
       });
     }
   };
@@ -276,6 +359,7 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
       : <Badge variant="outline">Offline</Badge>;
   };
 
+  const pendingApplications = applications.filter(app => app.status === 'pending');
   const pendingOperators = operators.filter(op => op.approval_status === 'pending');
   const activeOperators = operators.filter(op => op.approval_status === 'approved');
 
@@ -293,70 +377,234 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
           <h1 className="text-3xl font-bold">Operator Management</h1>
           <p className="text-muted-foreground">Manage operators and approve new applications</p>
         </div>
-        <Button 
-          onClick={() => setShowInviteForm(!showInviteForm)}
-          className="flex items-center gap-2"
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex space-x-1 border-b">
+        <Button
+          variant={activeTab === 'applications' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('applications')}
+          className="rounded-b-none"
         >
-          <Plus className="h-4 w-4" />
+          Applications {pendingApplications.length > 0 && (
+            <Badge variant="destructive" className="ml-2">
+              {pendingApplications.length}
+            </Badge>
+          )}
+        </Button>
+        <Button
+          variant={activeTab === 'operators' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('operators')}
+          className="rounded-b-none"
+        >
+          Operators {pendingOperators.length > 0 && (
+            <Badge variant="destructive" className="ml-2">
+              {pendingOperators.length}
+            </Badge>
+          )}
+        </Button>
+        <Button
+          variant={activeTab === 'invite' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('invite')}
+          className="rounded-b-none"
+        >
+          <Plus className="h-4 w-4 mr-2" />
           Invite Operator
         </Button>
       </div>
 
-      {/* Pending Approvals */}
-      {pendingOperators.length > 0 && (
-        <Card className="border-yellow-200 bg-yellow-50">
+      {/* Applications Tab */}
+      {activeTab === 'applications' && (
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-800">
+            <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Pending Approvals ({pendingOperators.length})
+              Operator Applications ({pendingApplications.length} pending)
             </CardTitle>
-            <CardDescription>Review and approve new operator applications</CardDescription>
+            <CardDescription>Review applications from the homepage form</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {pendingOperators.map((operator) => (
-                <div key={operator.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
-                  <div>
-                    <h4 className="font-medium">
-                      {operator.profiles ? 
-                        `${operator.profiles.first_name} ${operator.profiles.last_name}` : 
-                        'Pending Registration'
-                      }
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      Service Areas: {operator.zip_codes?.join(', ') || 'None'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Applied: {new Date(operator.created_at).toLocaleDateString()}
-                    </p>
+            {pendingApplications.length === 0 ? (
+              <div className="text-center py-8">
+                <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No pending applications</h3>
+                <p className="text-muted-foreground">New applications will appear here for review</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pendingApplications.map((application) => (
+                  <div key={application.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-lg">
+                          {application.first_name} {application.last_name}
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                          <p><strong>Email:</strong> {application.email}</p>
+                          <p><strong>Phone:</strong> {application.phone}</p>
+                          <p><strong>Address:</strong> {application.address}, {application.city}, {application.state}</p>
+                          <p><strong>Zip Code:</strong> {application.zip_code}</p>
+                          <p><strong>Vehicle:</strong> {application.vehicle_type}</p>
+                          <p><strong>Availability:</strong> {application.availability}</p>
+                        </div>
+                        {application.experience && (
+                          <div className="mt-2">
+                            <p className="text-sm"><strong>Experience:</strong> {application.experience}</p>
+                          </div>
+                        )}
+                        <div className="mt-2">
+                          <p className="text-sm"><strong>Motivation:</strong> {application.motivation}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Applied: {new Date(application.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleApplicationAction(application.id, 'approved')}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <UserCheck className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => handleApplicationAction(application.id, 'rejected')}
+                        >
+                          <UserX className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleApproval(operator.id, true)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <UserCheck className="h-4 w-4 mr-1" />
-                      Approve
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive"
-                      onClick={() => handleApproval(operator.id, false)}
-                    >
-                      <UserX className="h-4 w-4 mr-1" />
-                      Reject
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Invite Form */}
-      {showInviteForm && (
+      {/* Operators Tab */}
+      {activeTab === 'operators' && (
+        <>
+          {/* Pending Approvals */}
+          {pendingOperators.length > 0 && (
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-yellow-800">
+                  <Clock className="h-5 w-5" />
+                  Pending Approvals ({pendingOperators.length})
+                </CardTitle>
+                <CardDescription>Review and approve new operator invites</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {pendingOperators.map((operator) => (
+                    <div key={operator.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                      <div>
+                        <h4 className="font-medium">
+                          {operator.profiles ? 
+                            `${operator.profiles.first_name} ${operator.profiles.last_name}` : 
+                            'Pending Registration'
+                          }
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Service Areas: {operator.zip_codes?.join(', ') || 'None'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Applied: {new Date(operator.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleApproval(operator.id, true)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <UserCheck className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => handleApproval(operator.id, false)}
+                        >
+                          <UserX className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Active Operators */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Active Operators ({activeOperators.length})
+              </CardTitle>
+              <CardDescription>Manage your approved operators</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {activeOperators.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No operators yet</h3>
+                  <p className="text-muted-foreground mb-4">Invite your first operator to get started</p>
+                  <Button onClick={() => setActiveTab('invite')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Invite Operator
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {activeOperators.map((operator) => (
+                    <div key={operator.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <h4 className="font-medium">
+                            {operator.profiles ? 
+                              `${operator.profiles.first_name} ${operator.profiles.last_name}` : 
+                              'Unknown Operator'
+                            }
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {operator.profiles?.phone && `Phone: ${operator.profiles.phone} • `}
+                            Service Areas: {operator.zip_codes?.join(', ') || 'None'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Locker Access: {operator.locker_access?.length || 0} location(s)
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        {getStatusBadge(operator)}
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm">Active</Label>
+                          <Switch
+                            checked={operator.is_active}
+                            onCheckedChange={(checked) => toggleOperatorStatus(operator.id, checked)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* Invite Form Tab */}
+      {activeTab === 'invite' && (
         <Card>
           <CardHeader>
             <CardTitle>Invite New Operator</CardTitle>
@@ -428,65 +676,6 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
           </CardContent>
         </Card>
       )}
-
-      {/* Active Operators */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Active Operators ({activeOperators.length})
-          </CardTitle>
-          <CardDescription>Manage your approved operators</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {activeOperators.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No operators yet</h3>
-              <p className="text-muted-foreground mb-4">Invite your first operator to get started</p>
-              <Button onClick={() => setShowInviteForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Invite Operator
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {activeOperators.map((operator) => (
-                <div key={operator.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <h4 className="font-medium">
-                        {operator.profiles ? 
-                          `${operator.profiles.first_name} ${operator.profiles.last_name}` : 
-                          'Unknown Operator'
-                        }
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {operator.profiles?.phone && `Phone: ${operator.profiles.phone} • `}
-                        Service Areas: {operator.zip_codes?.join(', ') || 'None'}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Locker Access: {operator.locker_access?.length || 0} location(s)
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    {getStatusBadge(operator)}
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm">Active</Label>
-                      <Switch
-                        checked={operator.is_active}
-                        onCheckedChange={(checked) => toggleOperatorStatus(operator.id, checked)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };

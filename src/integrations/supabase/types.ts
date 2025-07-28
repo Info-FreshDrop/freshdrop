@@ -89,6 +89,66 @@ export type Database = {
         }
         Relationships: []
       }
+      operator_applications: {
+        Row: {
+          address: string
+          availability: string
+          city: string
+          created_at: string
+          drivers_license: string
+          email: string
+          experience: string | null
+          first_name: string
+          id: string
+          last_name: string
+          motivation: string | null
+          phone: string
+          state: string
+          status: string
+          updated_at: string
+          vehicle_type: string
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          availability: string
+          city: string
+          created_at?: string
+          drivers_license: string
+          email: string
+          experience?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          motivation?: string | null
+          phone: string
+          state: string
+          status?: string
+          updated_at?: string
+          vehicle_type: string
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          availability?: string
+          city?: string
+          created_at?: string
+          drivers_license?: string
+          email?: string
+          experience?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          motivation?: string | null
+          phone?: string
+          state?: string
+          status?: string
+          updated_at?: string
+          vehicle_type?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           bag_count: number | null

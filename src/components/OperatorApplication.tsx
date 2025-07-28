@@ -16,6 +16,8 @@ export function OperatorApplication() {
     email: '',
     phone: '',
     address: '',
+    city: '',
+    state: '',
     zipCode: '',
     driversLicense: '',
     vehicleType: '',
@@ -35,17 +37,29 @@ export function OperatorApplication() {
     setIsSubmitting(true);
 
     try {
-      // Store application in a simple way - could be enhanced with a proper applications table
-      const applicationData = {
-        ...formData,
-        status: 'pending',
-        submittedAt: new Date().toISOString(),
-        type: 'operator_application'
-      };
+      // Save application to database
+      const { error } = await supabase
+        .from('operator_applications')
+        .insert([
+          {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zip_code: formData.zipCode,
+            drivers_license: formData.driversLicense,
+            vehicle_type: formData.vehicleType,
+            availability: formData.availability,
+            experience: formData.experience,
+            motivation: formData.motivation,
+            status: 'pending'
+          }
+        ]);
 
-      // For now, we'll just show a success message
-      // In a real app, you might store this in a database or send an email
-      console.log('Operator Application:', applicationData);
+      if (error) throw error;
 
       toast({
         title: "Application Submitted!",
@@ -59,6 +73,8 @@ export function OperatorApplication() {
         email: '',
         phone: '',
         address: '',
+        city: '',
+        state: '',
         zipCode: '',
         driversLicense: '',
         vehicleType: '',
@@ -171,15 +187,35 @@ export function OperatorApplication() {
               </div>
 
               <div>
-                <Label htmlFor="address">Full Address</Label>
-                <Textarea
+                <Label htmlFor="address">Street Address</Label>
+                <Input
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
-                  placeholder="Street address, city, state"
+                  placeholder="Street address"
                   required
-                  rows={2}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) => handleInputChange('state', e.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
