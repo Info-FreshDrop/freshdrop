@@ -99,15 +99,6 @@ export function OperatorApplication() {
   return (
     <section id="operator-application" className="py-20 px-6 bg-muted/30">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
-            Be Your Own Boss
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Join our network of independent operators and start earning money with flexible hours.
-            Perfect for students, part-time workers, or anyone looking for extra income.
-          </p>
-        </div>
 
         {/* Benefits Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
@@ -124,7 +115,7 @@ export function OperatorApplication() {
           <Card className="text-center p-6">
             <Car className="h-8 w-8 mx-auto mb-3 text-primary" />
             <h3 className="font-semibold mb-2">Use Your Vehicle</h3>
-            <p className="text-sm text-muted-foreground">Car, bike, or on foot</p>
+            <p className="text-sm text-muted-foreground">Car, truck, or van required</p>
           </Card>
           <Card className="text-center p-6">
             <Briefcase className="h-8 w-8 mx-auto mb-3 text-primary" />
