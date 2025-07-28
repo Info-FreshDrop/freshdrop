@@ -77,6 +77,7 @@ export function OperatorDashboard() {
   const [washerData, setWasherData] = useState<WasherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmOrder, setConfirmOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -453,170 +454,35 @@ export function OperatorDashboard() {
             ) : (
               <div className="space-y-4">
                 {myOrders.map((order) => (
-                  <Card key={order.id} className="p-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-semibold">
-                          {order.profiles?.first_name} {order.profiles?.last_name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Claimed {new Date(order.claimed_at!).toLocaleString()}
-                        </p>
-                      </div>
-                      <Badge variant={order.is_express ? "destructive" : "secondary"}>
-                        {order.is_express ? "Express" : "Standard"}
-                      </Badge>
-                    </div>
-
-                    {/* Detailed Workflow Steps */}
-                    <div className="mb-4">
-                      <h4 className="font-medium mb-3">Order Workflow</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className={`flex items-start gap-2 p-2 rounded ${order.status === 'claimed' ? 'bg-blue-50 border border-blue-200' : 'bg-muted'}`}>
-                          <CheckCircle className={`h-4 w-4 mt-0.5 ${order.status === 'claimed' ? 'text-blue-600' : 'text-green-600'}`} />
-                          <div>
-                            <p className="font-medium">Step 1: Prepare for Pickup</p>
-                            <p className="text-muted-foreground">Get clear bags, labels, pen</p>
-                          </div>
+                  <Card 
+                    key={order.id} 
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => setSelectedOrder(order)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-semibold">Order #{order.id.slice(0, 8)}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {order.profiles?.first_name} {order.profiles?.last_name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {order.service_type.replace('_', ' ')} • {order.bag_count} bags
+                          </p>
                         </div>
-                        
-                        <div className={`flex items-start gap-2 p-2 rounded ${order.status === 'claimed' ? 'bg-muted border' : 'bg-muted'}`}>
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 2: Go to Address</p>
-                            <p className="text-muted-foreground">Navigate to pickup location</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 3: Locate Bag</p>
-                            <p className="text-muted-foreground">Find customer's laundry bag</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 4: Label Bag</p>
-                            <p className="text-muted-foreground">Attach identification label</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 5: Take Photo</p>
-                            <p className="text-muted-foreground">Document pickup condition</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 6: Pickup/Confirm</p>
-                            <p className="text-muted-foreground">Collect items and confirm pickup</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 7: Get to Washer</p>
-                            <p className="text-muted-foreground">Transport to washing facility</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 8: Wash Following Instructions</p>
-                            <p className="text-muted-foreground">Wash & dry according to customer needs</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 9: Fold/Hang</p>
-                            <p className="text-muted-foreground">Properly prepare clean items</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 10: Bag Properly</p>
-                            <p className="text-muted-foreground">Package items professionally</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 11: Re-label</p>
-                            <p className="text-muted-foreground">Attach delivery label</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
-                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">Step 12: Return & Take Photo</p>
-                            <p className="text-muted-foreground">Deliver within pickup window time, document delivery</p>
-                          </div>
+                        <div className="text-right">
+                          <Badge variant={order.is_express ? "destructive" : "secondary"}>
+                            {order.is_express ? "Express" : "Standard"}
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Due: {order.pickup_window_end && new Date(order.pickup_window_end).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </p>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Order Details */}
-                    <div className="mb-4 text-sm space-y-1">
-                      <p><strong>Bags:</strong> {order.bag_count}</p>
-                      <p><strong>Total:</strong> ${(order.total_amount_cents / 100).toFixed(2)}</p>
-                      {order.pickup_address && (
-                        <p><strong>Pickup:</strong> {order.pickup_address}</p>
-                      )}
-                      {order.delivery_address && (
-                        <p><strong>Delivery:</strong> {order.delivery_address}</p>
-                      )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 flex-wrap">
-                      {order.status === 'claimed' && (
-                        <Button 
-                          size="sm" 
-                          onClick={() => updateOrderStatus(order.id, 'in_progress')}
-                        >
-                          ✅ Mark Pickup Done
-                        </Button>
-                      )}
-                      {order.status === 'in_progress' && (
-                        <Button 
-                          size="sm" 
-                          onClick={() => updateOrderStatus(order.id, 'washed')}
-                        >
-                          🧼 Washing Complete
-                        </Button>
-                      )}
-                      {order.status === 'washed' && (
-                        <Button 
-                          size="sm" 
-                          onClick={() => updateOrderStatus(order.id, 'completed')}
-                        >
-                          📦 Mark Delivered
-                        </Button>
-                      )}
-                      <Button variant="outline" size="sm">
-                        <Camera className="h-3 w-3 mr-1" />
-                        Photo
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <MessageSquare className="h-3 w-3 mr-1" />
-                        Support
-                      </Button>
-                    </div>
+                    </CardContent>
                   </Card>
                 ))}
               </div>
@@ -812,6 +678,142 @@ export function OperatorDashboard() {
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Claim Order
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Step-by-Step Workflow Dialog */}
+        <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between">
+                Order Workflow
+                <Badge variant={selectedOrder?.is_express ? "destructive" : "secondary"}>
+                  {selectedOrder?.is_express ? "Express" : "Standard"}
+                </Badge>
+              </DialogTitle>
+              <DialogDescription>
+                Pickup Deadline: {selectedOrder?.pickup_window_end && 
+                  new Date(selectedOrder.pickup_window_end).toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })
+                }
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedOrder && (
+              <div className="space-y-6 py-4">
+                {/* Progress Indicators */}
+                <div className="flex justify-center space-x-4 mb-6">
+                  {[
+                    { label: "Prepare", icon: Package, active: selectedOrder.status === 'claimed' },
+                    { label: "Pickup", icon: Truck, active: selectedOrder.status === 'in_progress' },
+                    { label: "Wash", icon: Circle, active: selectedOrder.status === 'washed' },
+                    { label: "Deliver", icon: CheckCircle, active: selectedOrder.status === 'completed' }
+                  ].map((step, index) => (
+                    <div key={index} className="flex flex-col items-center">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        step.active ? 'bg-yellow-400 text-yellow-900' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        <step.icon className="h-6 w-6" />
+                      </div>
+                      <span className="text-xs mt-1">{step.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Current Step Details */}
+                {selectedOrder.status === 'claimed' && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-yellow-400 text-yellow-900 flex items-center justify-center text-sm font-bold">3</div>
+                      <h3 className="font-semibold text-lg">Locate Bags</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <p><strong>Unit Number:</strong> {selectedOrder.pickup_address}</p>
+                      <p><strong>Pickup Spot:</strong> Front Door</p>
+                      <Button variant="outline" size="sm" className="mr-2">
+                        HELP LOCATE BAGS
+                      </Button>
+                      <p className="text-muted-foreground italic">Don't handle the bags yet.</p>
+                    </div>
+                    <Button className="w-full mt-4 bg-yellow-400 hover:bg-yellow-500 text-yellow-900">
+                      STEP COMPLETE ↓
+                    </Button>
+                  </div>
+                )}
+
+                {/* All Steps List */}
+                <div className="space-y-3">
+                  {[
+                    { num: 1, title: "PREPARE FOR PICKUP", desc: "Get clear bags, labels, pen", completed: true },
+                    { num: 2, title: "GO TO ADDRESS", desc: "Navigate to pickup location", completed: true },
+                    { num: 3, title: "LOCATE BAGS", desc: "Find customer's laundry bag", completed: selectedOrder.status !== 'claimed', active: selectedOrder.status === 'claimed' },
+                    { num: 4, title: "TAKE A PHOTO", desc: "Document pickup condition", completed: false },
+                    { num: 5, title: "LABEL BAGS", desc: "Attach identification label", completed: false },
+                    { num: 6, title: "COUNT BAGS", desc: "Verify bag count", completed: false },
+                    { num: 7, title: "PICKUP", desc: "Collect items and confirm pickup", completed: false },
+                    { num: 8, title: "GET TO WASHER", desc: "Transport to washing facility", completed: false },
+                    { num: 9, title: "WASH FOLLOWING INSTRUCTIONS", desc: "Wash & dry according to customer needs", completed: false },
+                    { num: 10, title: "FOLD/HANG", desc: "Properly prepare clean items", completed: false },
+                    { num: 11, title: "BAG PROPERLY", desc: "Package items professionally", completed: false },
+                    { num: 12, title: "RE-LABEL", desc: "Attach delivery label", completed: false },
+                    { num: 13, title: "RETURN & TAKE PHOTO", desc: "Deliver within pickup window time, document delivery", completed: false }
+                  ].map((step) => (
+                    <div key={step.num} className={`flex items-start gap-3 p-3 rounded-lg ${
+                      step.active ? 'bg-yellow-50 border border-yellow-200' : 
+                      step.completed ? 'bg-green-50 border border-green-200' : 
+                      'bg-muted'
+                    }`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        step.active ? 'bg-yellow-400 text-yellow-900' :
+                        step.completed ? 'bg-green-500 text-white' :
+                        'bg-gray-300 text-gray-600'
+                      }`}>
+                        {step.completed ? '✓' : step.num}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{step.title}</h4>
+                        <p className="text-sm text-muted-foreground">{step.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Order Info */}
+                <div className="border-t pt-4 space-y-2 text-sm">
+                  <p><strong>Customer:</strong> {selectedOrder.profiles?.first_name} {selectedOrder.profiles?.last_name}</p>
+                  <p><strong>Phone:</strong> {selectedOrder.profiles?.phone}</p>
+                  <p><strong>Service:</strong> {selectedOrder.service_type.replace('_', ' ')}</p>
+                  <p><strong>Bags:</strong> {selectedOrder.bag_count}</p>
+                  {selectedOrder.special_instructions && (
+                    <p><strong>Instructions:</strong> {selectedOrder.special_instructions}</p>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter className="flex gap-2">
+              <Button variant="outline" onClick={() => setSelectedOrder(null)}>
+                Close
+              </Button>
+              {selectedOrder?.status === 'claimed' && (
+                <Button onClick={() => selectedOrder && updateOrderStatus(selectedOrder.id, 'in_progress')}>
+                  Mark Pickup Complete
+                </Button>
+              )}
+              {selectedOrder?.status === 'in_progress' && (
+                <Button onClick={() => selectedOrder && updateOrderStatus(selectedOrder.id, 'washed')}>
+                  Mark Washing Complete
+                </Button>
+              )}
+              {selectedOrder?.status === 'washed' && (
+                <Button onClick={() => selectedOrder && updateOrderStatus(selectedOrder.id, 'completed')}>
+                  Mark Delivered
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
