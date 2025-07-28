@@ -148,24 +148,35 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
       }
       
       // Use reverse geocoding to get address
-      const response = await supabase.functions.invoke('geocoding', {
-        body: { 
-          query: `${location.longitude},${location.latitude}`,
-          type: 'reverse'
-        }
-      });
-      
-      if (response.data?.suggestions?.[0]) {
-        const address = response.data.suggestions[0].display_name;
-        handleInputChange('pickupAddress', address);
-        handleInputChange('deliveryAddress', address);
+      try {
+        const response = await supabase.functions.invoke('geocoding', {
+          body: { 
+            query: `${location.longitude},${location.latitude}`,
+            type: 'reverse'
+          }
+        });
         
-        // Extract zip code from address
-        const zipMatch = address.match(/\b\d{5}\b/);
-        if (zipMatch) {
-          handleInputChange('zipCode', zipMatch[0]);
+        console.log('Reverse geocoding response:', response);
+        
+        if (response.data?.suggestions?.[0]) {
+          const address = response.data.suggestions[0].display_name;
+          handleInputChange('pickupAddress', address);
+          handleInputChange('deliveryAddress', address);
+          
+          // Extract zip code from address
+          const zipMatch = address.match(/\b\d{5}\b/);
+          if (zipMatch) {
+            handleInputChange('zipCode', zipMatch[0]);
+          }
+        } else {
+          // Fallback address
+          const mockAddress = "123 Main St, Springfield, MO 65804";
+          handleInputChange('pickupAddress', mockAddress);
+          handleInputChange('deliveryAddress', mockAddress);
+          handleInputChange('zipCode', '65804');
         }
-      } else {
+      } catch (error) {
+        console.error('Geocoding error:', error);
         // Fallback address
         const mockAddress = "123 Main St, Springfield, MO 65804";
         handleInputChange('pickupAddress', mockAddress);
@@ -468,9 +479,35 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
               <Input
                 placeholder="Enter your address"
                 value={formData.pickupAddress}
-                onChange={(e) => {
-                  handleInputChange('pickupAddress', e.target.value);
-                  handleInputChange('deliveryAddress', e.target.value);
+                onChange={async (e) => {
+                  const value = e.target.value;
+                  handleInputChange('pickupAddress', value);
+                  handleInputChange('deliveryAddress', value);
+                  
+                  // Auto-search for addresses as user types
+                  if (value.length > 3) {
+                    try {
+                      const response = await supabase.functions.invoke('geocoding', {
+                        body: { 
+                          query: value,
+                          type: 'search'
+                        }
+                      });
+                      
+                      if (response.data?.suggestions?.[0]) {
+                        const suggestion = response.data.suggestions[0];
+                        console.log('Address suggestion:', suggestion);
+                        
+                        // Extract zip code from the formatted address
+                        const zipMatch = suggestion.formatted.match(/\b\d{5}\b/);
+                        if (zipMatch) {
+                          handleInputChange('zipCode', zipMatch[0]);
+                        }
+                      }
+                    } catch (error) {
+                      console.error('Address search error:', error);
+                    }
+                  }
                 }}
                 className="h-12"
                 required
