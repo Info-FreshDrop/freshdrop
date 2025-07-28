@@ -117,10 +117,12 @@ serve(async (req) => {
       customer_id: user.id,
       status: 'unclaimed', // Mark as unclaimed so operators can see it
       stripe_session_id: null, // No Stripe session
-      promo_code: orderData.promoCode || null,
+      promo_code: orderData.promoCode || null, // Map promoCode to promo_code
       discount_amount_cents: discountAmount,
       total_amount_cents: totalAmount,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      // Remove promoCode from orderData to avoid column mismatch
+      promoCode: undefined
     }).select().single();
 
     if (orderError) {
