@@ -34,6 +34,8 @@ export const LiveOrderMap: React.FC<LiveOrderMapProps> = ({
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [distance, setDistance] = useState<string | null>(null);
+  const [duration, setDuration] = useState<string | null>(null);
 
   useEffect(() => {
     loadMapboxToken();
@@ -148,6 +150,12 @@ export const LiveOrderMap: React.FC<LiveOrderMapProps> = ({
       if (data.routes && data.routes.length > 0) {
         const route = data.routes[0];
         
+        // Update distance and duration
+        const distanceKm = (route.distance / 1000).toFixed(1);
+        const durationMin = Math.round(route.duration / 60);
+        setDistance(`${distanceKm} km`);
+        setDuration(`${durationMin} min`);
+        
         map.current.addSource('route', {
           type: 'geojson',
           data: {
@@ -252,6 +260,11 @@ export const LiveOrderMap: React.FC<LiveOrderMapProps> = ({
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
               <span>{order.status === 'claimed' || order.status === 'in_progress' ? 'Pickup' : 'Delivery'}</span>
             </div>
+            {distance && duration && (
+              <div className="flex items-center gap-1 text-primary font-medium">
+                <span>📍 {distance} • ⏱️ {duration}</span>
+              </div>
+            )}
           </div>
           {order.pickup_window_end && (
             <span>

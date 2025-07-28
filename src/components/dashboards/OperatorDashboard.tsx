@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { ServiceAreaModal } from './ServiceAreaModal';
 import { LiveOrderMap } from '../orders/LiveOrderMap';
+import { OrdersOverviewMap } from '../orders/OrdersOverviewMap';
 
 interface Order {
   id: string;
@@ -103,6 +104,7 @@ export function OperatorDashboard() {
   const [showLiveMap, setShowLiveMap] = useState(false);
   const [selectedMapOrder, setSelectedMapOrder] = useState<Order | null>(null);
   const [operatorLocation, setOperatorLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [showOverviewMap, setShowOverviewMap] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -919,9 +921,22 @@ export function OperatorDashboard() {
 
           {/* My Orders Tab */}
           <TabsContent value="my-orders" className="space-y-4">
-            <div className="text-center mb-4">
-              <h2 className="text-lg font-semibold">Your Active Orders</h2>
-              <p className="text-sm text-muted-foreground">Track and manage your claimed orders</p>
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-center flex-1">
+                <h2 className="text-lg font-semibold">Your Active Orders</h2>
+                <p className="text-sm text-muted-foreground">Track and manage your claimed orders</p>
+              </div>
+              {myOrders.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowOverviewMap(true)}
+                  className="flex items-center gap-1"
+                >
+                  <MapPin className="h-4 w-4" />
+                  View All on Map
+                </Button>
+              )}
             </div>
 
             {myOrders.length === 0 ? (
@@ -1602,6 +1617,14 @@ export function OperatorDashboard() {
             operatorLocation={operatorLocation}
           />
         )}
+
+        {/* Orders Overview Map Modal */}
+        <OrdersOverviewMap
+          isOpen={showOverviewMap}
+          onClose={() => setShowOverviewMap(false)}
+          orders={myOrders}
+          currentLocation={operatorLocation}
+        />
       </div>
     </div>
   );
