@@ -297,31 +297,40 @@ export type Database = {
       }
       washers: {
         Row: {
+          approval_status: string | null
           created_at: string
           id: string
           is_active: boolean | null
           is_online: boolean | null
           locker_access: string[] | null
+          signup_expires_at: string | null
+          signup_token: string | null
           updated_at: string
           user_id: string
           zip_codes: string[] | null
         }
         Insert: {
+          approval_status?: string | null
           created_at?: string
           id?: string
           is_active?: boolean | null
           is_online?: boolean | null
           locker_access?: string[] | null
+          signup_expires_at?: string | null
+          signup_token?: string | null
           updated_at?: string
           user_id: string
           zip_codes?: string[] | null
         }
         Update: {
+          approval_status?: string | null
           created_at?: string
           id?: string
           is_active?: boolean | null
           is_online?: boolean | null
           locker_access?: string[] | null
+          signup_expires_at?: string | null
+          signup_token?: string | null
           updated_at?: string
           user_id?: string
           zip_codes?: string[] | null

@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
+import OperatorSignup from "./pages/OperatorSignup";
 import "./App.css";
 
 const queryClient = new QueryClient();

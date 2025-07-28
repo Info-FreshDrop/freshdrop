@@ -3,7 +3,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { WasherManagement } from "@/components/washers/WasherManagement";
+import { OperatorManagement } from "@/components/admin/OperatorManagement";
+import { ServiceAreasManagement } from "@/components/admin/ServiceAreasManagement";
 import { ClothesShopManagement } from "@/components/admin/ClothesShopManagement";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,10 +22,11 @@ import {
 
 export function OwnerDashboard() {
   const { signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'washers' | 'shop' | 'analytics'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics'>('dashboard');
   const [stats, setStats] = useState({
     totalOrders: 0,
-    activeWashers: 0,
+    activeOperators: 0,
+    pendingApprovals: 0,
     totalLockers: 0,
     activeLockers: 0,
     totalRevenue: 0
@@ -49,11 +51,18 @@ export function OwnerDashboard() {
 
       const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.total_amount_cents || 0), 0) || 0;
 
-      // Get active washers count
-      const { count: washersCount } = await supabase
+      // Get active operators count
+      const { count: operatorsCount } = await supabase
         .from('washers')
         .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('approval_status', 'approved');
+
+      // Get pending approvals count
+      const { count: pendingCount } = await supabase
+        .from('washers')
+        .select('*', { count: 'exact', head: true })
+        .eq('approval_status', 'pending');
 
       // Get lockers stats
       const { count: totalLockersCount } = await supabase
@@ -69,18 +78,37 @@ export function OwnerDashboard() {
 
       setStats({
         totalOrders: ordersCount || 0,
-        activeWashers: washersCount || 0,
+        activeOperators: operatorsCount || 0,
+        pendingApprovals: pendingCount || 0,
         totalLockers: totalLockersCount || 0,
         activeLockers: activeLockersCount || 0,
         totalRevenue: totalRevenue
       });
+
+      // Set up real-time subscription for pending approvals
+      const channel = supabase
+        .channel('dashboard-stats')
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'washers' },
+          () => loadDashboardStats()
+        )
+        .on('postgres_changes', 
+          { event: 'UPDATE', schema: 'public', table: 'washers' },
+          () => loadDashboardStats()
+        )
+        .subscribe();
+        
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }
   };
 
-  if (currentView === 'washers') {
-    return <WasherManagement onBack={() => setCurrentView('dashboard')} />;
+  if (currentView === 'operators') {
+    return <OperatorManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'service-areas') {
+    return <ServiceAreasManagement onBack={() => setCurrentView('dashboard')} />;
   }
 
   if (currentView === 'shop') {
@@ -140,8 +168,13 @@ export function OwnerDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Washers</p>
-                  <p className="text-2xl font-bold">{stats.activeWashers}</p>
+                  <p className="text-sm text-muted-foreground">Active Operators</p>
+                  <p className="text-2xl font-bold">{stats.activeOperators}</p>
+                  {stats.pendingApprovals > 0 && (
+                    <p className="text-xs text-yellow-600 font-medium">
+                      +{stats.pendingApprovals} pending approval
+                    </p>
+                  )}
                 </div>
                 <Users className="h-8 w-8 text-accent" />
               </div>
@@ -179,10 +212,15 @@ export function OwnerDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                Manage Washers
+                Manage Operators
+                {stats.pendingApprovals > 0 && (
+                  <Badge variant="outline" className="ml-auto text-yellow-600 border-yellow-600">
+                    {stats.pendingApprovals} pending
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>
-                Add, edit, and assign washers
+                Invite, approve, and manage operators
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -190,13 +228,13 @@ export function OwnerDashboard() {
                 <Button 
                   variant="hero" 
                   className="w-full"
-                  onClick={() => setCurrentView('washers')}
+                  onClick={() => setCurrentView('operators')}
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  Manage Washers
+                  Manage Operators
                 </Button>
                 <Button variant="outline" className="w-full">
-                  View All Washers
+                  View All Operators
                 </Button>
               </div>
             </CardContent>
@@ -206,20 +244,24 @@ export function OwnerDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-accent" />
-                Locker Management
+                Service Areas
               </CardTitle>
               <CardDescription>
-                Monitor and manage locker locations
+                Manage zip codes and service capabilities
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="hero" className="w-full">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('service-areas')}
+                >
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  Add New Locker
+                  Manage Service Areas
                 </Button>
                 <Button variant="outline" className="w-full">
-                  Locker Status
+                  View Coverage Map
                 </Button>
               </div>
             </CardContent>
