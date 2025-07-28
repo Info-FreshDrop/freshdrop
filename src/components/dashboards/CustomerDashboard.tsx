@@ -367,17 +367,6 @@ export function CustomerDashboard() {
           </div>
         </Tabs>
 
-        {/* Logout Button */}
-        <div className="p-4 border-t border-slate-200 bg-white">
-          <Button
-            variant="ghost"
-            onClick={signOut}
-            className="w-full text-slate-600 hover:text-slate-900"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
-        </div>
       </div>
 
       {/* Modals */}
