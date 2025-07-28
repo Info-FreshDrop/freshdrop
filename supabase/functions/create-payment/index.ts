@@ -75,7 +75,42 @@ serve(async (req) => {
       }
     }
 
-    // Create a one-time payment session
+    // Handle free orders (when total amount is 0 due to promo codes)
+    if (totalAmount === 0) {
+      console.log("Free order detected, skipping Stripe payment");
+      
+      // Store the order directly as paid since it's free
+      const supabaseService = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        { auth: { persistSession: false } }
+      );
+
+      const { data: order, error: orderError } = await supabaseService.from("orders").insert({
+        ...orderData,
+        customer_id: user.id,
+        status: 'placed', // Mark as placed since no payment needed
+        stripe_session_id: null, // No Stripe session for free orders
+        promo_code: orderData.promoCode || null,
+        discount_amount_cents: discountAmount,
+        created_at: new Date().toISOString()
+      }).select().single();
+
+      if (orderError) {
+        console.error("Error storing free order:", orderError);
+        throw new Error("Failed to store order data");
+      }
+
+      // Return success URL directly for free orders
+      return new Response(JSON.stringify({ 
+        url: `${req.headers.get("origin")}/payment-success?free_order=true&order_id=${order.id}` 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Create a one-time payment session for paid orders
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
