@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { WasherManagement } from "@/components/washers/WasherManagement";
 import { 
   Users, 
   Package, 
@@ -15,6 +17,11 @@ import {
 
 export function OwnerDashboard() {
   const { signOut } = useAuth();
+  const [currentView, setCurrentView] = useState<'dashboard' | 'washers'>('dashboard');
+
+  if (currentView === 'washers') {
+    return <WasherManagement onBack={() => setCurrentView('dashboard')} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-wave">
@@ -104,9 +111,13 @@ export function OwnerDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="hero" className="w-full">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('washers')}
+                >
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  Add New Washer
+                  Manage Washers
                 </Button>
                 <Button variant="outline" className="w-full">
                   View All Washers

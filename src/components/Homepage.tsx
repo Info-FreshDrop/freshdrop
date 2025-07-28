@@ -9,6 +9,7 @@ import { CustomerDashboard } from "./dashboards/CustomerDashboard";
 import { OwnerDashboard } from "./dashboards/OwnerDashboard";
 import { OperatorDashboard } from "./dashboards/OperatorDashboard";
 import { MarketingDashboard } from "./dashboards/MarketingDashboard";
+import { WasherDashboard } from "./washers/WasherDashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 
@@ -32,6 +33,8 @@ export function Homepage() {
     switch (userRole) {
       case 'customer':
         return <CustomerDashboard />;
+      case 'washer':
+        return <WasherDashboard onBack={() => {}} />;
       case 'owner':
         return <OwnerDashboard />;
       case 'operator':
