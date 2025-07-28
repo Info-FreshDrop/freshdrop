@@ -14,16 +14,322 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clothes_items: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          price_cents: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          price_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lockers: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          locker_count: number | null
+          name: string
+          qr_code: string | null
+          status: Database["public"]["Enums"]["locker_status"] | null
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          locker_count?: number | null
+          name: string
+          qr_code?: string | null
+          status?: Database["public"]["Enums"]["locker_status"] | null
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          locker_count?: number | null
+          name?: string
+          qr_code?: string | null
+          status?: Database["public"]["Enums"]["locker_status"] | null
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          bag_count: number | null
+          claimed_at: string | null
+          completed_at: string | null
+          created_at: string
+          customer_id: string
+          delivery_address: string | null
+          delivery_photo_url: string | null
+          delivery_window_end: string | null
+          delivery_window_start: string | null
+          id: string
+          is_express: boolean | null
+          items: Json | null
+          locker_id: string | null
+          pickup_address: string | null
+          pickup_photo_url: string | null
+          pickup_type: Database["public"]["Enums"]["pickup_type"]
+          pickup_window_end: string | null
+          pickup_window_start: string | null
+          service_type: Database["public"]["Enums"]["service_type"]
+          special_instructions: string | null
+          status: Database["public"]["Enums"]["order_status"] | null
+          total_amount_cents: number
+          updated_at: string
+          washer_id: string | null
+          zip_code: string
+        }
+        Insert: {
+          bag_count?: number | null
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_id: string
+          delivery_address?: string | null
+          delivery_photo_url?: string | null
+          delivery_window_end?: string | null
+          delivery_window_start?: string | null
+          id?: string
+          is_express?: boolean | null
+          items?: Json | null
+          locker_id?: string | null
+          pickup_address?: string | null
+          pickup_photo_url?: string | null
+          pickup_type: Database["public"]["Enums"]["pickup_type"]
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
+          service_type: Database["public"]["Enums"]["service_type"]
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          total_amount_cents: number
+          updated_at?: string
+          washer_id?: string | null
+          zip_code: string
+        }
+        Update: {
+          bag_count?: number | null
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string
+          delivery_address?: string | null
+          delivery_photo_url?: string | null
+          delivery_window_end?: string | null
+          delivery_window_start?: string | null
+          id?: string
+          is_express?: boolean | null
+          items?: Json | null
+          locker_id?: string | null
+          pickup_address?: string | null
+          pickup_photo_url?: string | null
+          pickup_type?: Database["public"]["Enums"]["pickup_type"]
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
+          service_type?: Database["public"]["Enums"]["service_type"]
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          total_amount_cents?: number
+          updated_at?: string
+          washer_id?: string | null
+          zip_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_locker_id_fkey"
+            columns: ["locker_id"]
+            isOneToOne: false
+            referencedRelation: "lockers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      service_areas: {
+        Row: {
+          allows_delivery: boolean | null
+          allows_express: boolean | null
+          allows_locker: boolean | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          zip_code: string
+        }
+        Insert: {
+          allows_delivery?: boolean | null
+          allows_express?: boolean | null
+          allows_locker?: boolean | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          zip_code: string
+        }
+        Update: {
+          allows_delivery?: boolean | null
+          allows_express?: boolean | null
+          allows_locker?: boolean | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      washers: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          is_online: boolean | null
+          locker_access: string[] | null
+          updated_at: string
+          user_id: string
+          zip_codes: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          is_online?: boolean | null
+          locker_access?: string[] | null
+          updated_at?: string
+          user_id: string
+          zip_codes?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          is_online?: boolean | null
+          locker_access?: string[] | null
+          updated_at?: string
+          user_id?: string
+          zip_codes?: string[] | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          user_uuid: string
+          check_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
+      is_admin_role: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "customer" | "washer" | "operator" | "owner" | "marketing"
+      locker_status: "available" | "in_use" | "full" | "maintenance" | "closed"
+      order_status:
+        | "placed"
+        | "unclaimed"
+        | "claimed"
+        | "in_progress"
+        | "washed"
+        | "returned"
+        | "completed"
+        | "cancelled"
+      pickup_type: "locker" | "pickup_delivery"
+      service_type: "wash_fold" | "wash_hang_dry" | "express"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +456,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["customer", "washer", "operator", "owner", "marketing"],
+      locker_status: ["available", "in_use", "full", "maintenance", "closed"],
+      order_status: [
+        "placed",
+        "unclaimed",
+        "claimed",
+        "in_progress",
+        "washed",
+        "returned",
+        "completed",
+        "cancelled",
+      ],
+      pickup_type: ["locker", "pickup_delivery"],
+      service_type: ["wash_fold", "wash_hang_dry", "express"],
+    },
   },
 } as const
