@@ -109,26 +109,6 @@ export function FAQSection() {
             </Button>
           </div>
         </div>
-
-        <div className="mt-12 text-center">
-          <div className="p-6 bg-gradient-wave rounded-xl border">
-            <h3 className="text-xl font-bold mb-3 text-primary">Still have questions?</h3>
-            <p className="text-muted-foreground mb-4">
-              Our support team is here to help you get the most out of FreshDrop's services.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <div className="text-sm">
-                <strong>Email:</strong> support@freshdrop.com
-              </div>
-              <div className="text-sm">
-                <strong>Phone:</strong> (555) 123-WASH
-              </div>
-              <div className="text-sm">
-                <strong>Hours:</strong> 7 AM - 10 PM daily
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

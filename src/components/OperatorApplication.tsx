@@ -99,6 +99,15 @@ export function OperatorApplication() {
   return (
     <section id="operator-application" className="py-20 px-6 bg-muted/30">
       <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
+            Be Your Own Boss
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Join our network of independent operators and start earning money with flexible hours.
+            Perfect for students, part-time workers, or anyone looking for extra income.
+          </p>
+        </div>
 
         {/* Benefits Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
@@ -124,23 +133,17 @@ export function OperatorApplication() {
           </Card>
         </div>
 
-        {/* Want to Become an Operator Box */}
-        <Card className="shadow-soft mb-8 bg-gradient-primary text-white">
-          <CardContent className="p-8 text-center">
-            <h3 className="text-2xl font-bold mb-4">Want to Become an Operator?</h3>
-            <p className="text-lg text-white/90 mb-6">
-              Join our network of professional laundry operators and start earning with flexible hours.
-            </p>
-            <Button 
-              onClick={() => setShowApplicationForm(!showApplicationForm)}
-              variant="default"
-              size="lg"
-              className="bg-white text-primary hover:bg-white/90"
-            >
-              {showApplicationForm ? 'Hide Application' : 'Apply Now'}
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Apply Now Button */}
+        <div className="text-center mb-8">
+          <Button 
+            onClick={() => setShowApplicationForm(!showApplicationForm)}
+            variant="default"
+            size="xl"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-64"
+          >
+            {showApplicationForm ? 'Hide Application' : 'Apply Now'}
+          </Button>
+        </div>
 
         {/* Enhanced Application Form - Only show when requested */}
         {showApplicationForm && (

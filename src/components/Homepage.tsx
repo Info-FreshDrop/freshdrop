@@ -75,6 +75,29 @@ export function Homepage() {
       <FAQSection />
       <OperatorApplication />
       
+      {/* Support Section - Moved to bottom */}
+      <section className="py-12 px-6 bg-muted/20">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="p-6 bg-gradient-wave rounded-xl border">
+            <h3 className="text-xl font-bold mb-3 text-primary">Still have questions?</h3>
+            <p className="text-muted-foreground mb-4">
+              Our support team is here to help you get the most out of FreshDrop's services.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center text-sm">
+              <div>
+                <strong>Email:</strong> support@freshdrop.com
+              </div>
+              <div>
+                <strong>Phone:</strong> (555) 123-WASH
+              </div>
+              <div>
+                <strong>Hours:</strong> 7 AM - 10 PM daily
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
       {/* Footer */}
       <footer className="bg-primary text-primary-foreground py-12">
         <div className="max-w-6xl mx-auto px-6">
