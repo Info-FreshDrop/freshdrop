@@ -149,6 +149,53 @@ export type Database = {
         }
         Relationships: []
       }
+      operator_invites: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          id: string
+          is_used: boolean | null
+          locker_access: string[] | null
+          signup_expires_at: string
+          signup_token: string
+          updated_at: string
+          used_by_user_id: string | null
+          zip_codes: string[] | null
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          id?: string
+          is_used?: boolean | null
+          locker_access?: string[] | null
+          signup_expires_at: string
+          signup_token: string
+          updated_at?: string
+          used_by_user_id?: string | null
+          zip_codes?: string[] | null
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          id?: string
+          is_used?: boolean | null
+          locker_access?: string[] | null
+          signup_expires_at?: string
+          signup_token?: string
+          updated_at?: string
+          used_by_user_id?: string | null
+          zip_codes?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operator_invites_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "operator_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           bag_count: number | null

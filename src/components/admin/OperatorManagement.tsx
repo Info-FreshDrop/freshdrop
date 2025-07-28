@@ -180,19 +180,14 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
 
-      // Create a placeholder user ID that will be replaced during signup
-      const placeholderUserId = crypto.randomUUID();
-
+      // Create invite in the new invites table (no application_id for manual invites)
       const { error } = await supabase
-        .from('washers')
+        .from('operator_invites')
         .insert([{
           signup_token: token,
           signup_expires_at: expiresAt.toISOString(),
           zip_codes: inviteForm.selectedZipCodes,
-          locker_access: inviteForm.selectedLockers,
-          approval_status: 'pending',
-          is_active: false,
-          user_id: placeholderUserId // Use proper UUID format
+          locker_access: inviteForm.selectedLockers
         }]);
 
       if (error) throw error;
@@ -227,22 +222,19 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
   const handleApplicationAction = async (applicationId: string, action: 'approved' | 'rejected') => {
     try {
       if (action === 'approved') {
-        // Create an operator invite
+        // Create an operator invite in the new invites table
         const token = crypto.randomUUID();
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7);
-        const placeholderUserId = crypto.randomUUID();
 
         const { error: createError } = await supabase
-          .from('washers')
+          .from('operator_invites')
           .insert([{
+            application_id: applicationId,
             signup_token: token,
             signup_expires_at: expiresAt.toISOString(),
             zip_codes: [],
-            locker_access: [],
-            approval_status: 'pending',
-            is_active: false,
-            user_id: placeholderUserId
+            locker_access: []
           }]);
 
         if (createError) throw createError;
