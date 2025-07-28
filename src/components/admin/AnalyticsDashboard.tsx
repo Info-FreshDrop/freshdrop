@@ -247,7 +247,7 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">FreshDrop Pay</p>
-                  <p className="text-xs text-muted-foreground">Business cut (30%)</p>
+                  <p className="text-xs text-muted-foreground">Business cut (50%)</p>
                   <p className="text-3xl font-bold text-primary">{formatCurrency(analytics.freshDropPay)}</p>
                   <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
                     <ArrowUp className="h-3 w-3" />
@@ -264,7 +264,7 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Operator Pay</p>
-                  <p className="text-xs text-muted-foreground">Washer payouts (70%)</p>
+                  <p className="text-xs text-muted-foreground">Washer payouts (50%)</p>
                   <p className="text-3xl font-bold text-accent">{formatCurrency(analytics.operatorPay)}</p>
                   <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
                     <ArrowUp className="h-3 w-3" />

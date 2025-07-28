@@ -327,7 +327,7 @@ export function OwnerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">FreshDrop Pay</p>
-                  <p className="text-xs text-muted-foreground">Business cut after operator pay</p>
+                  <p className="text-xs text-muted-foreground">Business cut (50%)</p>
                   <p className="text-2xl font-bold text-primary">${(stats.freshDropPay / 100).toFixed(2)}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-primary" />
@@ -340,7 +340,7 @@ export function OwnerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Operator Pay</p>
-                  <p className="text-xs text-muted-foreground">Washer payouts</p>
+                  <p className="text-xs text-muted-foreground">Washer payouts (50%)</p>
                   <p className="text-2xl font-bold text-accent">${(stats.operatorPay / 100).toFixed(2)}</p>
                 </div>
                 <Users className="h-8 w-8 text-accent" />
