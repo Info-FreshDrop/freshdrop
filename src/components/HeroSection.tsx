@@ -24,12 +24,13 @@ export function HeroSection() {
       </div>
 
       <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-        {/* Logo section */}
+        {/* Logo section - Enhanced */}
         <div className="mb-8 flex items-center justify-center">
           <img 
             src={freshDropLogo} 
             alt="FreshDrop Logo" 
-            className="h-32 md:h-48 w-auto"
+            className="h-40 md:h-64 w-auto drop-shadow-lg"
+            style={{ filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))' }}
           />
         </div>
 
