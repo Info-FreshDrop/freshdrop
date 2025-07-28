@@ -72,8 +72,12 @@ export function OperatorLogin({ onBack }: OperatorLoginProps) {
 
   const getRoleIcon = (roleValue: string) => {
     switch (roleValue) {
+      case "owner":
+        return <Shield className="h-4 w-4" />;
       case "operator":
         return <Users className="h-4 w-4" />;
+      case "marketing":
+        return <Megaphone className="h-4 w-4" />;
       default:
         return null;
     }
@@ -81,8 +85,12 @@ export function OperatorLogin({ onBack }: OperatorLoginProps) {
 
   const getRoleDescription = (roleValue: string) => {
     switch (roleValue) {
+      case "owner":
+        return "Full system access and management";
       case "operator":
         return "Order and washer management";
+      case "marketing":
+        return "Promotions and campaign management";
       default:
         return "Select your role to continue";
     }
@@ -119,10 +127,22 @@ export function OperatorLogin({ onBack }: OperatorLoginProps) {
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="owner">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Owner
+                    </div>
+                  </SelectItem>
                   <SelectItem value="operator">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       Operator
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="marketing">
+                    <div className="flex items-center gap-2">
+                      <Megaphone className="h-4 w-4" />
+                      Marketing
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -193,8 +213,16 @@ export function OperatorLogin({ onBack }: OperatorLoginProps) {
         <h4 className="font-semibold text-sm mb-2">Role Permissions:</h4>
         <div className="space-y-1 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
+            <Shield className="h-3 w-3" />
+            <span><strong>Owner:</strong> Full control of system, orders, drivers, lockers</span>
+          </div>
+          <div className="flex items-center gap-2">
             <Users className="h-3 w-3" />
             <span><strong>Operator:</strong> Manage orders and monitor washers</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Megaphone className="h-3 w-3" />
+            <span><strong>Marketing:</strong> Promotions and campaigns only</span>
           </div>
         </div>
       </div>
