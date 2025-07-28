@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { OrderTracking } from "@/components/orders/OrderTracking";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Package, MapPin, Clock, Star, Plus } from "lucide-react";
-import { OrderPlacement } from "@/components/orders/OrderPlacement";
-import { FindLockers } from "@/components/FindLockers";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { OrderPlacement } from "@/components/orders/OrderPlacement";
+import { OrderTracking } from "@/components/orders/OrderTracking";
+import { FindLockers } from "@/components/FindLockers";
 
 export function CustomerDashboard() {
   const { user, signOut } = useAuth();
