@@ -27,6 +27,7 @@ interface ApplicationFormData {
 
   // Vehicle Confirmation
   hasVehicle: boolean;
+  vehicleDetails: string;
 
   // Laundry Skills Test
   towelPhoto: File | null;
@@ -50,6 +51,7 @@ interface ApplicationFormData {
   agreesToStandards: boolean;
   wontMixLoads: boolean;
   treatWithCare: boolean;
+  agreesToTerms: boolean;
 }
 
 export function FreshDropWasherApplication() {
@@ -65,6 +67,7 @@ export function FreshDropWasherApplication() {
     washerLocation: '',
     washerBrand: '',
     hasVehicle: false,
+    vehicleDetails: '',
     towelPhoto: null,
     tshirtPhoto: null,
     laundryStackPhoto: null,
@@ -78,6 +81,7 @@ export function FreshDropWasherApplication() {
     agreesToStandards: false,
     wontMixLoads: false,
     treatWithCare: false,
+    agreesToTerms: false,
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,7 +127,7 @@ export function FreshDropWasherApplication() {
           formData.washerLocation
         );
       case 3:
-        return formData.hasVehicle;
+        return !!(formData.hasVehicle && formData.vehicleDetails);
       case 4:
         return !!(formData.towelPhoto && formData.tshirtPhoto && formData.laundryStackPhoto);
       case 5:
@@ -133,7 +137,7 @@ export function FreshDropWasherApplication() {
       case 7:
         return !!(formData.weeklyAvailability && formData.availableDays.length > 0 && formData.canReturn24to48hrs);
       case 8:
-        return !!(formData.agreesToStandards && formData.wontMixLoads && formData.treatWithCare);
+        return !!(formData.agreesToStandards && formData.wontMixLoads && formData.treatWithCare && formData.agreesToTerms);
       default:
         return true;
     }
@@ -191,11 +195,12 @@ export function FreshDropWasherApplication() {
       return;
     }
 
-    // Block shared/apartment/laundromat locations
-    if (formData.washerLocation === 'shared' || formData.washerLocation === 'apartment' || formData.washerLocation === 'laundromat') {
+    // Remove old eligibility restrictions - now allow shared and laundromat
+    // Only block if no location is selected
+    if (!formData.washerLocation) {
       toast({
-        title: "Application Not Eligible",
-        description: "We currently only accept applications from those with in-home washers and dryers.",
+        title: "Location Required",
+        description: "Please select your washer/dryer location.",
         variant: "destructive",
       });
       return;
@@ -230,7 +235,7 @@ export function FreshDropWasherApplication() {
             state: 'N/A', // Required field
             zip_code: formData.zipCode,
             drivers_license: 'N/A',
-            vehicle_type: formData.hasVehicle ? 'car' : 'none',
+            vehicle_type: formData.hasVehicle ? formData.vehicleDetails : 'none',
             availability: formData.weeklyAvailability,
             experience: `Supplies: ${formData.supplies.join(', ')}. Days: ${formData.availableDays.join(', ')}`,
             motivation: `Washer brand: ${formData.washerBrand}, Location: ${formData.washerLocation}`,
@@ -259,6 +264,7 @@ export function FreshDropWasherApplication() {
         washerLocation: '',
         washerBrand: '',
         hasVehicle: false,
+        vehicleDetails: '',
         towelPhoto: null,
         tshirtPhoto: null,
         laundryStackPhoto: null,
@@ -272,6 +278,7 @@ export function FreshDropWasherApplication() {
         agreesToStandards: false,
         wontMixLoads: false,
         treatWithCare: false,
+        agreesToTerms: false,
       });
       setCurrentStep(1);
     } catch (error) {
@@ -400,9 +407,8 @@ export function FreshDropWasherApplication() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="home">✅ In my home</SelectItem>
-                  <SelectItem value="shared">🚫 Shared (not eligible)</SelectItem>
-                  <SelectItem value="apartment">🚫 Apartment building (not eligible)</SelectItem>
-                  <SelectItem value="laundromat">🚫 Laundromat (not eligible)</SelectItem>
+                  <SelectItem value="shared">✅ Shared</SelectItem>
+                  <SelectItem value="laundromat">✅ Laundromat</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -422,7 +428,7 @@ export function FreshDropWasherApplication() {
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold mb-4">3. Vehicle Confirmation</h3>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 mb-4">
               <Checkbox
                 id="hasVehicle"
                 checked={formData.hasVehicle}
@@ -432,6 +438,18 @@ export function FreshDropWasherApplication() {
                 ✅ I have access to a reliable vehicle for pickups and deliveries *
               </Label>
             </div>
+            {formData.hasVehicle && (
+              <div>
+                <Label htmlFor="vehicleDetails">What is the make, model, and color of the vehicle you'll use for pickups/deliveries? *</Label>
+                <Input
+                  id="vehicleDetails"
+                  value={formData.vehicleDetails}
+                  onChange={(e) => handleInputChange('vehicleDetails', e.target.value)}
+                  placeholder="e.g., Blue 2019 Honda Civic"
+                  required
+                />
+              </div>
+            )}
           </div>
         );
 
@@ -501,9 +519,7 @@ export function FreshDropWasherApplication() {
               {[
                 'Laundry detergent (Free & Clear)',
                 'Laundry detergent (Standard)',
-                'Clear plastic bags',
-                'Hangers',
-                'Bathroom scale'
+                'Clear plastic bags'
               ].map((supply) => (
                 <div key={supply} className="flex items-center space-x-2">
                   <Checkbox
@@ -557,7 +573,7 @@ export function FreshDropWasherApplication() {
                 checked={formData.canReturn24to48hrs}
                 onCheckedChange={(checked) => handleInputChange('canReturn24to48hrs', checked)}
               />
-              <Label htmlFor="canReturn24to48hrs">✅ I can consistently return laundry in 24-48 hours *</Label>
+              <Label htmlFor="canReturn24to48hrs">✅ I can return all laundry within 24 hours unless marked as an express order *</Label>
             </div>
           </div>
         );
@@ -590,6 +606,14 @@ export function FreshDropWasherApplication() {
                   onCheckedChange={(checked) => handleInputChange('treatWithCare', checked)}
                 />
                 <Label htmlFor="treatWithCare">I will treat all laundry with care and confidentiality *</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="agreesToTerms"
+                  checked={formData.agreesToTerms}
+                  onCheckedChange={(checked) => handleInputChange('agreesToTerms', checked)}
+                />
+                <Label htmlFor="agreesToTerms">All terms and conditions of being a FreshDrop Operator *</Label>
               </div>
             </div>
           </div>
