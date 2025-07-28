@@ -611,12 +611,40 @@ export function OperatorDashboard() {
   const getCurrentOperatorLocation = async () => {
     try {
       const position = await getCurrentLocation();
-      setOperatorLocation({
+      const newLocation = {
         latitude: position.latitude,
         longitude: position.longitude
-      });
+      };
+      setOperatorLocation(newLocation);
+      
+      // Store location in washer profile for persistence
+      if (washerData?.id) {
+        await supabase
+          .from('washers')
+          .update({
+            current_location: `POINT(${newLocation.longitude} ${newLocation.latitude})`
+          })
+          .eq('id', washerData.id);
+      }
+      
+      console.log('Operator location updated:', newLocation);
     } catch (error) {
       console.warn('Could not get operator location:', error);
+      // Try to get location from stored data if available
+      if (washerData?.current_location) {
+        try {
+          const coords = washerData.current_location.coordinates;
+          if (coords && coords.length === 2) {
+            setOperatorLocation({
+              latitude: coords[1],
+              longitude: coords[0]
+            });
+            console.log('Using stored operator location:', coords);
+          }
+        } catch (parseError) {
+          console.warn('Could not parse stored location:', parseError);
+        }
+      }
     }
   };
 
@@ -921,26 +949,45 @@ export function OperatorDashboard() {
           {/* My Orders Tab */}
           <TabsContent value="my-orders" className="space-y-4">
             <div className="text-center mb-4">
-              <h2 className="text-lg font-semibold">Your Active Orders</h2>
+              <h2 className="text-lg font-semibold">Your Orders</h2>
               <p className="text-sm text-muted-foreground">Track and manage your claimed orders</p>
             </div>
 
             {myOrders.length === 0 ? (
               <Card className="p-8 text-center">
                 <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No active orders</h3>
+                <h3 className="text-lg font-medium mb-2">No orders</h3>
                 <p className="text-muted-foreground">Claim orders from the Live Orders tab to see them here!</p>
               </Card>
             ) : (
               <div className="space-y-6">
-                {/* Embedded Map */}
-                <OrdersOverviewMap
-                  orders={myOrders}
-                  currentLocation={operatorLocation}
-                />
-                
-                {/* Orders List */}
-                <div className="space-y-4">
+                {/* Filter orders */}
+                {(() => {
+                  const activeOrders = myOrders.filter(order => 
+                    !['completed', 'delivered'].includes(order.status)
+                  );
+                  const completedOrders = myOrders.filter(order => 
+                    ['completed', 'delivered'].includes(order.status)
+                  );
+
+                  return (
+                    <>
+                      {/* Maps for active orders only */}
+                      {activeOrders.length > 0 && (
+                        <OrdersOverviewMap
+                          orders={activeOrders}
+                          currentLocation={operatorLocation}
+                        />
+                      )}
+                      
+                      {/* Active Orders Section */}
+                      {activeOrders.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                            <Clock className="h-5 w-5 text-primary" />
+                            Active Orders ({activeOrders.length})
+                          </h3>
+                          <div className="space-y-4">
                 {myOrders.map((order) => {
                   const { progressText, progressColor, currentStep } = getOrderProgressInfo(order);
                   
