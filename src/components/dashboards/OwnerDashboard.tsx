@@ -12,6 +12,7 @@ import { AllOperatorsView } from "@/components/admin/AllOperatorsView";
 import { LiveOrderManagement } from "@/components/admin/LiveOrderManagement";
 import { OrderIssueTracking } from "@/components/admin/OrderIssueTracking";
 import { OperatorWorkloadBalance } from "@/components/admin/OperatorWorkloadBalance";
+import { UserManagement } from "@/components/admin/UserManagement";
 import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -23,12 +24,13 @@ import {
   PlusCircle,
   BarChart3,
   Shield,
-  ArrowLeft
+  ArrowLeft,
+  UserPlus
 } from "lucide-react";
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -222,6 +224,37 @@ export function OwnerDashboard() {
   if (currentView === 'workload-balance') {
     return <OperatorWorkloadBalance onBack={() => setCurrentView('dashboard')} />;
   }
+
+  if (currentView === 'user-management') {
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentView('dashboard')}
+              className="p-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              User Management
+            </h1>
+            <p className="text-muted-foreground">
+              Create and manage owner and marketing team members
+            </p>
+          </div>
+
+          <UserManagement />
+        </div>
+      </div>
+    );
+  }
+
   if (currentView === 'live-orders') {
     return (
       <div className="min-h-screen bg-gradient-wave">
@@ -586,6 +619,33 @@ export function OwnerDashboard() {
                 </Button>
                 <Button variant="outline" className="w-full">
                   Usage Analytics
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5 text-primary" />
+                User Management
+              </CardTitle>
+              <CardDescription>
+                Create owner and marketing profiles
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('user-management')}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Manage Users
+                </Button>
+                <Button variant="outline" className="w-full">
+                  View Team Members
                 </Button>
               </div>
             </CardContent>
