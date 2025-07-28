@@ -362,6 +362,7 @@ export type Database = {
           discount_type: string
           discount_value: number
           id: string
+          image_url: string | null
           is_active: boolean
           updated_at: string
         }
@@ -372,6 +373,7 @@ export type Database = {
           discount_type: string
           discount_value: number
           id?: string
+          image_url?: string | null
           is_active?: boolean
           updated_at?: string
         }
@@ -382,6 +384,7 @@ export type Database = {
           discount_type?: string
           discount_value?: number
           id?: string
+          image_url?: string | null
           is_active?: boolean
           updated_at?: string
         }
