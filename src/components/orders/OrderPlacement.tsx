@@ -29,7 +29,7 @@ interface OrderPlacementProps {
 }
 
 export function OrderPlacement({ onBack }: OrderPlacementProps) {
-  const [orderType, setOrderType] = useState<'locker' | 'pickup_delivery'>('locker');
+  const [orderType, setOrderType] = useState<'locker' | 'pickup_delivery'>('pickup_delivery');
   const [serviceType, setServiceType] = useState('');
   const [isExpress, setIsExpress] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,6 +39,8 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
   const [lockers, setLockers] = useState<any[]>([]);
   const [clothesItems, setClothesItems] = useState<any[]>([]);
   const [serviceAreas, setServiceAreas] = useState<any[]>([]);
+  const [laundryPreferences, setLaundryPreferences] = useState<any[]>([]);
+  const [selectedPickupDate, setSelectedPickupDate] = useState('');
   const [formData, setFormData] = useState({
     pickupAddress: '',
     deliveryAddress: '',
@@ -47,6 +49,10 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     specialInstructions: '',
     bagCount: 1,
     timeWindow: '',
+    pickupDate: '',
+    soapPreference: '',
+    washTempPreference: '',
+    dryTempPreference: '',
     detergentType: 'standard',
     fragranceFree: false,
     shirtsOnHangers: false,
@@ -64,15 +70,30 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
 
   const loadData = async () => {
     try {
-      const [lockersRes, itemsRes, areasRes] = await Promise.all([
+      const [lockersRes, itemsRes, areasRes, preferencesRes] = await Promise.all([
         supabase.from('lockers').select('*').eq('is_active', true),
         supabase.from('clothes_items').select('*').eq('is_active', true),
-        supabase.from('service_areas').select('*').eq('is_active', true)
+        supabase.from('service_areas').select('*').eq('is_active', true),
+        supabase.from('laundry_preferences').select('*').eq('is_active', true)
       ]);
 
       if (lockersRes.data) setLockers(lockersRes.data);
       if (itemsRes.data) setClothesItems(itemsRes.data);
       if (areasRes.data) setServiceAreas(areasRes.data);
+      if (preferencesRes.data) {
+        setLaundryPreferences(preferencesRes.data);
+        // Set default preferences
+        const defaultSoap = preferencesRes.data.find(p => p.category === 'soap' && p.is_default);
+        const defaultWashTemp = preferencesRes.data.find(p => p.category === 'wash_temp' && p.is_default);
+        const defaultDryTemp = preferencesRes.data.find(p => p.category === 'dry_temp' && p.is_default);
+        
+        setFormData(prev => ({
+          ...prev,
+          soapPreference: defaultSoap?.id || '',
+          washTempPreference: defaultWashTemp?.id || '',
+          dryTempPreference: defaultDryTemp?.id || ''
+        }));
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
@@ -295,6 +316,12 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
       total += 2000; // $20 express fee
     }
     
+    // Add laundry preference costs
+    const soapPref = laundryPreferences.find(p => p.id === formData.soapPreference);
+    if (soapPref) {
+      total += soapPref.price_cents;
+    }
+    
     // Add-on services
     if (formData.fragranceFree) {
       total += 300; // $3 fragrance-free detergent
@@ -333,6 +360,39 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
         return;
       }
 
+      // Calculate pickup time based on selected date and time window
+      const pickupDate = new Date(formData.pickupDate);
+      let pickupStart, pickupEnd;
+      
+      switch (formData.timeWindow) {
+        case 'morning':
+          pickupStart = new Date(pickupDate);
+          pickupStart.setHours(6, 0, 0, 0);
+          pickupEnd = new Date(pickupDate);
+          pickupEnd.setHours(8, 0, 0, 0);
+          break;
+        case 'lunch':
+          pickupStart = new Date(pickupDate);
+          pickupStart.setHours(12, 0, 0, 0);
+          pickupEnd = new Date(pickupDate);
+          pickupEnd.setHours(14, 0, 0, 0);
+          break;
+        case 'evening':
+          pickupStart = new Date(pickupDate);
+          pickupStart.setHours(17, 0, 0, 0);
+          pickupEnd = new Date(pickupDate);
+          pickupEnd.setHours(19, 0, 0, 0);
+          break;
+        default:
+          throw new Error('Invalid time window');
+      }
+
+      // Delivery is in the same window the next day
+      const deliveryStart = new Date(pickupStart);
+      deliveryStart.setDate(deliveryStart.getDate() + 1);
+      const deliveryEnd = new Date(pickupEnd);
+      deliveryEnd.setDate(deliveryEnd.getDate() + 1);
+
       // Prepare order data
       const orderData = {
         pickup_type: orderType,
@@ -346,14 +406,13 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
         bag_count: formData.bagCount,
         items: [{ time_window: formData.timeWindow }],
         total_amount_cents: calculateTotal(),
-        pickup_window_start: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-        pickup_window_end: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-        delivery_window_start: isExpress 
-          ? new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString()
-          : new Date(Date.now() + 22 * 60 * 60 * 1000).toISOString(),
-        delivery_window_end: isExpress 
-          ? new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString()
-          : new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString()
+        soap_preference_id: formData.soapPreference,
+        wash_temp_preference_id: formData.washTempPreference,
+        dry_temp_preference_id: formData.dryTempPreference,
+        pickup_window_start: pickupStart.toISOString(),
+        pickup_window_end: pickupEnd.toISOString(),
+        delivery_window_start: isExpress ? pickupEnd.toISOString() : deliveryStart.toISOString(),
+        delivery_window_end: isExpress ? new Date(pickupEnd.getTime() + 2 * 60 * 60 * 1000).toISOString() : deliveryEnd.toISOString()
       };
 
       // Create payment session
@@ -589,8 +648,8 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                     <SelectValue placeholder="Select wash type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="wash_fold">Wash & Fold</SelectItem>
-                    <SelectItem value="wash_hang_dry">Wash & Hang Dry</SelectItem>
+                    <SelectItem value="wash_fold">Wash and Fold</SelectItem>
+                    <SelectItem value="delicates_airdry">Delicates / Air Dry</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -653,21 +712,114 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                 </Select>
               </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="time-window">Pickup Time Window</Label>
-                  <Select value={formData.timeWindow} onValueChange={(value) => handleInputChange('timeWindow', value)} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select pickup time window" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="morning">Morning (6AM - 8AM)</SelectItem>
-                      <SelectItem value="lunch">Lunch (12PM - 2PM)</SelectItem>
-                      <SelectItem value="evening">Evening (5PM - 7PM)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Drop-off will be in the same time window 24 hours later
-                  </p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pickup-date">Pickup Date</Label>
+                    <Input
+                      id="pickup-date"
+                      type="date"
+                      value={formData.pickupDate}
+                      onChange={(e) => handleInputChange('pickupDate', e.target.value)}
+                      min={new Date(Date.now() + 60 * 60 * 1000).toISOString().split('T')[0]} // At least 1 hour from now
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="time-window">Pickup Time Window</Label>
+                    <Select value={formData.timeWindow} onValueChange={(value) => handleInputChange('timeWindow', value)} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select pickup time window" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="morning">Morning (6AM - 8AM)</SelectItem>
+                        <SelectItem value="lunch">Lunch (12PM - 2PM)</SelectItem>
+                        <SelectItem value="evening">Evening (5PM - 7PM)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Drop-off will be in the same time window the following day
+                    </p>
+                  </div>
+
+                  {/* Laundry Preferences */}
+                  <div className="space-y-4 border-t pt-6">
+                    <h4 className="font-semibold text-lg">Laundry Preferences</h4>
+                    
+                    <div className="space-y-4">
+                      {/* Soap Selection */}
+                      <div className="space-y-2">
+                        <Label htmlFor="soap-preference">Soap Type</Label>
+                        <Select value={formData.soapPreference} onValueChange={(value) => handleInputChange('soapPreference', value)} required>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select soap type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {laundryPreferences
+                              .filter(p => p.category === 'soap')
+                              .map(preference => (
+                                <SelectItem key={preference.id} value={preference.id}>
+                                  {preference.name} {preference.price_cents > 0 && `(+$${(preference.price_cents / 100).toFixed(2)})`}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        {laundryPreferences.find(p => p.id === formData.soapPreference)?.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {laundryPreferences.find(p => p.id === formData.soapPreference)?.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Wash Temperature */}
+                      <div className="space-y-2">
+                        <Label htmlFor="wash-temp">Wash Temperature</Label>
+                        <Select value={formData.washTempPreference} onValueChange={(value) => handleInputChange('washTempPreference', value)} required>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select wash temperature" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {laundryPreferences
+                              .filter(p => p.category === 'wash_temp')
+                              .map(preference => (
+                                <SelectItem key={preference.id} value={preference.id}>
+                                  {preference.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        {laundryPreferences.find(p => p.id === formData.washTempPreference)?.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {laundryPreferences.find(p => p.id === formData.washTempPreference)?.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Dry Temperature */}
+                      <div className="space-y-2">
+                        <Label htmlFor="dry-temp">Dry Temperature</Label>
+                        <Select value={formData.dryTempPreference} onValueChange={(value) => handleInputChange('dryTempPreference', value)} required>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select dry temperature" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {laundryPreferences
+                              .filter(p => p.category === 'dry_temp')
+                              .map(preference => (
+                                <SelectItem key={preference.id} value={preference.id}>
+                                  {preference.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        {laundryPreferences.find(p => p.id === formData.dryTempPreference)?.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {laundryPreferences.find(p => p.id === formData.dryTempPreference)?.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Detergent & Add-on Services */}
@@ -834,7 +986,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
             variant="hero"
             size="xl"
             className="w-full"
-            disabled={isLoading || !validateServiceArea().valid || !serviceType || !formData.timeWindow || (orderType === 'pickup_delivery' && !formData.pickupAddress)}
+            disabled={isLoading || !validateServiceArea().valid || !serviceType || !formData.timeWindow || !formData.pickupDate || !formData.soapPreference || !formData.washTempPreference || !formData.dryTempPreference || (orderType === 'pickup_delivery' && !formData.pickupAddress)}
             >
               {isLoading ? "Processing Payment..." : `Pay Now - $${(calculateTotal() / 100).toFixed(2)}`}
             </Button>

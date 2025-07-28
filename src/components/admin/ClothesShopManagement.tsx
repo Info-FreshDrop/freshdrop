@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { LaundryPreferencesManagement } from "./LaundryPreferencesManagement";
 import { 
   Package, 
   Plus, 
@@ -21,7 +22,8 @@ import {
   Eye,
   EyeOff,
   Percent,
-  Calculator
+  Calculator,
+  Settings
 } from "lucide-react";
 
 interface ClothesShopManagementProps {
@@ -44,6 +46,7 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
   const [items, setItems] = useState<ClothesItem[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showBulkPricing, setShowBulkPricing] = useState(false);
+  const [showPreferencesManagement, setShowPreferencesManagement] = useState(false);
   const [editingItem, setEditingItem] = useState<ClothesItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [bulkPricingData, setBulkPricingData] = useState({
@@ -291,6 +294,15 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
 
   const categories = Array.from(new Set(items.map(item => item.category)));
 
+  // Show preferences management if selected
+  if (showPreferencesManagement) {
+    return (
+      <LaundryPreferencesManagement 
+        onBack={() => setShowPreferencesManagement(false)} 
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-wave">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -333,6 +345,15 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
             >
               <Calculator className="h-4 w-4" />
               Bulk Pricing
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setShowPreferencesManagement(true)}
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Laundry Preferences
             </Button>
           </div>
         </div>

@@ -50,6 +50,42 @@ export type Database = {
         }
         Relationships: []
       }
+      laundry_preferences: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          price_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          price_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lockers: {
         Row: {
           address: string
@@ -278,6 +314,7 @@ export type Database = {
           delivery_window_end: string | null
           delivery_window_start: string | null
           discount_amount_cents: number | null
+          dry_temp_preference_id: string | null
           id: string
           is_express: boolean | null
           items: Json | null
@@ -290,6 +327,7 @@ export type Database = {
           pickup_window_start: string | null
           promo_code: string | null
           service_type: Database["public"]["Enums"]["service_type"]
+          soap_preference_id: string | null
           special_instructions: string | null
           status: Database["public"]["Enums"]["order_status"] | null
           step_completed_at: Json | null
@@ -297,6 +335,7 @@ export type Database = {
           stripe_session_id: string | null
           total_amount_cents: number
           updated_at: string
+          wash_temp_preference_id: string | null
           washer_id: string | null
           zip_code: string
         }
@@ -313,6 +352,7 @@ export type Database = {
           delivery_window_end?: string | null
           delivery_window_start?: string | null
           discount_amount_cents?: number | null
+          dry_temp_preference_id?: string | null
           id?: string
           is_express?: boolean | null
           items?: Json | null
@@ -325,6 +365,7 @@ export type Database = {
           pickup_window_start?: string | null
           promo_code?: string | null
           service_type: Database["public"]["Enums"]["service_type"]
+          soap_preference_id?: string | null
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           step_completed_at?: Json | null
@@ -332,6 +373,7 @@ export type Database = {
           stripe_session_id?: string | null
           total_amount_cents: number
           updated_at?: string
+          wash_temp_preference_id?: string | null
           washer_id?: string | null
           zip_code: string
         }
@@ -348,6 +390,7 @@ export type Database = {
           delivery_window_end?: string | null
           delivery_window_start?: string | null
           discount_amount_cents?: number | null
+          dry_temp_preference_id?: string | null
           id?: string
           is_express?: boolean | null
           items?: Json | null
@@ -360,6 +403,7 @@ export type Database = {
           pickup_window_start?: string | null
           promo_code?: string | null
           service_type?: Database["public"]["Enums"]["service_type"]
+          soap_preference_id?: string | null
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           step_completed_at?: Json | null
@@ -367,6 +411,7 @@ export type Database = {
           stripe_session_id?: string | null
           total_amount_cents?: number
           updated_at?: string
+          wash_temp_preference_id?: string | null
           washer_id?: string | null
           zip_code?: string
         }
@@ -379,10 +424,31 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
           {
+            foreignKeyName: "orders_dry_temp_preference_id_fkey"
+            columns: ["dry_temp_preference_id"]
+            isOneToOne: false
+            referencedRelation: "laundry_preferences"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "orders_locker_id_fkey"
             columns: ["locker_id"]
             isOneToOne: false
             referencedRelation: "lockers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_soap_preference_id_fkey"
+            columns: ["soap_preference_id"]
+            isOneToOne: false
+            referencedRelation: "laundry_preferences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_wash_temp_preference_id_fkey"
+            columns: ["wash_temp_preference_id"]
+            isOneToOne: false
+            referencedRelation: "laundry_preferences"
             referencedColumns: ["id"]
           },
           {
