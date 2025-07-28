@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Droplets, Clock, Shield, Smartphone } from "lucide-react";
+import freshDropLogo from "@/assets/freshdrop-logo.png";
 
 export function HeroSection() {
   return (
@@ -24,16 +25,12 @@ export function HeroSection() {
 
       <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
         {/* Logo section */}
-        <div className="mb-8 flex items-center justify-center gap-4">
-          <div className="relative">
-            <Droplets className="h-16 w-16 text-primary-lighter" />
-            <div className="absolute inset-0 animate-ripple bg-primary-lighter rounded-full opacity-30"></div>
-          </div>
-          <div>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-2">
-              FreshDrop
-            </h1>
-          </div>
+        <div className="mb-8 flex items-center justify-center">
+          <img 
+            src={freshDropLogo} 
+            alt="FreshDrop Logo" 
+            className="h-24 md:h-32 w-auto"
+          />
         </div>
 
         <h2 className="text-2xl md:text-4xl font-semibold text-white/90 mb-6">
