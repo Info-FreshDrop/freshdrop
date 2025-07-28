@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -75,6 +76,7 @@ export function OperatorDashboard() {
   const [operatorProfile, setOperatorProfile] = useState<OperatorProfile | null>(null);
   const [washerData, setWasherData] = useState<WasherData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmOrder, setConfirmOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -174,9 +176,18 @@ export function OperatorDashboard() {
   };
 
   const claimOrder = async (orderId: string) => {
-    if (!washerData) return;
+    if (!washerData) {
+      toast({
+        title: "Error",
+        description: "Unable to find your operator profile. Please try logging in again.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
+      console.log('Claiming order:', orderId, 'with washer:', washerData.id);
+      
       const { error } = await supabase
         .from('orders')
         .update({
@@ -184,21 +195,26 @@ export function OperatorDashboard() {
           status: 'claimed',
           claimed_at: new Date().toISOString()
         })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .eq('status', 'unclaimed'); // Only claim if still unclaimed
 
-      if (error) throw error;
+      if (error) {
+        console.error('Claim order error:', error);
+        throw error;
+      }
 
       toast({
         title: "Order Claimed!",
         description: "You've successfully claimed this order. Customer has been notified.",
       });
 
+      setConfirmOrder(null); // Close confirmation dialog
       loadDashboardData(); // Refresh data
     } catch (error) {
       console.error('Error claiming order:', error);
       toast({
         title: "Error",
-        description: "Failed to claim order. Please try again.",
+        description: "Failed to claim order. It may have been claimed by another operator.",
         variant: "destructive"
       });
     }
@@ -401,7 +417,7 @@ export function OperatorDashboard() {
 
                     <div className="flex gap-2">
                       <Button 
-                        onClick={() => claimOrder(order.id)}
+                        onClick={() => setConfirmOrder(order)}
                         className="flex-1"
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
@@ -628,6 +644,86 @@ export function OperatorDashboard() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Order Confirmation Dialog */}
+        <Dialog open={!!confirmOrder} onOpenChange={() => setConfirmOrder(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Confirm Order Claim</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to claim this order? Once claimed, you'll be responsible for pickup and delivery.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {confirmOrder && (
+              <div className="space-y-4 py-4">
+                <div>
+                  <h4 className="font-semibold">Customer Details</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {confirmOrder.profiles?.first_name} {confirmOrder.profiles?.last_name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    📞 {confirmOrder.profiles?.phone}
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold">Service Details</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {confirmOrder.pickup_type} • {confirmOrder.service_type}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {confirmOrder.bag_count} bag(s) • ${(confirmOrder.total_amount_cents / 100).toFixed(2)}
+                  </p>
+                </div>
+                
+                {confirmOrder.pickup_address && (
+                  <div>
+                    <h4 className="font-semibold">Pickup Address</h4>
+                    <p className="text-sm text-muted-foreground">
+                      📍 {confirmOrder.pickup_address}
+                    </p>
+                  </div>
+                )}
+                
+                {confirmOrder.delivery_address && (
+                  <div>
+                    <h4 className="font-semibold">Delivery Address</h4>
+                    <p className="text-sm text-muted-foreground">
+                      📍 {confirmOrder.delivery_address}
+                    </p>
+                  </div>
+                )}
+                
+                {confirmOrder.special_instructions && (
+                  <div>
+                    <h4 className="font-semibold">Special Instructions</h4>
+                    <p className="text-sm text-muted-foreground bg-muted p-2 rounded">
+                      {confirmOrder.special_instructions}
+                    </p>
+                  </div>
+                )}
+                
+                <div>
+                  <h4 className="font-semibold">Pickup Window</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {formatTimeWindow(confirmOrder.pickup_window_start, confirmOrder.pickup_window_end)}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setConfirmOrder(null)}>
+                Cancel
+              </Button>
+              <Button onClick={() => confirmOrder && claimOrder(confirmOrder.id)}>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Claim Order
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
