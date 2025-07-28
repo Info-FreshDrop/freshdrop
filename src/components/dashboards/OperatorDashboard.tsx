@@ -133,12 +133,12 @@ export function OperatorDashboard() {
         
         console.log('Orders without profiles join:', { ordersWithoutProfiles, ordersWithoutProfilesError });
         
-        // Finally, try with profiles
+        // Finally, try with profiles using the correct foreign key
         const { data: available, error: availableError } = await supabase
           .from('orders')
           .select(`
             *,
-            profiles!inner(first_name, last_name, phone)
+            profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone)
           `)
           .eq('status', 'unclaimed')
           .in('zip_code', washer.zip_codes)
@@ -155,7 +155,7 @@ export function OperatorDashboard() {
           .from('orders')
           .select(`
             *,
-            profiles!inner(first_name, last_name, phone)
+            profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone)
           `)
           .eq('washer_id', washer.id)
           .in('status', ['claimed', 'in_progress'])

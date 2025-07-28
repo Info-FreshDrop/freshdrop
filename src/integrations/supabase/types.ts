@@ -363,6 +363,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "orders_customer_id_profiles_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "orders_locker_id_fkey"
             columns: ["locker_id"]
             isOneToOne: false
