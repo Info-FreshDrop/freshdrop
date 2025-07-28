@@ -174,8 +174,10 @@ export function OrderHistory({ onBack }: OrderHistoryProps) {
           </Card>
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => (
-              <Card key={order.id}>
+            {orders.map((order) => {
+              console.log('Order step_photos:', order.step_photos); // Debug log
+              return (
+              <Card key={order.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
@@ -337,7 +339,8 @@ export function OrderHistory({ onBack }: OrderHistoryProps) {
                   )}
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
 

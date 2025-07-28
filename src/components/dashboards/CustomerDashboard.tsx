@@ -335,6 +335,7 @@ export function CustomerDashboard() {
               }}
               order={selectedOrder}
               operatorName="Your Operator"
+              onRatingSubmitted={loadOrders} // Refresh orders after rating
             />
           </>
         )}
