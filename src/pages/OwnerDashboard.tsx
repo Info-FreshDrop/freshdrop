@@ -16,7 +16,8 @@ import {
   Plus,
   Trash2,
   Edit,
-  Save
+  Save,
+  ArrowLeft
 } from "lucide-react";
 
 export default function OwnerDashboard() {
@@ -33,7 +34,7 @@ export default function OwnerDashboard() {
     locker_count: 1
   });
 
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -128,6 +129,15 @@ export default function OwnerDashboard() {
     <div className="min-h-screen bg-gradient-wave">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={signOut}
+            className="p-0 h-auto text-muted-foreground hover:text-foreground mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Exit Dashboard
+          </Button>
+          
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Owner Dashboard
           </h1>
