@@ -62,6 +62,14 @@ interface OperatorApplication {
   motivation: string;
   status: string;
   created_at: string;
+  washer_photo_url?: string;
+  washer_inside_photo_url?: string;
+  dryer_photo_url?: string;
+  dryer_inside_photo_url?: string;
+  towel_photo_url?: string;
+  tshirt_photo_url?: string;
+  laundry_stack_photo_url?: string;
+  laundry_area_photo_url?: string;
 }
 
 export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }) => {
@@ -479,7 +487,103 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
                         <div className="mt-2">
                           <p className="text-sm"><strong>Motivation:</strong> {application.motivation}</p>
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        
+                        {/* Application Photos */}
+                        <div className="mt-4 border-t pt-4">
+                          <h5 className="text-sm font-medium mb-3">Application Photos:</h5>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {application.washer_photo_url && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Washer (Front)</p>
+                                <img 
+                                  src={application.washer_photo_url} 
+                                  alt="Washer front" 
+                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                  onClick={() => window.open(application.washer_photo_url, '_blank')}
+                                />
+                              </div>
+                            )}
+                            {application.washer_inside_photo_url && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Washer (Inside)</p>
+                                <img 
+                                  src={application.washer_inside_photo_url} 
+                                  alt="Washer inside" 
+                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                  onClick={() => window.open(application.washer_inside_photo_url, '_blank')}
+                                />
+                              </div>
+                            )}
+                            {application.dryer_photo_url && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Dryer (Front)</p>
+                                <img 
+                                  src={application.dryer_photo_url} 
+                                  alt="Dryer front" 
+                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                  onClick={() => window.open(application.dryer_photo_url, '_blank')}
+                                />
+                              </div>
+                            )}
+                            {application.dryer_inside_photo_url && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Dryer (Inside)</p>
+                                <img 
+                                  src={application.dryer_inside_photo_url} 
+                                  alt="Dryer inside" 
+                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                  onClick={() => window.open(application.dryer_inside_photo_url, '_blank')}
+                                />
+                              </div>
+                            )}
+                            {application.towel_photo_url && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Folded Towel</p>
+                                <img 
+                                  src={application.towel_photo_url} 
+                                  alt="Folded towel" 
+                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                  onClick={() => window.open(application.towel_photo_url, '_blank')}
+                                />
+                              </div>
+                            )}
+                            {application.tshirt_photo_url && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Folded T-Shirt</p>
+                                <img 
+                                  src={application.tshirt_photo_url} 
+                                  alt="Folded t-shirt" 
+                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                  onClick={() => window.open(application.tshirt_photo_url, '_blank')}
+                                />
+                              </div>
+                            )}
+                            {application.laundry_stack_photo_url && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Laundry Stack</p>
+                                <img 
+                                  src={application.laundry_stack_photo_url} 
+                                  alt="Laundry stack" 
+                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                  onClick={() => window.open(application.laundry_stack_photo_url, '_blank')}
+                                />
+                              </div>
+                            )}
+                            {application.laundry_area_photo_url && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Laundry Area</p>
+                                <img 
+                                  src={application.laundry_area_photo_url} 
+                                  alt="Laundry area" 
+                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                  onClick={() => window.open(application.laundry_area_photo_url, '_blank')}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <p className="text-xs text-muted-foreground mt-4">
                           Applied: {new Date(application.created_at).toLocaleDateString()}
                         </p>
                       </div>

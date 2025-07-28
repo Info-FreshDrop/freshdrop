@@ -155,6 +155,32 @@ export function FreshDropWasherApplication() {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
+  const uploadPhoto = async (file: File, fileName: string): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const uniqueFileName = `${fileName}_${Date.now()}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('application-photos')
+        .upload(uniqueFileName, file);
+
+      if (error) {
+        console.error('Upload error:', error);
+        return null;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('application-photos')
+        .getPublicUrl(data.path);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      return null;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateCurrentStep()) {
       toast({
@@ -178,8 +204,19 @@ export function FreshDropWasherApplication() {
     setIsSubmitting(true);
 
     try {
-      // Here you would typically upload photos to storage and save form data
-      // For now, we'll save the text data to the operator_applications table
+      // Upload all photos
+      const photoUrls = {
+        washer_photo_url: formData.washerPhoto ? await uploadPhoto(formData.washerPhoto, 'washer') : null,
+        washer_inside_photo_url: formData.washerInsidePhoto ? await uploadPhoto(formData.washerInsidePhoto, 'washer_inside') : null,
+        dryer_photo_url: formData.dryerPhoto ? await uploadPhoto(formData.dryerPhoto, 'dryer') : null,
+        dryer_inside_photo_url: formData.dryerInsidePhoto ? await uploadPhoto(formData.dryerInsidePhoto, 'dryer_inside') : null,
+        towel_photo_url: formData.towelPhoto ? await uploadPhoto(formData.towelPhoto, 'towel') : null,
+        tshirt_photo_url: formData.tshirtPhoto ? await uploadPhoto(formData.tshirtPhoto, 'tshirt') : null,
+        laundry_stack_photo_url: formData.laundryStackPhoto ? await uploadPhoto(formData.laundryStackPhoto, 'laundry_stack') : null,
+        laundry_area_photo_url: formData.laundryAreaPhoto ? await uploadPhoto(formData.laundryAreaPhoto, 'laundry_area') : null,
+      };
+
+      // Save application data including photo URLs
       const { error } = await supabase
         .from('operator_applications')
         .insert([
@@ -197,7 +234,8 @@ export function FreshDropWasherApplication() {
             availability: formData.weeklyAvailability,
             experience: `Supplies: ${formData.supplies.join(', ')}. Days: ${formData.availableDays.join(', ')}`,
             motivation: `Washer brand: ${formData.washerBrand}, Location: ${formData.washerLocation}`,
-            status: 'pending'
+            status: 'pending',
+            ...photoUrls
           }
         ]);
 

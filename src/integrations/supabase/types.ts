@@ -96,17 +96,25 @@ export type Database = {
           city: string
           created_at: string
           drivers_license: string
+          dryer_inside_photo_url: string | null
+          dryer_photo_url: string | null
           email: string
           experience: string | null
           first_name: string
           id: string
           last_name: string
+          laundry_area_photo_url: string | null
+          laundry_stack_photo_url: string | null
           motivation: string | null
           phone: string
           state: string
           status: string
+          towel_photo_url: string | null
+          tshirt_photo_url: string | null
           updated_at: string
           vehicle_type: string
+          washer_inside_photo_url: string | null
+          washer_photo_url: string | null
           zip_code: string
         }
         Insert: {
@@ -115,17 +123,25 @@ export type Database = {
           city: string
           created_at?: string
           drivers_license: string
+          dryer_inside_photo_url?: string | null
+          dryer_photo_url?: string | null
           email: string
           experience?: string | null
           first_name: string
           id?: string
           last_name: string
+          laundry_area_photo_url?: string | null
+          laundry_stack_photo_url?: string | null
           motivation?: string | null
           phone: string
           state: string
           status?: string
+          towel_photo_url?: string | null
+          tshirt_photo_url?: string | null
           updated_at?: string
           vehicle_type: string
+          washer_inside_photo_url?: string | null
+          washer_photo_url?: string | null
           zip_code: string
         }
         Update: {
@@ -134,17 +150,25 @@ export type Database = {
           city?: string
           created_at?: string
           drivers_license?: string
+          dryer_inside_photo_url?: string | null
+          dryer_photo_url?: string | null
           email?: string
           experience?: string | null
           first_name?: string
           id?: string
           last_name?: string
+          laundry_area_photo_url?: string | null
+          laundry_stack_photo_url?: string | null
           motivation?: string | null
           phone?: string
           state?: string
           status?: string
+          towel_photo_url?: string | null
+          tshirt_photo_url?: string | null
           updated_at?: string
           vehicle_type?: string
+          washer_inside_photo_url?: string | null
+          washer_photo_url?: string | null
           zip_code?: string
         }
         Relationships: []
