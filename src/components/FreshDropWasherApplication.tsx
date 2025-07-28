@@ -294,7 +294,7 @@ export function FreshDropWasherApplication() {
   }) => (
     <div className="space-y-2">
       <Label className="text-sm font-medium">{label} {required && "*"}</Label>
-      <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
+      <div className="border-2 border-dashed border-border rounded-lg p-4 text-center relative">
         {file ? (
           <div className="flex items-center justify-center space-x-2 text-primary">
             <CheckCircle className="h-5 w-5" />
