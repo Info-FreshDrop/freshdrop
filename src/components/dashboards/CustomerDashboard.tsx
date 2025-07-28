@@ -12,6 +12,7 @@ import { ReferralInterface } from "@/components/customer/ReferralInterface";
 import { TipModal } from "@/components/customer/TipModal";
 import { RatingModal } from "@/components/customer/RatingModal";
 import { OrderPlacement } from "@/components/orders/OrderPlacement";
+import { OrderHistory } from "@/components/orders/OrderHistory";
 import { 
   Package, 
   User, 
@@ -37,6 +38,7 @@ export function CustomerDashboard() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showOrderPlacement, setShowOrderPlacement] = useState(false);
+  const [showOrderHistory, setShowOrderHistory] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -73,6 +75,11 @@ export function CustomerDashboard() {
   // Show OrderPlacement component if requested
   if (showOrderPlacement) {
     return <OrderPlacement onBack={() => setShowOrderPlacement(false)} />;
+  }
+
+  // Show OrderHistory component if requested
+  if (showOrderHistory) {
+    return <OrderHistory onBack={() => setShowOrderHistory(false)} />;
   }
 
   return (
@@ -282,7 +289,11 @@ export function CustomerDashboard() {
                   </Card>
                 ))}
                 {orderHistory.length > 3 && (
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setShowOrderHistory(true)}
+                  >
                     View All Order History ({orderHistory.length} orders)
                   </Button>
                 )}

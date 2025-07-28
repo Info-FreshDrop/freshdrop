@@ -73,19 +73,44 @@ export function RatingModal({ isOpen, onClose, order, operatorName, onRatingSubm
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      // Check if rating already exists
+      const { data: existingRating } = await supabase
         .from('order_ratings')
-        .insert({
-          order_id: order.id,
-          customer_id: user?.id,
-          cleanliness_rating: ratings.cleanliness_rating || null,
-          folding_quality_rating: ratings.folding_quality_rating || null,
-          communication_rating: ratings.communication_rating || null,
-          overall_rating: overallRating,
-          feedback: feedback || null
-        });
+        .select('id')
+        .eq('order_id', order.id)
+        .eq('customer_id', user?.id)
+        .single();
 
-      if (error) throw error;
+      if (existingRating) {
+        // Update existing rating
+        const { error } = await supabase
+          .from('order_ratings')
+          .update({
+            cleanliness_rating: ratings.cleanliness_rating || null,
+            folding_quality_rating: ratings.folding_quality_rating || null,
+            communication_rating: ratings.communication_rating || null,
+            overall_rating: overallRating,
+            feedback: feedback || null
+          })
+          .eq('id', existingRating.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new rating
+        const { error } = await supabase
+          .from('order_ratings')
+          .insert({
+            order_id: order.id,
+            customer_id: user?.id,
+            cleanliness_rating: ratings.cleanliness_rating || null,
+            folding_quality_rating: ratings.folding_quality_rating || null,
+            communication_rating: ratings.communication_rating || null,
+            overall_rating: overallRating,
+            feedback: feedback || null
+          });
+
+        if (error) throw error;
+      }
 
       toast.success('Thank you for your feedback!');
       onRatingSubmitted?.();
