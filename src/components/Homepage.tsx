@@ -52,17 +52,15 @@ export function Homepage() {
       <div className="relative">
         <HeroSection />
         
-        {/* Login form positioned to not cover hero content */}
-        <div className="absolute top-0 right-0 w-full h-full pointer-events-none">
-          <div className="absolute top-8 right-8 z-20 pointer-events-auto">
-            <Card className="bg-background/95 backdrop-blur-md border-0 shadow-glow p-6 w-80 max-w-[calc(100vw-4rem)]">
-              {showOperatorLogin ? (
-                <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
-              ) : (
-                <AuthForms onOperatorLogin={() => setShowOperatorLogin(true)} />
-              )}
-            </Card>
-          </div>
+        {/* Login form positioned in top-right corner without covering content */}
+        <div className="absolute top-6 right-6 z-20">
+          <Card className="bg-background/95 backdrop-blur-md border-0 shadow-glow p-4 w-72">
+            {showOperatorLogin ? (
+              <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
+            ) : (
+              <AuthForms onOperatorLogin={() => setShowOperatorLogin(true)} />
+            )}
+          </Card>
         </div>
       </div>
 
