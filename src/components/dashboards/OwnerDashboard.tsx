@@ -8,6 +8,7 @@ import { ServiceAreasManagement } from "@/components/admin/ServiceAreasManagemen
 import { ClothesShopManagement } from "@/components/admin/ClothesShopManagement";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { PromoCodeManagement } from "@/components/admin/PromoCodeManagement";
+import { AllOperatorsView } from "@/components/admin/AllOperatorsView";
 import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -24,7 +25,7 @@ import {
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -199,10 +200,13 @@ export function OwnerDashboard() {
     return <AnalyticsDashboard onBack={() => setCurrentView('dashboard')} />;
   }
 
+  if (currentView === 'all-operators') {
+    return <AllOperatorsView onBack={() => setCurrentView('dashboard')} />;
+  }
+
   if (currentView === 'promo-codes') {
     return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} />;
   }
-
   if (currentView === 'live-orders') {
     return (
       <div className="min-h-screen bg-gradient-wave">
@@ -422,7 +426,11 @@ export function OwnerDashboard() {
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Manage Operators
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('all-operators')}
+                >
                   View All Operators
                 </Button>
               </div>
