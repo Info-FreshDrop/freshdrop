@@ -126,16 +126,41 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     }
   };
 
-  const requestHumanSupport = () => {
-    const handoffMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'system',
-      content: 'A human agent will be with you shortly. In the meantime, you can also reach us at support@freshdrop.com or call (555) 123-4567.',
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, handoffMessage]);
-    setShowHumanHandoff(false);
-    toast.success('Human support requested. We\'ll be with you shortly!');
+  const requestHumanSupport = async () => {
+    try {
+      // Create a support ticket with chat history
+      const chatTranscript = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp.toISOString()
+      }));
+
+      const { error } = await supabase
+        .from('support_tickets')
+        .insert({
+          customer_id: user?.id,
+          subject: 'Live Chat Support Request',
+          description: 'Customer requested human support from AI chat',
+          chat_transcript: chatTranscript,
+          priority: 'medium'
+        });
+
+      if (error) throw error;
+
+      const handoffMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'system',
+        content: 'Support ticket created! A human agent will be with you shortly. You can also reach us at support@freshdrop.com or call (555) 123-4567.',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, handoffMessage]);
+      setShowHumanHandoff(false);
+      toast.success('Human support requested. We\'ll be with you shortly!');
+    } catch (error) {
+      console.error('Error creating support ticket:', error);
+      toast.error('Failed to create support ticket. Please contact us directly.');
+    }
   };
 
   if (!isOpen) return null;

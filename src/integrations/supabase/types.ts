@@ -426,6 +426,48 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          assigned_agent_id: string | null
+          chat_transcript: Json | null
+          created_at: string
+          customer_id: string | null
+          description: string | null
+          id: string
+          priority: string
+          resolved_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_agent_id?: string | null
+          chat_transcript?: Json | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_agent_id?: string | null
+          chat_transcript?: Json | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
