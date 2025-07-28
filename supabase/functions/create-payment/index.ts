@@ -110,6 +110,29 @@ serve(async (req) => {
       }
     }
 
+    // Check for unused referral rewards and apply if this is first order
+    const { data: existingOrders } = await supabaseService
+      .from('orders')
+      .select('id')
+      .eq('customer_id', user.id)
+      .limit(1);
+
+    if (!existingOrders || existingOrders.length === 0) {
+      // This is the user's first order, check for referral rewards
+      const { data: referralReward } = await supabaseService
+        .from('referral_uses')
+        .select('reward_given_cents')
+        .eq('referred_user_id', user.id)
+        .single();
+
+      if (referralReward && referralReward.reward_given_cents > 0) {
+        const referralDiscount = referralReward.reward_given_cents;
+        discountAmount += referralDiscount;
+        totalAmount = Math.max(0, totalAmount - referralDiscount);
+        console.log("Applied referral discount:", referralDiscount, "New total:", totalAmount);
+      }
+    }
+
     console.log("Bypassing Stripe payment - creating order directly");
 
     const { data: order, error: orderError } = await supabaseService.from("orders").insert({

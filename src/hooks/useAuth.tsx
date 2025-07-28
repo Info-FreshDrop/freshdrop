@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, metadata = {}) => {
+  const signUp = async (email: string, password: string, metadata: any = {}) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -102,8 +102,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: metadata
       }
     });
-    
+
+    // If signup is successful and there's a referral code, handle it
+    if (!error && metadata?.referral_code) {
+      setTimeout(async () => {
+        await handleReferralCode(metadata.referral_code);
+      }, 2000); // Delay to ensure user creation is complete
+    }
+
     return { error };
+  };
+
+  const handleReferralCode = async (referralCode: string) => {
+    try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Find the referral code
+      const { data: refCode, error: refError } = await supabase
+        .from('referral_codes')
+        .select('*')
+        .eq('code', referralCode.toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (refError || !refCode) {
+        console.error('Referral code not found:', referralCode);
+        return;
+      }
+
+      // Check if the referrer is different from the new user
+      if (refCode.user_id === user.id) {
+        console.error('Cannot use your own referral code');
+        return;
+      }
+
+      // Check if this user already used a referral code
+      const { data: existingUse } = await supabase
+        .from('referral_uses')
+        .select('id')
+        .eq('referred_user_id', user.id)
+        .single();
+
+      if (existingUse) {
+        console.error('User already used a referral code');
+        return;
+      }
+
+      // Create referral use record
+      await supabase.from('referral_uses').insert({
+        referral_code_id: refCode.id,
+        referrer_user_id: refCode.user_id,
+        referred_user_id: user.id,
+        reward_given_cents: refCode.reward_amount_cents
+      });
+
+      // Update referral code usage count
+      await supabase
+        .from('referral_codes')
+        .update({ 
+          usage_count: refCode.usage_count + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', refCode.id);
+
+      console.log('Referral code processed successfully');
+    } catch (error) {
+      console.error('Error processing referral code:', error);
+    }
   };
 
   const signIn = async (email: string, password: string, rememberMe = false) => {

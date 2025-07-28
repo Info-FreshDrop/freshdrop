@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin, Gift } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthFormsProps {
   onOperatorLogin: () => void;
@@ -24,17 +25,65 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
     password: '',
     name: '',
     phone: '',
-    address: ''
+    address: '',
+    referralCode: ''
   });
+  const [referralCodeValid, setReferralCodeValid] = useState<boolean | null>(null);
+  const [referralCodeMessage, setReferralCodeMessage] = useState('');
   
   const { signUp, signIn, resetPassword } = useAuth();
   const { toast } = useToast();
 
+  // Check for referral code in URL on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      setFormData(prev => ({ ...prev, referralCode: refCode }));
+      validateReferralCode(refCode);
+    }
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
+
+    // Validate referral code as user types
+    if (name === 'referralCode') {
+      if (value.trim()) {
+        validateReferralCode(value.trim().toUpperCase());
+      } else {
+        setReferralCodeValid(null);
+        setReferralCodeMessage('');
+      }
+    }
+  };
+
+  const validateReferralCode = async (code: string) => {
+    if (!code.trim()) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('referral_codes')
+        .select('*')
+        .eq('code', code.toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        setReferralCodeValid(false);
+        setReferralCodeMessage('Invalid referral code');
+      } else {
+        setReferralCodeValid(true);
+        setReferralCodeMessage(`Valid! You'll both get $${(data.reward_amount_cents / 100).toFixed(2)} off`);
+      }
+    } catch (error) {
+      setReferralCodeValid(false);
+      setReferralCodeMessage('Error validating referral code');
+    }
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -108,7 +157,8 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
         first_name: formData.name.split(' ')[0],
         last_name: formData.name.split(' ').slice(1).join(' '),
         phone: formData.phone,
-        address: formData.address
+        address: formData.address,
+        referral_code: formData.referralCode.trim().toUpperCase() || null
       });
       
       if (error) {
@@ -120,7 +170,9 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
       } else {
         toast({
           title: "Account Created!",
-          description: "Please check your email to verify your account.",
+          description: formData.referralCode 
+            ? "Please check your email to verify your account. Your referral reward will be applied to your first order!"
+            : "Please check your email to verify your account.",
         });
       }
     } catch (error) {
@@ -308,6 +360,28 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
                       required
                     />
                   </div>
+                </div>
+                
+                {/* Referral Code Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+                  <div className="relative">
+                    <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="referralCode"
+                      name="referralCode"
+                      type="text"
+                      value={formData.referralCode}
+                      onChange={handleInputChange}
+                      placeholder="Enter referral code"
+                      className="pl-10 uppercase"
+                    />
+                  </div>
+                  {referralCodeMessage && (
+                    <p className={`text-xs ${referralCodeValid ? 'text-green-600' : 'text-red-600'}`}>
+                      {referralCodeMessage}
+                    </p>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
