@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import { Clock, MapPin, Home, Zap, Leaf, Package, HelpCircle } from "lucide-react";
 
 export function FAQSection() {
@@ -85,6 +86,28 @@ export function FAQSection() {
               </AccordionItem>
             ))}
           </Accordion>
+        </div>
+
+        {/* Become an Operator Section */}
+        <div className="mt-12">
+          <div className="p-6 bg-gradient-primary rounded-xl border text-center">
+            <h3 className="text-xl font-bold mb-3 text-primary-foreground">Want to Become an Operator?</h3>
+            <p className="text-primary-foreground/90 mb-4">
+              Be your own boss! Join our network of independent operators and start earning money doing laundry pickups and deliveries.
+            </p>
+            <Button 
+              variant="secondary" 
+              size="lg"
+              onClick={() => {
+                const operatorForm = document.querySelector('#operator-application');
+                if (operatorForm) {
+                  operatorForm.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
+              Apply Now
+            </Button>
+          </div>
         </div>
 
         <div className="mt-12 text-center">

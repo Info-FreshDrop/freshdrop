@@ -40,7 +40,12 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     zipCode: '',
     specialInstructions: '',
     bagCount: 1,
-    timeWindow: ''
+    timeWindow: '',
+    detergentType: 'standard',
+    fragranceFree: false,
+    shirtsOnHangers: false,
+    extraRinse: false,
+    promoCode: ''
   });
 
   const { user } = useAuth();
@@ -107,6 +112,24 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     
     if (isExpress) {
       total += 2000; // $20 express fee
+    }
+    
+    // Add-on services
+    if (formData.fragranceFree) {
+      total += 300; // $3 fragrance-free detergent
+    }
+    
+    if (formData.shirtsOnHangers) {
+      total += 800; // $8 shirts on hangers
+    }
+    
+    if (formData.extraRinse) {
+      total += 200; // $2 extra rinse
+    }
+    
+    // Apply promo code discount
+    if (formData.promoCode === 'TEST') {
+      total = 0; // 100% off for testing
     }
     
     return total;
@@ -399,19 +422,101 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="time-window">Pickup Time Window</Label>
-                <Select value={formData.timeWindow} onValueChange={(value) => handleInputChange('timeWindow', value)} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select pickup time window" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="morning">Morning (6AM - 8AM)</SelectItem>
-                    <SelectItem value="lunch">Lunch (12PM - 2PM)</SelectItem>
-                    <SelectItem value="evening">Evening (5PM - 7PM)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="time-window">Pickup Time Window</Label>
+                  <Select value={formData.timeWindow} onValueChange={(value) => handleInputChange('timeWindow', value)} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select pickup time window" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="morning">Morning (6AM - 8AM)</SelectItem>
+                      <SelectItem value="lunch">Lunch (12PM - 2PM)</SelectItem>
+                      <SelectItem value="evening">Evening (5PM - 7PM)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Drop-off will be in the same time window 24 hours later
+                  </p>
+                </div>
+
+                {/* Detergent & Add-on Services */}
+                <div className="space-y-4 border-t pt-6">
+                  <h4 className="font-semibold text-lg">Add-on Services</h4>
+                  
+                  <div className="space-y-4">
+                    {/* Fragrance-Free Detergent */}
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h5 className="font-medium">Fragrance-Free Detergent</h5>
+                        <p className="text-sm text-muted-foreground">Hypoallergenic and gentle for sensitive skin</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">+$3.00</p>
+                        <input
+                          type="checkbox"
+                          checked={formData.fragranceFree}
+                          onChange={(e) => handleInputChange('fragranceFree', e.target.checked)}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Shirts on Hangers */}
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h5 className="font-medium">Shirts on Hangers</h5>
+                        <p className="text-sm text-muted-foreground">Professional hanging service for dress shirts</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">+$8.00</p>
+                        <input
+                          type="checkbox"
+                          checked={formData.shirtsOnHangers}
+                          onChange={(e) => handleInputChange('shirtsOnHangers', e.target.checked)}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Extra Rinse */}
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h5 className="font-medium">Extra Rinse Cycle</h5>
+                        <p className="text-sm text-muted-foreground">Additional rinse for thorough cleaning</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">+$2.00</p>
+                        <input
+                          type="checkbox"
+                          checked={formData.extraRinse}
+                          onChange={(e) => handleInputChange('extraRinse', e.target.checked)}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Promo Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="promo-code">Promo Code (Optional)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="promo-code"
+                      placeholder="Enter promo code"
+                      value={formData.promoCode}
+                      onChange={(e) => handleInputChange('promoCode', e.target.value.toUpperCase())}
+                    />
+                    {formData.promoCode === 'TEST' && (
+                      <div className="flex items-center text-green-600 text-sm">
+                        ✓ 100% Off Applied!
+                      </div>
+                    )}
+                  </div>
+                  {formData.promoCode === 'TEST' && (
+                    <p className="text-xs text-green-600">Test promo code applied - this order is free!</p>
+                  )}
+                </div>
 
               <div className="space-y-2">
                 <Label htmlFor="instructions">Special Instructions (Optional)</Label>
@@ -445,6 +550,36 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                   <span>Number of Bags:</span>
                   <span>{formData.bagCount} × $35.00 = ${(formData.bagCount * 35).toFixed(2)}</span>
                 </div>
+                {isExpress && (
+                  <div className="flex justify-between">
+                    <span>Express Service:</span>
+                    <span>$20.00</span>
+                  </div>
+                )}
+                {formData.fragranceFree && (
+                  <div className="flex justify-between text-sm">
+                    <span>Fragrance-Free Detergent:</span>
+                    <span>$3.00</span>
+                  </div>
+                )}
+                {formData.shirtsOnHangers && (
+                  <div className="flex justify-between text-sm">
+                    <span>Shirts on Hangers:</span>
+                    <span>$8.00</span>
+                  </div>
+                )}
+                {formData.extraRinse && (
+                  <div className="flex justify-between text-sm">
+                    <span>Extra Rinse:</span>
+                    <span>$2.00</span>
+                  </div>
+                )}
+                {formData.promoCode === 'TEST' && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Promo Code (TEST):</span>
+                    <span>-100%</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Time Window:</span>
                   <span className="capitalize">
@@ -453,14 +588,8 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                     {formData.timeWindow === 'evening' && 'Evening (5PM - 7PM)'}
                   </span>
                 </div>
-                {isExpress && (
-                  <div className="flex justify-between text-amber-600">
-                    <span>Express Service:</span>
-                    <span>+$20.00</span>
-                  </div>
-                )}
                 <hr className="my-2" />
-                <div className="flex justify-between font-semibold">
+                <div className="flex justify-between font-bold text-lg">
                   <span>Total:</span>
                   <span>${(calculateTotal() / 100).toFixed(2)}</span>
                 </div>

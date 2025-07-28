@@ -5,6 +5,7 @@ import { OperatorLogin } from "./OperatorLogin";
 import { ServicesSection } from "./ServicesSection";
 import { HowItWorksSection } from "./HowItWorksSection";
 import { FAQSection } from "./FAQSection";
+import { OperatorApplication } from "./OperatorApplication";
 import { CustomerDashboard } from "./dashboards/CustomerDashboard";
 import { OwnerDashboard } from "./dashboards/OwnerDashboard";
 import { OperatorDashboard } from "./dashboards/OperatorDashboard";
@@ -52,8 +53,12 @@ export function Homepage() {
       <HeroSection />
       
       {/* Login Section */}
-      <section className="py-16 bg-background">
+      <section id="auth-section" className="py-16 bg-background">
         <div className="max-w-md mx-auto px-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold mb-2">Sign in to Order</h2>
+            <p className="text-muted-foreground">Create an account or sign in to place your laundry order</p>
+          </div>
           <Card className="shadow-glow">
             {showOperatorLogin ? (
               <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
@@ -68,6 +73,7 @@ export function Homepage() {
       <ServicesSection />
       <HowItWorksSection />
       <FAQSection />
+      <OperatorApplication />
       
       {/* Footer */}
       <footer className="bg-primary text-primary-foreground py-12">

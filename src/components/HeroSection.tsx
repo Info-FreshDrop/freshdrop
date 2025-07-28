@@ -44,10 +44,30 @@ export function HeroSection() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-          <Button variant="hero" size="xl" className="min-w-64">
+          <Button 
+            variant="hero" 
+            size="xl" 
+            className="min-w-64"
+            onClick={() => {
+              const authSection = document.querySelector('#auth-section');
+              if (authSection) {
+                authSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+          >
             Schedule a Pickup
           </Button>
-          <Button variant="default" size="xl" className="min-w-64 bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button 
+            variant="default" 
+            size="xl" 
+            className="min-w-64 bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => {
+              const authSection = document.querySelector('#auth-section');
+              if (authSection) {
+                authSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+          >
             Find a Locker
           </Button>
         </div>

@@ -136,9 +136,22 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
 
   const generateInviteLink = async () => {
     try {
+      // Validation: ensure at least one zip code or locker is selected
+      if (inviteForm.selectedZipCodes.length === 0 && inviteForm.selectedLockers.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please select at least one service area or locker access",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const token = crypto.randomUUID();
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
+
+      // Create a placeholder user ID that will be replaced during signup
+      const placeholderUserId = crypto.randomUUID();
 
       const { error } = await supabase
         .from('washers')
@@ -149,7 +162,7 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
           locker_access: inviteForm.selectedLockers,
           approval_status: 'pending',
           is_active: false,
-          user_id: '00000000-0000-0000-0000-000000000000' // Placeholder until signup
+          user_id: placeholderUserId // Use proper UUID format
         }]);
 
       if (error) throw error;
@@ -165,7 +178,7 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
       console.error('Error generating invite link:', error);
       toast({
         title: "Error",
-        description: "Failed to generate invite link",
+        description: "Failed to generate invite link. Please try again.",
         variant: "destructive"
       });
     }
