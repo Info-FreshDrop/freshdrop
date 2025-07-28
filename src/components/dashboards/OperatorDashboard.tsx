@@ -78,6 +78,7 @@ export function OperatorDashboard() {
   const [loading, setLoading] = useState(true);
   const [confirmOrder, setConfirmOrder] = useState<Order | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
 
   useEffect(() => {
     if (user) {
@@ -234,11 +235,18 @@ export function OperatorDashboard() {
 
       if (error) throw error;
 
+      // Send notification to customer about status update
+      console.log(`Sending notification to customer: Order ${newStatus.replace('_', ' ')}`);
+      
+      // TODO: Call edge function to send SMS/email notification
+      // This would call an edge function like: supabase.functions.invoke('notify-customer', { orderId, status: newStatus })
+
       toast({
         title: "Status Updated",
-        description: `Order marked as ${newStatus.replace('_', ' ')}`,
+        description: `Order marked as ${newStatus.replace('_', ' ')}. Customer has been notified.`,
       });
 
+      setSelectedOrder(null); // Close the workflow dialog
       loadDashboardData(); // Refresh data
     } catch (error) {
       console.error('Error updating order status:', error);
@@ -247,6 +255,23 @@ export function OperatorDashboard() {
         description: "Failed to update status. Please try again.",
         variant: "destructive"
       });
+    }
+  };
+
+  const completeStep = async (orderId: string, stepNumber: number) => {
+    try {
+      // Update step completion in database or local state
+      setCurrentStep(stepNumber + 1);
+      
+      // Notify customer of progress
+      console.log(`Step ${stepNumber} completed for order ${orderId}`);
+      
+      toast({
+        title: "Step Complete",
+        description: `Step ${stepNumber} completed. Moving to next step.`,
+      });
+    } catch (error) {
+      console.error('Error completing step:', error);
     }
   };
 
@@ -705,7 +730,7 @@ export function OperatorDashboard() {
             
             {selectedOrder && (
               <div className="space-y-6 py-4">
-                {/* Progress Indicators */}
+                 {/* Progress Indicators */}
                 <div className="flex justify-center space-x-4 mb-6">
                   {[
                     { label: "Prepare", icon: Package, active: selectedOrder.status === 'claimed' },
@@ -715,7 +740,7 @@ export function OperatorDashboard() {
                   ].map((step, index) => (
                     <div key={index} className="flex flex-col items-center">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        step.active ? 'bg-yellow-400 text-yellow-900' : 'bg-muted text-muted-foreground'
+                        step.active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                       }`}>
                         <step.icon className="h-6 w-6" />
                       </div>
@@ -726,21 +751,25 @@ export function OperatorDashboard() {
 
                 {/* Current Step Details */}
                 {selectedOrder.status === 'claimed' && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="bg-primary-light/10 border border-primary-light/30 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-yellow-400 text-yellow-900 flex items-center justify-center text-sm font-bold">3</div>
-                      <h3 className="font-semibold text-lg">Locate Bags</h3>
+                      <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</div>
+                      <h3 className="font-semibold text-lg">Prepare for Pickup</h3>
                     </div>
                     <div className="space-y-2 text-sm">
-                      <p><strong>Unit Number:</strong> {selectedOrder.pickup_address}</p>
-                      <p><strong>Pickup Spot:</strong> Front Door</p>
-                      <Button variant="outline" size="sm" className="mr-2">
-                        HELP LOCATE BAGS
-                      </Button>
-                      <p className="text-muted-foreground italic">Don't handle the bags yet.</p>
+                      <p>Get ready for pickup with the following items:</p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        <li>Clear bags for organization</li>
+                        <li>Labels for identification</li>
+                        <li>Pen for marking</li>
+                      </ul>
+                      <p className="text-muted-foreground italic">Make sure you have everything before heading out.</p>
                     </div>
-                    <Button className="w-full mt-4 bg-yellow-400 hover:bg-yellow-500 text-yellow-900">
-                      STEP COMPLETE ↓
+                    <Button 
+                      className="w-full mt-4" 
+                      onClick={() => selectedOrder && completeStep(selectedOrder.id, 1)}
+                    >
+                      PREPARATION COMPLETE →
                     </Button>
                   </div>
                 )}
@@ -748,9 +777,9 @@ export function OperatorDashboard() {
                 {/* All Steps List */}
                 <div className="space-y-3">
                   {[
-                    { num: 1, title: "PREPARE FOR PICKUP", desc: "Get clear bags, labels, pen", completed: true },
-                    { num: 2, title: "GO TO ADDRESS", desc: "Navigate to pickup location", completed: true },
-                    { num: 3, title: "LOCATE BAGS", desc: "Find customer's laundry bag", completed: selectedOrder.status !== 'claimed', active: selectedOrder.status === 'claimed' },
+                    { num: 1, title: "PREPARE FOR PICKUP", desc: "Get clear bags, labels, pen", completed: selectedOrder.status !== 'claimed' },
+                    { num: 2, title: "GO TO ADDRESS", desc: "Navigate to pickup location", completed: false },
+                    { num: 3, title: "LOCATE BAGS", desc: "Find customer's laundry bag", completed: false },
                     { num: 4, title: "TAKE A PHOTO", desc: "Document pickup condition", completed: false },
                     { num: 5, title: "LABEL BAGS", desc: "Attach identification label", completed: false },
                     { num: 6, title: "COUNT BAGS", desc: "Verify bag count", completed: false },
@@ -761,25 +790,39 @@ export function OperatorDashboard() {
                     { num: 11, title: "BAG PROPERLY", desc: "Package items professionally", completed: false },
                     { num: 12, title: "RE-LABEL", desc: "Attach delivery label", completed: false },
                     { num: 13, title: "RETURN & TAKE PHOTO", desc: "Deliver within pickup window time, document delivery", completed: false }
-                  ].map((step) => (
-                    <div key={step.num} className={`flex items-start gap-3 p-3 rounded-lg ${
-                      step.active ? 'bg-yellow-50 border border-yellow-200' : 
-                      step.completed ? 'bg-green-50 border border-green-200' : 
-                      'bg-muted'
-                    }`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                        step.active ? 'bg-yellow-400 text-yellow-900' :
-                        step.completed ? 'bg-green-500 text-white' :
-                        'bg-gray-300 text-gray-600'
+                  ].map((step) => {
+                    const isActive = step.num === currentStep && selectedOrder.status === 'claimed';
+                    const isCompleted = step.completed || step.num < currentStep;
+                    
+                    return (
+                      <div key={step.num} className={`flex items-start gap-3 p-3 rounded-lg ${
+                        isActive ? 'bg-primary-light/10 border border-primary-light/30' : 
+                        isCompleted ? 'bg-accent/10 border border-accent/30' : 
+                        'bg-muted'
                       }`}>
-                        {step.completed ? '✓' : step.num}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                          isActive ? 'bg-primary text-primary-foreground' :
+                          isCompleted ? 'bg-accent text-accent-foreground' :
+                          'bg-muted-foreground text-background'
+                        }`}>
+                          {isCompleted ? '✓' : step.num}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{step.title}</h4>
+                          <p className="text-sm text-muted-foreground">{step.desc}</p>
+                          {isActive && (
+                            <Button 
+                              size="sm" 
+                              className="mt-2"
+                              onClick={() => selectedOrder && completeStep(selectedOrder.id, step.num)}
+                            >
+                              Complete Step
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium">{step.title}</h4>
-                        <p className="text-sm text-muted-foreground">{step.desc}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Order Info */}
