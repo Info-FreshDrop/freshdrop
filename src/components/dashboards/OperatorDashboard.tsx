@@ -177,7 +177,7 @@ export function OperatorDashboard() {
             profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone)
           `)
           .eq('washer_id', washer.id)
-          .in('status', ['claimed', 'in_progress'])
+          .in('status', ['claimed', 'in_progress', 'washed'])
           .order('claimed_at', { ascending: true });
 
         if (claimedError) {
