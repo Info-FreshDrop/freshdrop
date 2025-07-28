@@ -287,7 +287,7 @@ export function OperatorDashboard() {
       if (stepNumber === 6) newStatus = 'picked_up';        // After pickup
       if (stepNumber === 8) newStatus = 'washed';           // After washing  
       if (stepNumber === 9) newStatus = 'folded';           // After folding
-      if (stepNumber === 12) newStatus = 'completed';       // After delivery
+      if (stepNumber === 13) newStatus = 'completed';       // After delivery (step 13)
       
       const { error } = await supabase
         .from('orders')

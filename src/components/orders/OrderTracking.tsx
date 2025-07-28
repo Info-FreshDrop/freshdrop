@@ -62,6 +62,35 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
 
   useEffect(() => {
     loadOrders();
+    
+    // Set up real-time subscription for order updates
+    if (!user) return;
+    
+    const channel = supabase
+      .channel('order-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `customer_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Order updated:', payload.new);
+          // Update the specific order in state
+          setOrders(prev => prev.map(order => 
+            order.id === payload.new.id 
+              ? { ...order, ...payload.new }
+              : order
+          ));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const loadOrders = async () => {
