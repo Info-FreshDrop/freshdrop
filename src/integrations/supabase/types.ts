@@ -220,6 +220,50 @@ export type Database = {
           },
         ]
       }
+      order_ratings: {
+        Row: {
+          cleanliness_rating: number | null
+          communication_rating: number | null
+          created_at: string
+          customer_id: string
+          feedback: string | null
+          folding_quality_rating: number | null
+          id: string
+          order_id: string
+          overall_rating: number | null
+        }
+        Insert: {
+          cleanliness_rating?: number | null
+          communication_rating?: number | null
+          created_at?: string
+          customer_id: string
+          feedback?: string | null
+          folding_quality_rating?: number | null
+          id?: string
+          order_id: string
+          overall_rating?: number | null
+        }
+        Update: {
+          cleanliness_rating?: number | null
+          communication_rating?: number | null
+          created_at?: string
+          customer_id?: string
+          feedback?: string | null
+          folding_quality_rating?: number | null
+          id?: string
+          order_id?: string
+          overall_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_ratings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           bag_count: number | null
@@ -327,6 +371,45 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          card_brand: string | null
+          card_exp_month: number | null
+          card_exp_year: number | null
+          card_last4: string | null
+          created_at: string
+          id: string
+          is_default: boolean | null
+          stripe_payment_method_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          stripe_payment_method_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          stripe_payment_method_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -395,6 +478,90 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          reward_amount_cents: number
+          updated_at: string
+          usage_count: number
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          reward_amount_cents?: number
+          updated_at?: string
+          usage_count?: number
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          reward_amount_cents?: number
+          updated_at?: string
+          usage_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_uses: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          referral_code_id: string
+          referred_user_id: string
+          referrer_user_id: string
+          reward_given_cents: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          referral_code_id: string
+          referred_user_id: string
+          referrer_user_id: string
+          reward_given_cents: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          referral_code_id?: string
+          referred_user_id?: string
+          referrer_user_id?: string
+          reward_given_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_uses_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_uses_referral_code_id_fkey"
+            columns: ["referral_code_id"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_areas: {
         Row: {
@@ -468,6 +635,44 @@ export type Database = {
         }
         Relationships: []
       }
+      tips: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          customer_id: string
+          id: string
+          message: string | null
+          operator_id: string
+          order_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          message?: string | null
+          operator_id: string
+          order_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          message?: string | null
+          operator_id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tips_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -485,6 +690,84 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          description: string | null
+          id: string
+          operator_id: string | null
+          order_id: string | null
+          status: string
+          stripe_session_id: string | null
+          transaction_type: string
+          wallet_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          operator_id?: string | null
+          order_id?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          transaction_type: string
+          wallet_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          operator_id?: string | null
+          order_id?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          transaction_type?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance_cents: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance_cents?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance_cents?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
