@@ -28,6 +28,7 @@ import {
   Upload,
   X,
   Navigation,
+  ArrowLeft,
   Check
 } from "lucide-react";
 
@@ -1055,7 +1056,17 @@ export function OperatorDashboard() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between">
-                Order Workflow
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setSelectedOrder(null)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  Order Workflow
+                </div>
                 <Badge variant={selectedOrder?.is_express ? "destructive" : "secondary"}>
                   {selectedOrder?.is_express ? "Express" : "Standard"}
                 </Badge>
