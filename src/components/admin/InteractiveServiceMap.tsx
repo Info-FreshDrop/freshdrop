@@ -92,79 +92,152 @@ export function InteractiveServiceMap({ onBack }: InteractiveServiceMapProps) {
       map.current.on('load', () => {
         if (!map.current) return;
 
-        // Add service areas as markers
-        serviceAreas.forEach((area) => {
-          if (!map.current) return;
-
-          // Create a marker for each zip code
-          const markerEl = document.createElement('div');
-          markerEl.className = 'custom-marker';
-          markerEl.style.width = '30px';
-          markerEl.style.height = '30px';
-          markerEl.style.borderRadius = '50%';
-          markerEl.style.border = '2px solid white';
-          markerEl.style.display = 'flex';
-          markerEl.style.alignItems = 'center';
-          markerEl.style.justifyContent = 'center';
-          markerEl.style.fontSize = '10px';
-          markerEl.style.fontWeight = 'bold';
-          markerEl.style.color = 'white';
-          markerEl.style.cursor = 'pointer';
-          markerEl.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-          
-          // Color based on status and services
-          if (!area.is_active) {
-            markerEl.style.backgroundColor = '#gray';
-          } else if (area.allows_express) {
-            markerEl.style.backgroundColor = '#ef4444'; // Red for express
-          } else if (area.allows_locker) {
-            markerEl.style.backgroundColor = '#8b5cf6'; // Purple for locker
-          } else if (area.allows_delivery) {
-            markerEl.style.backgroundColor = '#3b82f6'; // Blue for delivery
-          } else {
-            markerEl.style.backgroundColor = '#10b981'; // Green for basic
+        // Add data sources for service areas
+        map.current.addSource('service-areas', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: []
           }
+        });
 
-          markerEl.textContent = area.zip_code; // Show full zip code
+        // Add layers for service areas
+        // Fill layer for coverage areas
+        map.current.addLayer({
+          id: 'service-areas-fill',
+          type: 'fill',
+          source: 'service-areas',
+          paint: {
+            'fill-color': [
+              'case',
+              ['get', 'is_active'], '#10b981', // Green for active
+              '#6b7280' // Gray for inactive
+            ],
+            'fill-opacity': [
+              'case',
+              ['get', 'is_active'], 0.3,
+              0.1
+            ]
+          }
+        });
 
-          // Create popup content
+        // Outline layer for service areas
+        map.current.addLayer({
+          id: 'service-areas-outline',
+          type: 'line',
+          source: 'service-areas',
+          paint: {
+            'line-color': [
+              'case',
+              ['get', 'is_active'], '#059669', // Darker green for active
+              '#4b5563' // Darker gray for inactive
+            ],
+            'line-width': 2,
+            'line-opacity': 0.8
+          }
+        });
+
+        // Label layer for zip codes
+        map.current.addLayer({
+          id: 'service-areas-labels',
+          type: 'symbol',
+          source: 'service-areas',
+          layout: {
+            'text-field': ['get', 'zip_code'],
+            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+            'text-size': 14,
+            'text-anchor': 'center'
+          },
+          paint: {
+            'text-color': [
+              'case',
+              ['get', 'is_active'], '#065f46', // Dark green for active
+              '#374151' // Dark gray for inactive
+            ],
+            'text-halo-color': '#ffffff',
+            'text-halo-width': 1
+          }
+        });
+
+        // Load zip code boundaries and update the map
+        loadZipCodeBoundaries();
+
+        // Add click handlers for interactive features
+        map.current.on('click', 'service-areas-fill', (e) => {
+          if (!e.features || e.features.length === 0) return;
+          
+          const feature = e.features[0];
+          const properties = feature.properties;
+          
           const services = [];
-          if (area.allows_delivery) services.push('Pickup & Delivery');
-          if (area.allows_locker) services.push('Locker Service');
-          if (area.allows_express) services.push('Express Service');
+          if (properties?.allows_delivery) services.push('Pickup & Delivery');
+          if (properties?.allows_locker) services.push('Locker Service');
+          if (properties?.allows_express) services.push('Express Service');
 
           const popupContent = `
-            <div style="font-family: system-ui; padding: 8px;">
-              <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">
-                ${area.zip_code}
+            <div style="font-family: system-ui; padding: 12px; min-width: 200px;">
+              <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
+                Zip Code: ${properties?.zip_code}
               </h3>
               <div style="margin-bottom: 8px;">
-                <span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; background-color: ${area.is_active ? '#10b981' : '#6b7280'}; color: white;">
-                  ${area.is_active ? 'Active' : 'Inactive'}
+                <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; background-color: ${properties?.is_active ? '#10b981' : '#6b7280'}; color: white;">
+                  ${properties?.is_active ? 'Active Coverage' : 'Inactive'}
                 </span>
               </div>
               ${services.length > 0 ? `
-                <div style="font-size: 12px; color: #666;">
-                  <strong>Services:</strong><br>
+                <div style="font-size: 14px; color: #374151;">
+                  <strong>Available Services:</strong><br>
                   ${services.join('<br>')}
                 </div>
-              ` : '<div style="font-size: 12px; color: #666;">No services enabled</div>'}
+              ` : '<div style="font-size: 14px; color: #6b7280;">No services enabled</div>'}
             </div>
           `;
 
-          const popup = new mapboxgl.Popup({ offset: 25 })
-            .setHTML(popupContent);
+          new mapboxgl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(popupContent)
+            .addTo(map.current!);
+        });
 
-          // For demo purposes, use approximate coordinates
-          // In a real app, you'd geocode the zip codes
-          const mockCoordinates = getMockCoordinatesForZip(area.zip_code);
-          
-          new mapboxgl.Marker(markerEl)
-            .setLngLat(mockCoordinates)
-            .setPopup(popup)
-            .addTo(map.current);
+        // Change cursor on hover
+        map.current.on('mouseenter', 'service-areas-fill', () => {
+          if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.current.on('mouseleave', 'service-areas-fill', () => {
+          if (map.current) map.current.getCanvas().style.cursor = '';
         });
       });
+
+      // Function to load zip code boundaries
+      const loadZipCodeBoundaries = async () => {
+        const features = await Promise.all(
+          serviceAreas.map(async (area) => {
+            // Get approximate boundaries for the zip code
+            const bounds = await getZipCodeBounds(area.zip_code);
+            
+             return {
+               type: 'Feature' as const,
+               properties: {
+                 zip_code: area.zip_code,
+                 is_active: area.is_active,
+                 allows_delivery: area.allows_delivery,
+                 allows_locker: area.allows_locker,
+                 allows_express: area.allows_express
+               },
+               geometry: bounds
+             };
+          })
+        );
+
+        // Update the map source with the new data
+        if (map.current?.getSource('service-areas')) {
+          (map.current.getSource('service-areas') as mapboxgl.GeoJSONSource).setData({
+            type: 'FeatureCollection',
+            features: features
+          });
+        }
+      };
 
     } catch (error) {
       console.error('Error initializing map:', error);
@@ -176,6 +249,28 @@ export function InteractiveServiceMap({ onBack }: InteractiveServiceMapProps) {
     };
   }, [mapboxToken, serviceAreas, loading]);
 
+  // Function to get approximate zip code boundaries
+  // In production, you'd use a geocoding service or zip code database
+  const getZipCodeBounds = async (zipCode: string): Promise<any> => {
+    // For demo, create approximate polygon boundaries based on zip code
+    // In production, you'd call a geocoding API or use a zip code boundaries dataset
+    const centerCoords = getMockCoordinatesForZip(zipCode);
+    
+    // Create a rough square polygon around the center point
+    const offset = 0.02; // Approximate size for zip code area
+    
+    return {
+      type: 'Polygon',
+      coordinates: [[
+        [centerCoords[0] - offset, centerCoords[1] - offset], // SW
+        [centerCoords[0] + offset, centerCoords[1] - offset], // SE
+        [centerCoords[0] + offset, centerCoords[1] + offset], // NE
+        [centerCoords[0] - offset, centerCoords[1] + offset], // NW
+        [centerCoords[0] - offset, centerCoords[1] - offset]  // Close polygon
+      ]]
+    };
+  };
+
   // Mock function to get coordinates for zip codes
   // In a real app, you'd use a geocoding service
   const getMockCoordinatesForZip = (zipCode: string): [number, number] => {
@@ -186,7 +281,7 @@ export function InteractiveServiceMap({ onBack }: InteractiveServiceMapProps) {
     const offsetLat = ((hash * 7) % 100 - 50) * 0.001;
     return [baseCoords[0] + offsetLng, baseCoords[1] + offsetLat];
   };
-
+  
   const activeAreas = serviceAreas.filter(area => area.is_active);
   const inactiveAreas = serviceAreas.filter(area => !area.is_active);
 
