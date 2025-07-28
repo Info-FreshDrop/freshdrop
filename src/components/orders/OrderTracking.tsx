@@ -85,7 +85,10 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
           filter: `customer_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Order updated:', payload.new);
+          console.log('Real-time order update received:', payload.new);
+          console.log('Current order status:', payload.new.status);
+          console.log('Current step:', payload.new.current_step);
+          
           // Update the specific order in state
           setOrders(prev => prev.map(order => 
             order.id === payload.new.id 
@@ -95,6 +98,8 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
         }
       )
       .subscribe();
+      
+      console.log('Real-time subscription setup complete for user:', user.id);
 
     return () => {
       supabase.removeChannel(channel);
@@ -125,6 +130,8 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log('Loaded orders for customer:', data?.length || 0, 'orders');
+      console.log('Order statuses:', data?.map(o => ({ id: o.id.slice(-8), status: o.status, step: o.current_step })) || []);
       setOrders(data as Order[] || []);
     } catch (error) {
       console.error('Error loading orders:', error);

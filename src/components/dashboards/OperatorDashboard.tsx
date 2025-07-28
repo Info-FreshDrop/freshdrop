@@ -289,6 +289,8 @@ export function OperatorDashboard() {
       if (stepNumber === 9) newStatus = 'folded';           // After folding
       if (stepNumber === 13) newStatus = 'completed';       // After delivery (step 13)
       
+      console.log(`Updating order ${orderId}: step ${stepNumber} -> ${newCurrentStep}, status: ${newStatus}`);
+      
       const { error } = await supabase
         .from('orders')
         .update({ 
@@ -298,7 +300,10 @@ export function OperatorDashboard() {
         })
         .eq('id', orderId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating order:', error);
+        throw error;
+      }
       
       // Notify customer of progress
       console.log(`Step ${stepNumber} completed for order ${orderId} - Status: ${newStatus}`);
@@ -307,8 +312,8 @@ export function OperatorDashboard() {
       if (stepNumber === 6) {
         console.log('Sending pickup confirmation to customer');
         // TODO: Call notification edge function
-      } else if (stepNumber === 12) {
-        console.log('Sending delivery confirmation to customer');
+      } else if (stepNumber === 13) {
+        console.log('Sending delivery confirmation to customer - ORDER COMPLETED');
         // TODO: Call notification edge function
       }
       
