@@ -40,7 +40,8 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     zipCode: '',
     specialInstructions: '',
     bagCount: 1,
-    selectedItems: [] as string[]
+    bagType: 'basic',
+    timeWindow: ''
   });
 
   const { user } = useAuth();
@@ -103,15 +104,10 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
   };
 
   const calculateTotal = () => {
-    let total = 0;
-    
-    formData.selectedItems.forEach(itemId => {
-      const item = clothesItems.find(i => i.id === itemId);
-      if (item) total += item.price_cents;
-    });
+    let total = formData.bagCount * 3500; // $35 per bag
     
     if (isExpress) {
-      total += 1000; // $10 express fee
+      total += 2000; // $20 express fee
     }
     
     return total;
@@ -146,7 +142,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
         locker_id: orderType === 'locker' ? formData.lockerId : null,
         special_instructions: formData.specialInstructions,
         bag_count: formData.bagCount,
-        items: formData.selectedItems,
+        items: [{ bag_type: formData.bagType, time_window: formData.timeWindow }],
         total_amount_cents: calculateTotal(),
         status: 'unclaimed' as const,
         pickup_window_start: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
@@ -364,9 +360,9 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                       type="button"
                       variant={isExpress ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setIsExpress(!isExpress)}
+                     onClick={() => setIsExpress(!isExpress)}
                     >
-                      {isExpress ? "Selected" : "Add +$10"}
+                      {isExpress ? "Selected" : "Add +$20"}
                     </Button>
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -391,7 +387,21 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="bag-count">Number of Bags</Label>
+                <Label htmlFor="bag-type">Bag Type (15 lbs capacity each)</Label>
+                <Select value={formData.bagType} onValueChange={(value) => handleInputChange('bagType', value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basic">Basic Bag</SelectItem>
+                    <SelectItem value="trash_13gal">Trash Bag (13 gallons)</SelectItem>
+                    <SelectItem value="freshdrop_basket">FreshDrop Laundry Basket</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bag-count">Number of Bags ($35 each)</Label>
                 <Select 
                   value={formData.bagCount.toString()} 
                   onValueChange={(value) => handleInputChange('bagCount', parseInt(value))}
@@ -402,9 +412,23 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                   <SelectContent>
                     {[1,2,3,4,5].map(num => (
                       <SelectItem key={num} value={num.toString()}>
-                        {num} bag{num > 1 ? 's' : ''}
+                        {num} bag{num > 1 ? 's' : ''} - ${(num * 35).toFixed(2)}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="time-window">Pickup Time Window</Label>
+                <Select value={formData.timeWindow} onValueChange={(value) => handleInputChange('timeWindow', value)} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select pickup time window" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="morning">Morning (6AM - 8AM)</SelectItem>
+                    <SelectItem value="lunch">Lunch (12PM - 2PM)</SelectItem>
+                    <SelectItem value="evening">Evening (5PM - 7PM)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -438,13 +462,25 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                   <span className="capitalize">{serviceType.replace('_', ' ')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Bags:</span>
-                  <span>{formData.bagCount}</span>
+                  <span>Bag Type:</span>
+                  <span className="capitalize">{formData.bagType.replace('_', ' ')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Number of Bags:</span>
+                  <span>{formData.bagCount} × $35.00 = ${(formData.bagCount * 35).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Time Window:</span>
+                  <span className="capitalize">
+                    {formData.timeWindow === 'morning' && 'Morning (6AM - 8AM)'}
+                    {formData.timeWindow === 'lunch' && 'Lunch (12PM - 2PM)'}
+                    {formData.timeWindow === 'evening' && 'Evening (5PM - 7PM)'}
+                  </span>
                 </div>
                 {isExpress && (
                   <div className="flex justify-between text-amber-600">
                     <span>Express Service:</span>
-                    <span>+$10.00</span>
+                    <span>+$20.00</span>
                   </div>
                 )}
                 <hr className="my-2" />
@@ -462,9 +498,9 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
             variant="hero"
             size="xl"
             className="w-full"
-            disabled={isLoading || !validateServiceArea().valid || !serviceType}
+            disabled={isLoading || !validateServiceArea().valid || !serviceType || !formData.timeWindow}
           >
-            {isLoading ? "Placing Order..." : "Place Order"}
+            {isLoading ? "Placing Order..." : `Place Order - $${(calculateTotal() / 100).toFixed(2)}`}
           </Button>
         </form>
       </div>
