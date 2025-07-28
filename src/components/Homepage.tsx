@@ -3,6 +3,7 @@ import { HeroSection } from "./HeroSection";
 import { AuthForms } from "./AuthForms";
 import { OperatorLogin } from "./OperatorLogin";
 import { ServicesSection } from "./ServicesSection";
+import { ChatWidget } from "./customer/ChatWidget";
 import { HowItWorksSection } from "./HowItWorksSection";
 import { FAQSection } from "./FAQSection";
 import { OperatorApplication } from "./OperatorApplication";
@@ -139,6 +140,9 @@ export function Homepage() {
           </div>
         </div>
       </footer>
+      
+      {/* Live Chat Widget */}
+      <ChatWidget />
     </div>
   );
 }

@@ -11,7 +11,8 @@ import { OrderTracking } from "@/components/orders/OrderTracking";
 import { FindLockers } from "@/components/FindLockers";
 import { ProfileModal } from "@/components/customer/ProfileModal";
 import { CouponsCarousel } from "@/components/customer/CouponsCarousel";
-import { OrderStatusProgress } from "@/components/customer/OrderStatusProgress";
+import { OrderStatusProgress } from "@/components/customer/OrderStatusProgress"; 
+import { ChatWidget } from "@/components/customer/ChatWidget";
 
 export function CustomerDashboard() {
   const { user, signOut } = useAuth();
@@ -277,6 +278,9 @@ export function CustomerDashboard() {
           onClose={() => setShowProfileModal(false)} 
         />
       </div>
+
+      {/* Live Chat Widget */}
+      <ChatWidget />
     </div>
   );
 }
