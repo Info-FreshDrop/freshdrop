@@ -72,8 +72,8 @@ export function Homepage() {
       {/* Public sections */}
       <ServicesSection />
       <HowItWorksSection />
-      <OperatorApplication />
       <FAQSection />
+      <OperatorApplication />
       
       {/* Support Section - Moved to bottom */}
       <section className="py-12 px-6 bg-muted/20">
