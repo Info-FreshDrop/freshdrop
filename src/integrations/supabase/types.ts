@@ -532,6 +532,48 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_code_usage: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          promo_code_id: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          promo_code_id: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          promo_code_id?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_usage_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_usage_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       promo_codes: {
         Row: {
           code: string
@@ -542,6 +584,8 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          one_time_use_per_user: boolean
+          restricted_to_item_ids: string[] | null
           updated_at: string
         }
         Insert: {
@@ -553,6 +597,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          one_time_use_per_user?: boolean
+          restricted_to_item_ids?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -564,6 +610,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          one_time_use_per_user?: boolean
+          restricted_to_item_ids?: string[] | null
           updated_at?: string
         }
         Relationships: []

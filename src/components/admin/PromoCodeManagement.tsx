@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Percent, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, Percent, DollarSign, ShoppingBag } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -22,12 +23,22 @@ interface PromoCode {
   discount_value: number;
   description: string | null;
   is_active: boolean;
+  one_time_use_per_user: boolean;
+  restricted_to_item_ids: string[] | null;
   created_at: string;
   updated_at: string;
 }
 
+interface ClothesItem {
+  id: string;
+  name: string;
+  category: string;
+  price_cents: number;
+}
+
 export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack }) => {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
+  const [clothesItems, setClothesItems] = useState<ClothesItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCode, setEditingCode] = useState<PromoCode | null>(null);
@@ -36,12 +47,15 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
     discount_type: 'percentage',
     discount_value: 0,
     description: '',
-    is_active: true
+    is_active: true,
+    one_time_use_per_user: false,
+    restricted_to_item_ids: [] as string[]
   });
   const { toast } = useToast();
 
   useEffect(() => {
     loadPromoCodes();
+    loadClothesItems();
   }, []);
 
   const loadPromoCodes = async () => {
@@ -65,6 +79,21 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
     }
   };
 
+  const loadClothesItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clothes_items')
+        .select('id, name, category, price_cents')
+        .eq('is_active', true)
+        .order('category, name');
+
+      if (error) throw error;
+      setClothesItems(data || []);
+    } catch (error) {
+      console.error('Error loading clothes items:', error);
+    }
+  };
+
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -75,7 +104,9 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
       discount_type: 'percentage',
       discount_value: 0,
       description: '',
-      is_active: true
+      is_active: true,
+      one_time_use_per_user: false,
+      restricted_to_item_ids: []
     });
     setEditingCode(null);
     setShowForm(false);
@@ -119,6 +150,8 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
         discount_value: formData.discount_value,
         description: formData.description.trim() || null,
         is_active: formData.is_active,
+        one_time_use_per_user: formData.one_time_use_per_user,
+        restricted_to_item_ids: formData.restricted_to_item_ids.length > 0 ? formData.restricted_to_item_ids : null,
         updated_at: new Date().toISOString()
       };
 
@@ -177,7 +210,9 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
       discount_type: promoCode.discount_type,
       discount_value: promoCode.discount_value,
       description: promoCode.description || '',
-      is_active: promoCode.is_active
+      is_active: promoCode.is_active,
+      one_time_use_per_user: promoCode.one_time_use_per_user,
+      restricted_to_item_ids: promoCode.restricted_to_item_ids || []
     });
     setShowForm(true);
   };
@@ -240,6 +275,15 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
     } else {
       return `$${(value / 100).toFixed(2)} off`;
     }
+  };
+
+  const handleItemSelection = (itemId: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      restricted_to_item_ids: checked 
+        ? [...prev.restricted_to_item_ids, itemId]
+        : prev.restricted_to_item_ids.filter(id => id !== itemId)
+    }));
   };
 
   if (loading) {
@@ -336,13 +380,49 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => handleInputChange('is_active', checked)}
-                />
-                <Label htmlFor="is_active">Active</Label>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => handleInputChange('is_active', checked)}
+                  />
+                  <Label htmlFor="is_active">Active</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="one_time_use"
+                    checked={formData.one_time_use_per_user}
+                    onCheckedChange={(checked) => handleInputChange('one_time_use_per_user', checked)}
+                  />
+                  <Label htmlFor="one_time_use">One-time use per user</Label>
+                </div>
+
+                {/* Item Restrictions */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Restrict to specific items (optional)</Label>
+                  <div className="max-h-48 overflow-y-auto border rounded-md p-3 space-y-2">
+                    {clothesItems.map((item) => (
+                      <div key={item.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`item-${item.id}`}
+                          checked={formData.restricted_to_item_ids.includes(item.id)}
+                          onCheckedChange={(checked) => handleItemSelection(item.id, checked as boolean)}
+                        />
+                        <Label htmlFor={`item-${item.id}`} className="text-sm flex-1 cursor-pointer">
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-muted-foreground ml-2">({item.category}) - ${(item.price_cents / 100).toFixed(2)}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  {formData.restricted_to_item_ids.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Selected {formData.restricted_to_item_ids.length} item(s)
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -400,9 +480,18 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
                       {promoCode.description && (
                         <p className="text-sm text-muted-foreground">{promoCode.description}</p>
                       )}
-                      <p className="text-xs text-muted-foreground">
-                        Created: {new Date(promoCode.created_at).toLocaleDateString()}
-                      </p>
+                      <div className="flex gap-4 text-xs text-muted-foreground">
+                        <span>Created: {new Date(promoCode.created_at).toLocaleDateString()}</span>
+                        {promoCode.one_time_use_per_user && (
+                          <Badge variant="outline" className="text-xs">One-time use</Badge>
+                        )}
+                        {promoCode.restricted_to_item_ids && promoCode.restricted_to_item_ids.length > 0 && (
+                          <Badge variant="outline" className="text-xs flex items-center gap-1">
+                            <ShoppingBag className="h-3 w-3" />
+                            {promoCode.restricted_to_item_ids.length} item(s)
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
