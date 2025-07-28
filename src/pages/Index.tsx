@@ -1,34 +1,24 @@
 import { Homepage } from "@/components/Homepage";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { OperatorDashboard } from "@/components/dashboards/OperatorDashboard";
 
 const Index = () => {
-  const { user } = useAuth();
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { user, userRole } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      checkUserRole();
+    // Auto-redirect operators to their dashboard
+    if (userRole === 'operator') {
+      // Don't navigate, just show the operator dashboard
     }
-  }, [user]);
+  }, [userRole, navigate]);
 
-  const checkUserRole = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user?.id)
-        .single();
-
-      if (!error && data) {
-        setUserRole(data.role);
-      }
-    } catch (error) {
-      console.error('Error checking user role:', error);
-    }
-  };
+  // Show operator dashboard if user is an operator
+  if (userRole === 'operator') {
+    return <OperatorDashboard />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-wave relative">
