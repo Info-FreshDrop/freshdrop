@@ -12,10 +12,60 @@ import {
 interface OrderStatusProgressProps {
   status: string;
   operatorName?: string;
+  currentStep?: number;
 }
 
-export function OrderStatusProgress({ status, operatorName }: OrderStatusProgressProps) {
-  const getStatusInfo = (orderStatus: string) => {
+export function OrderStatusProgress({ status, operatorName, currentStep }: OrderStatusProgressProps) {
+  const getStatusInfo = (orderStatus: string, step?: number) => {
+    // Use step for more granular progress if available
+    if (step && step > 1) {
+      const progressPercent = Math.min((step / 13) * 100, 100);
+      
+      if (step <= 3) {
+        return {
+          progress: Math.max(progressPercent, 15),
+          icon: Truck,
+          label: 'Pickup in Progress',
+          color: 'bg-orange-500',
+          description: 'Operator heading to pickup location'
+        };
+      } else if (step <= 6) {
+        return {
+          progress: Math.max(progressPercent, 35),
+          icon: Package,
+          label: 'Collecting Laundry',
+          color: 'bg-blue-500',
+          description: 'Operator collecting your items'
+        };
+      } else if (step <= 9) {
+        return {
+          progress: Math.max(progressPercent, 55),
+          icon: Loader2,
+          label: 'Washing',
+          color: 'bg-blue-500',
+          description: 'Your items are being washed',
+          animate: true
+        };
+      } else if (step <= 12) {
+        return {
+          progress: Math.max(progressPercent, 80),
+          icon: Package,
+          label: 'Preparing for Delivery',
+          color: 'bg-purple-500',
+          description: 'Items are ready, preparing delivery'
+        };
+      } else if (step === 13) {
+        return {
+          progress: 100,
+          icon: CheckCircle,
+          label: 'Delivered',
+          color: 'bg-green-600',
+          description: 'Order complete'
+        };
+      }
+    }
+
+    // Fall back to status-based progress
     switch (orderStatus) {
       case 'placed':
       case 'unclaimed':
@@ -30,34 +80,35 @@ export function OrderStatusProgress({ status, operatorName }: OrderStatusProgres
         return {
           progress: 25,
           icon: Truck,
-          label: 'Picked Up',
+          label: 'Pickup Assigned',
           color: 'bg-orange-500',
-          description: 'En route to facility'
+          description: 'Operator assigned to your order'
+        };
+      case 'picked_up':
+        return {
+          progress: 40,
+          icon: Truck,
+          label: 'Picked Up',
+          color: 'bg-blue-500',
+          description: 'En route to washing facility'
         };
       case 'in_progress':
-        return {
-          progress: 50,
-          icon: Loader2,
-          label: 'Washing',
-          color: 'bg-blue-500',
-          description: 'Being processed',
-          animate: true
-        };
       case 'washed':
         return {
-          progress: 75,
+          progress: 70,
+          icon: Loader2,
+          label: 'Processing',
+          color: 'bg-blue-500',
+          description: 'Being washed and processed',
+          animate: true
+        };
+      case 'folded':
+        return {
+          progress: 85,
           icon: Package,
-          label: 'Ready',
+          label: 'Ready for Delivery',
           color: 'bg-purple-500',
           description: 'Ready for delivery'
-        };
-      case 'out_for_delivery':
-        return {
-          progress: 90,
-          icon: Truck,
-          label: 'Out for Delivery',
-          color: 'bg-green-500',
-          description: 'On the way to you'
         };
       case 'completed':
         return {
@@ -78,7 +129,7 @@ export function OrderStatusProgress({ status, operatorName }: OrderStatusProgres
     }
   };
 
-  const statusInfo = getStatusInfo(status);
+  const statusInfo = getStatusInfo(status, currentStep);
   const Icon = statusInfo.icon;
 
   return (

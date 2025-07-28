@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { OrderHistory } from "@/components/orders/OrderHistory";
+import { OrderStatusProgress } from "@/components/customer/OrderStatusProgress";
 import { 
   Package, 
   Clock, 
@@ -23,7 +24,7 @@ interface Order {
   id: string;
   pickup_type: 'locker' | 'pickup_delivery';
   service_type: 'wash_fold' | 'wash_hang_dry' | 'express';
-  status: 'placed' | 'unclaimed' | 'claimed' | 'in_progress' | 'washed' | 'returned' | 'completed' | 'cancelled';
+  status: 'placed' | 'unclaimed' | 'claimed' | 'in_progress' | 'washed' | 'returned' | 'completed' | 'cancelled' | 'picked_up' | 'folded';
   is_express: boolean;
   pickup_address?: string;
   delivery_address?: string;
@@ -39,9 +40,16 @@ interface Order {
   pickup_photo_url?: string;
   delivery_photo_url?: string;
   step_photos?: any;
+  current_step?: number;
   lockers?: {
     name: string;
     address: string;
+  };
+  washers?: {
+    profiles?: {
+      first_name?: string;
+      last_name?: string;
+    };
   };
 }
 
@@ -105,6 +113,12 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
           lockers:locker_id (
             name,
             address
+          ),
+          washers:washer_id (
+            profiles:user_id (
+              first_name,
+              last_name
+            )
           )
         `)
         .eq('customer_id', user.id)
@@ -316,53 +330,16 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
                     </div>
                   )}
 
-                  {/* Order Status Timeline */}
+                  {/* Order Progress */}
                   <div className="mt-4 pt-4 border-t">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className={`flex items-center gap-1 ${
-                        ['placed', 'unclaimed', 'claimed', 'in_progress', 'washed', 'returned', 'completed'].includes(order.status) 
-                          ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        <div className="w-2 h-2 rounded-full bg-current"></div>
-                        <span>Placed</span>
-                      </div>
-                      
-                      <div className={`flex items-center gap-1 ${
-                        ['claimed', 'in_progress', 'washed', 'returned', 'completed'].includes(order.status) 
-                          ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        <div className="w-2 h-2 rounded-full bg-current"></div>
-                        <span>Claimed</span>
-                      </div>
-                      
-                      <div className={`flex items-center gap-1 ${
-                        ['in_progress', 'washed', 'returned', 'completed'].includes(order.status) 
-                          ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        <div className="w-2 h-2 rounded-full bg-current"></div>
-                        <span>Washing</span>
-                      </div>
-                      
-                      <div className={`flex items-center gap-1 ${
-                        ['returned', 'completed'].includes(order.status) 
-                          ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        <div className="w-2 h-2 rounded-full bg-current"></div>
-                        <span>Delivered</span>
-                      </div>
-                    </div>
-                    
-                    <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                      <div 
-                        className="bg-green-600 h-1 rounded-full transition-all duration-300"
-                        style={{
-                          width: order.status === 'placed' || order.status === 'unclaimed' ? '25%' :
-                                 order.status === 'claimed' ? '50%' :
-                                 order.status === 'in_progress' || order.status === 'washed' ? '75%' :
-                                 order.status === 'returned' || order.status === 'completed' ? '100%' : '0%'
-                        }}
-                      ></div>
-                    </div>
+                    <OrderStatusProgress 
+                      status={order.status} 
+                      currentStep={order.current_step}
+                      operatorName={order.washers?.profiles ? 
+                        `${order.washers.profiles.first_name || ''} ${order.washers.profiles.last_name || ''}`.trim() :
+                        undefined
+                      }
+                    />
                   </div>
                 </CardContent>
               </Card>
