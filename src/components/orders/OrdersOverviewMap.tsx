@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MapPin, Navigation, Locate } from 'lucide-react';
+import { Locate } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,15 +18,11 @@ interface Order {
 }
 
 interface OrdersOverviewMapProps {
-  isOpen: boolean;
-  onClose: () => void;
   orders: Order[];
   currentLocation?: { latitude: number; longitude: number };
 }
 
 export const OrdersOverviewMap: React.FC<OrdersOverviewMapProps> = ({
-  isOpen,
-  onClose,
   orders,
   currentLocation
 }) => {
@@ -41,7 +36,7 @@ export const OrdersOverviewMap: React.FC<OrdersOverviewMapProps> = ({
   }, []);
 
   useEffect(() => {
-    if (isOpen && mapboxToken && mapContainer.current && !map.current) {
+    if (mapboxToken && mapContainer.current && !map.current) {
       initializeMap();
     }
     
@@ -51,7 +46,7 @@ export const OrdersOverviewMap: React.FC<OrdersOverviewMapProps> = ({
         map.current = null;
       }
     };
-  }, [isOpen, mapboxToken, orders]);
+  }, [mapboxToken, orders]);
 
   const loadMapboxToken = async () => {
     try {
@@ -213,68 +208,59 @@ export const OrdersOverviewMap: React.FC<OrdersOverviewMapProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[85vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              My Orders Overview
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={getCurrentLocation}
-                className="flex items-center gap-1"
-              >
-                <Locate className="h-4 w-4" />
-                My Location
-              </Button>
-            </div>
-          </DialogTitle>
-        </DialogHeader>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Orders Map</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={getCurrentLocation}
+          className="flex items-center gap-1"
+        >
+          <Locate className="h-4 w-4" />
+          My Location
+        </Button>
+      </div>
 
-        <div className="relative h-[600px] w-full">
-          {loading && (
-            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                <p className="text-muted-foreground">Loading map...</p>
-              </div>
-            </div>
-          )}
-          <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
-        </div>
-
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>Your Location</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span>Claimed</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-              <span>In Progress</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <span>Washed</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-600 rounded-full"></div>
-              <span>Completed</span>
+      <div className="relative h-[400px] w-full">
+        {loading && (
+          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+              <p className="text-muted-foreground">Loading map...</p>
             </div>
           </div>
-          <span>
-            Total Orders: {orders.length}
-          </span>
+        )}
+        <div ref={mapContainer} className="absolute inset-0 rounded-lg border" />
+      </div>
+
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span>Your Location</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <span>Claimed</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+            <span>In Progress</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+            <span>Washed</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+            <span>Completed</span>
+          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        <span>
+          Total Orders: {orders.length}
+        </span>
+      </div>
+    </div>
   );
 };
