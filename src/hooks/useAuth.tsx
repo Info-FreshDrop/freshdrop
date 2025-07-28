@@ -167,9 +167,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         .eq('id', refCode.id);
 
+      // Add wallet credit for both users immediately
+      await addWalletCredit(user.id, refCode.reward_amount_cents, 'Referral signup bonus');
+      await addWalletCredit(refCode.user_id, refCode.reward_amount_cents, 'Referral reward for inviting friend');
+
       console.log('Referral code processed successfully');
     } catch (error) {
       console.error('Error processing referral code:', error);
+    }
+  };
+
+  const addWalletCredit = async (userId: string, amountCents: number, description: string) => {
+    try {
+      // Check if user has a wallet, create if not
+      const { data: wallet } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (!wallet) {
+        // Create wallet
+        await supabase.from('wallets').insert({
+          user_id: userId,
+          balance_cents: amountCents
+        });
+      } else {
+        // Update existing wallet balance
+        await supabase
+          .from('wallets')
+          .update({ 
+            balance_cents: wallet.balance_cents + amountCents,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+      }
+
+      // Record the transaction
+      await supabase.from('wallet_transactions').insert({
+        wallet_id: wallet?.id || null,
+        amount_cents: amountCents,
+        transaction_type: 'credit',
+        description: description,
+        status: 'completed'
+      });
+    } catch (error) {
+      console.error('Error adding wallet credit:', error);
     }
   };
 
