@@ -14,7 +14,8 @@ import {
   Settings,
   PlusCircle,
   BarChart3,
-  Shield
+  Shield,
+  ArrowLeft
 } from "lucide-react";
 
 export function OwnerDashboard() {
@@ -36,6 +37,17 @@ export function OwnerDashboard() {
   return (
     <div className="min-h-screen bg-gradient-wave">
       <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={signOut}
+            className="p-0 h-auto text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Exit Dashboard
+          </Button>
+        </div>
+        
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
@@ -50,9 +62,6 @@ export function OwnerDashboard() {
               <Shield className="h-3 w-3 mr-1" />
               Owner Access
             </Badge>
-            <Button variant="outline" onClick={signOut}>
-              Sign Out
-            </Button>
           </div>
         </div>
 
