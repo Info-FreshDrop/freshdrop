@@ -151,16 +151,15 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         try {
           const response = await supabase.functions.invoke('geocoding', {
             body: { 
-              lat: location.latitude,
-              lon: location.longitude,
+              query: `${location.longitude},${location.latitude}`,
               type: 'reverse'
             }
           });
           
           console.log('Reverse geocoding response:', response);
           
-          if (response.data?.display_name) {
-            const address = response.data.display_name;
+          if (response.data?.suggestions?.[0]) {
+            const address = response.data.suggestions[0].display_name;
             handleInputChange('pickupAddress', address);
             handleInputChange('deliveryAddress', address);
             
@@ -561,13 +560,13 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                     try {
                       const response = await supabase.functions.invoke('geocoding', {
                         body: { 
-                          q: value,
+                          query: value,
                           type: 'search'
                         }
                       });
                       
-                      if (response.data?.[0]) {
-                        const suggestion = response.data[0];
+                      if (response.data?.suggestions?.[0]) {
+                        const suggestion = response.data.suggestions[0];
                         console.log('Address suggestion:', suggestion);
                         
                         // Extract zip code from the display name
