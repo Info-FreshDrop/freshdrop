@@ -83,8 +83,10 @@ serve(async (req) => {
       success_url: `${req.headers.get("origin")}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/`,
       metadata: {
-        order_data: JSON.stringify(orderData),
-        user_id: user.id
+        user_id: user.id,
+        bag_count: orderData.bag_count.toString(),
+        service_type: orderData.service_type,
+        pickup_type: orderData.pickup_type
       }
     });
 
