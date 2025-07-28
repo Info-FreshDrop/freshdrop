@@ -1,57 +1,57 @@
 import { Button } from "@/components/ui/button";
 import { Droplets } from "lucide-react";
-import freshDropLogo from "@/assets/freshdrop-logo.png";
 
 export function HeroSection() {
   return (
     <section className="relative min-h-screen flex flex-col bg-white overflow-hidden">
-      {/* Clean white background with wave at bottom */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-20 pb-32">
-        {/* Logo section */}
-        <div className="mb-12 flex flex-col items-center">
-          <div className="mb-6">
-            <Droplets className="h-16 w-16 mx-auto text-primary mb-4" />
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-20">
+        {/* Droplet icon */}
+        <div className="mb-8">
+          <div className="relative">
+            <Droplets className="h-24 w-24 text-cyan-400 fill-cyan-400" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Droplets className="h-12 w-12 text-blue-600 fill-blue-600" />
+            </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">
-            FreshDrop
-          </h1>
         </div>
 
-        <h2 className="text-3xl md:text-4xl font-semibold text-primary mb-16 text-center">
+        {/* FreshDrop title */}
+        <h1 className="text-5xl md:text-6xl font-bold text-blue-800 mb-12 text-center">
+          FreshDrop
+        </h1>
+
+        {/* Tagline */}
+        <h2 className="text-4xl md:text-5xl font-bold text-cyan-400 mb-20 text-center leading-tight">
           Laundry<br />made easy
         </h2>
       </div>
 
-      {/* Wave gradient background at bottom */}
-      <div className="relative h-64 bg-gradient-to-t from-primary to-primary/80">
-        {/* Wave shape */}
-        <div className="absolute top-0 left-0 w-full overflow-hidden leading-none">
-          <svg 
-            className="relative block w-full h-16" 
-            viewBox="0 0 1200 120" 
-            preserveAspectRatio="none"
-          >
-            <path 
-              d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" 
-              className="fill-white"
-            />
+      {/* Wave section at bottom */}
+      <div className="relative">
+        {/* Multiple wave layers for depth */}
+        <div className="absolute bottom-0 left-0 w-full">
+          <svg className="relative block w-full h-32" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z" className="fill-cyan-300 opacity-60"></path>
           </svg>
         </div>
         
-        {/* Content area */}
-        <div className="flex items-center justify-center h-full pt-16">
-          <Button 
-            size="xl" 
-            className="bg-white/20 text-white border-2 border-white/30 hover:bg-white/30 min-w-64 h-14 text-lg font-semibold rounded-full backdrop-blur-sm"
-            onClick={() => {
-              const authSection = document.querySelector('#auth-section');
-              if (authSection) {
-                authSection.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-          >
-            Schedule a Pickup
-          </Button>
+        <div className="relative bg-gradient-to-t from-cyan-400 to-cyan-300 pt-16 pb-32">
+          {/* Schedule button */}
+          <div className="flex justify-center pt-8">
+            <Button 
+              size="xl" 
+              className="bg-white/20 text-white border-0 hover:bg-white/30 px-12 py-4 text-xl font-semibold rounded-full backdrop-blur-sm shadow-lg"
+              onClick={() => {
+                const authSection = document.querySelector('#auth-section');
+                if (authSection) {
+                  authSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
+              Schedule a Pickup
+            </Button>
+          </div>
         </div>
       </div>
     </section>
