@@ -277,24 +277,60 @@ export function OperatorDashboard() {
     try {
       // Update step completion for this specific order
       const newCurrentStep = stepNumber + 1;
-      console.log(`Before completing step ${stepNumber}, currentStep was:`, orderSteps[orderId] || 1);
       setOrderSteps(prev => ({ ...prev, [orderId]: newCurrentStep }));
-      console.log(`After completing step ${stepNumber}, currentStep should be:`, newCurrentStep);
+      
+      // Update database with current step and completion timestamp
+      const stepCompletedAt = { [`step_${stepNumber}`]: new Date().toISOString() };
+      
+      // Determine order status based on step
+      let newStatus: 'placed' | 'unclaimed' | 'claimed' | 'in_progress' | 'washed' | 'returned' | 'completed' | 'cancelled' | 'picked_up' | 'folded' = 'claimed';
+      if (stepNumber === 6) newStatus = 'picked_up';        // After pickup
+      if (stepNumber === 8) newStatus = 'washed';           // After washing  
+      if (stepNumber === 9) newStatus = 'folded';           // After folding
+      if (stepNumber === 12) newStatus = 'completed';       // After delivery
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          current_step: newCurrentStep,
+          step_completed_at: stepCompletedAt,
+          status: newStatus
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
       
       // Notify customer of progress
-      console.log(`Step ${stepNumber} completed for order ${orderId}`);
+      console.log(`Step ${stepNumber} completed for order ${orderId} - Status: ${newStatus}`);
+      
+      // Send customer notification based on step
+      if (stepNumber === 6) {
+        console.log('Sending pickup confirmation to customer');
+        // TODO: Call notification edge function
+      } else if (stepNumber === 12) {
+        console.log('Sending delivery confirmation to customer');
+        // TODO: Call notification edge function
+      }
       
       toast({
         title: "Step Complete",
-        description: `Step ${stepNumber} completed. Moving to next step.`,
+        description: `Step ${stepNumber} completed. Order status: ${newStatus.replace('_', ' ')}`,
       });
 
-      // Force component re-render by updating the selected order
+      // Force component re-render
       if (selectedOrder) {
-        setSelectedOrder({...selectedOrder});
+        setSelectedOrder({...selectedOrder, status: newStatus});
       }
+      
+      // Refresh data to show updated progress
+      loadDashboardData();
     } catch (error) {
       console.error('Error completing step:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete step. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -401,13 +437,13 @@ export function OperatorDashboard() {
   };
 
   const canCompleteStep = (stepNumber: number, orderId: string) => {
-    // Step 4 and 13 require photos
-    if (stepNumber === 4 || stepNumber === 13) {
+    // Step 3 and 12 require photos (pickup and delivery)
+    if (stepNumber === 3 || stepNumber === 12) {
       return photoUploaded[`${orderId}-${stepNumber}`] || false;
     }
     
-    // Step 6 requires bag count verification
-    if (stepNumber === 6) {
+    // Step 5 requires bag count verification
+    if (stepNumber === 5) {
       const stepInfo = stepData[orderId]?.[`step_${stepNumber}`];
       return stepInfo?.bagCount !== undefined;
     }
@@ -472,6 +508,37 @@ export function OperatorDashboard() {
       hour: 'numeric', 
       minute: '2-digit' 
     })}`;
+  };
+
+  const getOrderProgressInfo = (order: Order) => {
+    const currentStep = orderSteps[order.id] || 1;
+    const stepNames = [
+      "", "Preparing", "Going to pickup", "Locating bags", "Taking photo", 
+      "Labeling bags", "Counting bags", "Picked up", "Going to washer", 
+      "Washing", "Folding", "Bagging", "Re-labeling", "Delivering"
+    ];
+    
+    let progressText = "";
+    let progressColor = "";
+    
+    if (order.status === 'picked_up') {
+      progressText = "🚗 In transit to washer";
+      progressColor = "text-blue-600";
+    } else if (order.status === 'washed') {
+      progressText = "🧺 In washer/dryer";
+      progressColor = "text-yellow-600";
+    } else if (order.status === 'folded') {
+      progressText = "👕 Folded & ready";
+      progressColor = "text-green-600";
+    } else if (order.status === 'completed') {
+      progressText = "✅ Delivered";
+      progressColor = "text-green-700";
+    } else {
+      progressText = stepNames[currentStep] || "Processing";
+      progressColor = "text-blue-600";
+    }
+    
+    return { progressText, progressColor, currentStep };
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -690,38 +757,77 @@ export function OperatorDashboard() {
               </Card>
             ) : (
               <div className="space-y-4">
-                {myOrders.map((order) => (
-                  <Card 
-                    key={order.id} 
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => setSelectedOrder(order)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-semibold">Order #{order.id.slice(0, 8)}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {order.profiles?.first_name} {order.profiles?.last_name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {order.service_type.replace('_', ' ')} • {order.bag_count} bags
-                          </p>
+                {myOrders.map((order) => {
+                  const { progressText, progressColor, currentStep } = getOrderProgressInfo(order);
+                  
+                  return (
+                    <Card 
+                      key={order.id} 
+                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h4 className="font-semibold">Order #{order.id.slice(0, 8)}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {order.profiles?.first_name} {order.profiles?.last_name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {order.service_type.replace('_', ' ')} • {order.bag_count} bags
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant={order.is_express ? "destructive" : "secondary"}>
+                              {order.is_express ? "Express" : "Standard"}
+                            </Badge>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Due: {order.pickup_window_end && new Date(order.pickup_window_end).toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <Badge variant={order.is_express ? "destructive" : "secondary"}>
-                            {order.is_express ? "Express" : "Standard"}
-                          </Badge>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Due: {order.pickup_window_end && new Date(order.pickup_window_end).toLocaleTimeString([], { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </p>
+                        
+                        {/* Progress Information */}
+                        <div className="border-t pt-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
+                              <span className={`text-sm font-medium ${progressColor}`}>
+                                {progressText}
+                              </span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              Step {currentStep}/13
+                            </span>
+                          </div>
+                          
+                          {/* Progress bar */}
+                          <div className="w-full bg-muted rounded-full h-1.5 mt-2">
+                            <div 
+                              className="bg-primary h-1.5 rounded-full transition-all" 
+                              style={{ width: `${(currentStep / 13) * 100}%` }}
+                            />
+                          </div>
+                          
+                          {/* Quick status info */}
+                          {order.status === 'washed' && (
+                            <p className="text-xs text-orange-600 mt-1">
+                              💧 Items are currently washing/drying
+                            </p>
+                          )}
+                          {order.status === 'folded' && (
+                            <p className="text-xs text-green-600 mt-1">
+                              📦 Ready for delivery preparation
+                            </p>
+                          )}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -961,27 +1067,41 @@ export function OperatorDashboard() {
                   ))}
                 </div>
 
-                {/* Current Step Details */}
-                {selectedOrder.status === 'claimed' && (
-                  <div className="bg-primary-light/10 border border-primary-light/30 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
+                {/* Combined Step 1 - Preparation and navigation combined */}
+                {((selectedOrder ? (orderSteps[selectedOrder.id] || 1) : 1) === 1) && selectedOrder.status === 'claimed' && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
+                    <div className="flex items-center gap-2 mb-3">
                       <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</div>
-                      <h3 className="font-semibold text-lg">Prepare for Pickup</h3>
+                      <h3 className="font-semibold text-lg">Prepare & Head to Pickup</h3>
                     </div>
-                    <div className="space-y-2 text-sm">
-                      <p>Get ready for pickup with the following items:</p>
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Clear bags for organization</li>
-                        <li>Labels for identification</li>
-                        <li>Pen for marking</li>
-                      </ul>
-                      <p className="text-muted-foreground italic">Make sure you have everything before heading out.</p>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <p className="font-medium mb-1">✅ Preparation checklist:</p>
+                        <ul className="list-disc pl-4 space-y-1 text-xs">
+                          <li>Clear bags for organization</li>
+                          <li>Labels for identification</li>
+                          <li>Pen for marking</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="font-medium mb-1">📍 Pickup Address:</p>
+                        <p className="text-muted-foreground text-xs bg-background rounded p-2 border">{selectedOrder.pickup_address}</p>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => selectedOrder.pickup_address && openGPSNavigation(selectedOrder.pickup_address)}
+                        className="w-full"
+                      >
+                        <Navigation className="h-3 w-3 mr-1" />
+                        Open GPS Navigation
+                      </Button>
                     </div>
                     <Button 
                       className="w-full mt-4" 
                       onClick={() => selectedOrder && completeStep(selectedOrder.id, 1)}
                     >
-                      PREPARATION COMPLETE →
+                      Ready & Heading to Pickup →
                     </Button>
                   </div>
                 )}
@@ -989,19 +1109,18 @@ export function OperatorDashboard() {
                 {/* Enhanced All Steps List */}
                 <div className="space-y-3">
                   {[
-                    { num: 1, title: "PREPARE FOR PICKUP", desc: "Get clear bags, labels, pen", completed: selectedOrder.status !== 'claimed' },
-                    { num: 2, title: "GO TO ADDRESS", desc: "Navigate to pickup location", completed: false },
-                    { num: 3, title: "LOCATE BAGS", desc: "Find customer's laundry bag", completed: false },
-                    { num: 4, title: "TAKE A PHOTO", desc: "Document pickup condition (PHOTO REQUIRED)", completed: false },
-                    { num: 5, title: "LABEL BAGS", desc: "Attach identification label", completed: false },
-                    { num: 6, title: "COUNT BAGS", desc: "Verify bag count", completed: false },
-                    { num: 7, title: "PICKUP", desc: "Collect items and confirm pickup", completed: false },
-                    { num: 8, title: "GET TO WASHER", desc: "Transport to washing facility", completed: false },
-                    { num: 9, title: "WASH FOLLOWING INSTRUCTIONS", desc: "Follow customer preferences", completed: false },
-                    { num: 10, title: "FOLD/HANG", desc: "Properly prepare clean items", completed: false },
-                    { num: 11, title: "BAG PROPERLY", desc: "Package items professionally", completed: false },
-                    { num: 12, title: "RE-LABEL", desc: "Attach delivery label", completed: false },
-                    { num: 13, title: "RETURN & TAKE PHOTO", desc: "Deliver on time and document (PHOTO REQUIRED)", completed: false }
+                    { num: 1, title: "PREPARE & HEAD TO PICKUP", desc: "Get ready and navigate to location", completed: selectedOrder.status !== 'claimed' },
+                    { num: 2, title: "LOCATE BAGS", desc: "Find customer's laundry bag", completed: false },
+                    { num: 3, title: "TAKE A PHOTO", desc: "Document pickup condition (PHOTO REQUIRED)", completed: false },
+                    { num: 4, title: "LABEL BAGS", desc: "Attach identification label", completed: false },
+                    { num: 5, title: "COUNT BAGS", desc: "Verify bag count", completed: false },
+                    { num: 6, title: "PICKUP", desc: "Collect items and confirm pickup", completed: false },
+                    { num: 7, title: "GET TO WASHER", desc: "Transport to washing facility", completed: false },
+                    { num: 8, title: "WASH FOLLOWING INSTRUCTIONS", desc: "Follow customer preferences", completed: false },
+                    { num: 9, title: "FOLD/HANG", desc: "Properly prepare clean items", completed: false },
+                    { num: 10, title: "BAG PROPERLY", desc: "Package items professionally", completed: false },
+                    { num: 11, title: "RE-LABEL", desc: "Attach delivery label", completed: false },
+                    { num: 12, title: "RETURN & TAKE PHOTO", desc: "Deliver on time and document (PHOTO REQUIRED)", completed: false }
                   ].map((step) => {
                     const currentStep = selectedOrder ? (orderSteps[selectedOrder.id] || 1) : 1;
                     const isActive = step.num === currentStep && selectedOrder.status === 'claimed';
@@ -1030,23 +1149,7 @@ export function OperatorDashboard() {
                           {/* Step-specific content */}
                           {isActive && (
                             <div className="bg-background rounded-md p-3 mb-3 text-xs space-y-2">
-                              {step.num === 2 && (
-                                <div className="space-y-2">
-                                  <p className="font-medium">📍 Pickup Address:</p>
-                                  <p className="text-muted-foreground">{selectedOrder.pickup_address}</p>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    onClick={() => selectedOrder.pickup_address && openGPSNavigation(selectedOrder.pickup_address)}
-                                    className="w-full"
-                                  >
-                                    <Navigation className="h-3 w-3 mr-1" />
-                                    Open GPS Navigation
-                                  </Button>
-                                </div>
-                              )}
-                              
-                              {step.num === 5 && (
+                              {step.num === 4 && (
                                 <div className="space-y-2">
                                   <p className="font-medium">🏷️ Label the bag with:</p>
                                   <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
@@ -1057,7 +1160,7 @@ export function OperatorDashboard() {
                                 </div>
                               )}
                               
-                              {step.num === 6 && (
+                              {step.num === 5 && (
                                 <div className="space-y-2">
                                   <p className="font-medium">📝 Verify bag count:</p>
                                   <div className="flex items-center gap-2">
@@ -1069,7 +1172,7 @@ export function OperatorDashboard() {
                                       value={bagCountInput}
                                       onChange={(e) => {
                                         setBagCountInput(e.target.value);
-                                        updateStepData(selectedOrder.id, 6, { bagCount: parseInt(e.target.value) });
+                                        updateStepData(selectedOrder.id, 5, { bagCount: parseInt(e.target.value) });
                                       }}
                                       className="h-7 text-xs w-20"
                                     />
@@ -1077,7 +1180,7 @@ export function OperatorDashboard() {
                                 </div>
                               )}
                               
-                              {step.num === 9 && (
+                              {step.num === 8 && (
                                 <div className="space-y-2">
                                   <p className="font-medium">🧺 Customer Preferences:</p>
                                   <ul className="text-xs space-y-1">
@@ -1091,7 +1194,7 @@ export function OperatorDashboard() {
                                 </div>
                               )}
                               
-                              {step.num === 12 && (
+                              {step.num === 11 && (
                                 <div className="space-y-2">
                                   <p className="font-medium">🏷️ Delivery label format:</p>
                                   <div className="bg-blue-50 border border-blue-200 rounded p-2">
@@ -1102,7 +1205,7 @@ export function OperatorDashboard() {
                                 </div>
                               )}
                               
-                              {step.num === 13 && (
+                              {step.num === 12 && (
                                 <div className="space-y-2">
                                   <p className="font-medium">⏰ Delivery Window:</p>
                                   <div className="bg-orange-50 border border-orange-200 rounded p-2">
@@ -1131,7 +1234,7 @@ export function OperatorDashboard() {
                               </Button>
                             )}
                             
-                            {(step.num === 4 || step.num === 13) && (
+                            {(step.num === 3 || step.num === 12) && (
                               <Button 
                                 size="sm" 
                                 variant={hasPhoto ? "default" : "outline"}
@@ -1146,18 +1249,6 @@ export function OperatorDashboard() {
                                   ? "Photo ✓" 
                                   : "Take Photo"
                                 }
-                              </Button>
-                            )}
-                            
-                            {step.num === 2 && selectedOrder.pickup_address && (
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => openGPSNavigation(selectedOrder.pickup_address!)}
-                                className="text-xs h-7"
-                              >
-                                <Navigation className="h-3 w-3 mr-1" />
-                                GPS
                               </Button>
                             )}
                           </div>

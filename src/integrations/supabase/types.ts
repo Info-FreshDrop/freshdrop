@@ -271,6 +271,7 @@ export type Database = {
           claimed_at: string | null
           completed_at: string | null
           created_at: string
+          current_step: number | null
           customer_id: string
           delivery_address: string | null
           delivery_photo_url: string | null
@@ -291,6 +292,7 @@ export type Database = {
           service_type: Database["public"]["Enums"]["service_type"]
           special_instructions: string | null
           status: Database["public"]["Enums"]["order_status"] | null
+          step_completed_at: Json | null
           step_photos: Json | null
           stripe_session_id: string | null
           total_amount_cents: number
@@ -304,6 +306,7 @@ export type Database = {
           claimed_at?: string | null
           completed_at?: string | null
           created_at?: string
+          current_step?: number | null
           customer_id: string
           delivery_address?: string | null
           delivery_photo_url?: string | null
@@ -324,6 +327,7 @@ export type Database = {
           service_type: Database["public"]["Enums"]["service_type"]
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
+          step_completed_at?: Json | null
           step_photos?: Json | null
           stripe_session_id?: string | null
           total_amount_cents: number
@@ -337,6 +341,7 @@ export type Database = {
           claimed_at?: string | null
           completed_at?: string | null
           created_at?: string
+          current_step?: number | null
           customer_id?: string
           delivery_address?: string | null
           delivery_photo_url?: string | null
@@ -357,6 +362,7 @@ export type Database = {
           service_type?: Database["public"]["Enums"]["service_type"]
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
+          step_completed_at?: Json | null
           step_photos?: Json | null
           stripe_session_id?: string | null
           total_amount_cents?: number
@@ -864,6 +870,8 @@ export type Database = {
         | "returned"
         | "completed"
         | "cancelled"
+        | "picked_up"
+        | "folded"
       pickup_type: "locker" | "pickup_delivery"
       service_type: "wash_fold" | "wash_hang_dry" | "express"
     }
@@ -1004,6 +1012,8 @@ export const Constants = {
         "returned",
         "completed",
         "cancelled",
+        "picked_up",
+        "folded",
       ],
       pickup_type: ["locker", "pickup_delivery"],
       service_type: ["wash_fold", "wash_hang_dry", "express"],
