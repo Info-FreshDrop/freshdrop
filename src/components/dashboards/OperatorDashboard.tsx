@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useCapacitor } from "@/hooks/useCapacitor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -23,7 +26,9 @@ import {
   Star,
   Truck,
   Upload,
-  X
+  X,
+  Navigation,
+  Check
 } from "lucide-react";
 
 interface Order {
@@ -72,6 +77,7 @@ interface WasherData {
 export function OperatorDashboard() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { getCurrentLocation } = useCapacitor();
   const [activeTab, setActiveTab] = useState("live-orders");
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
   const [myOrders, setMyOrders] = useState<Order[]>([]);
@@ -81,9 +87,12 @@ export function OperatorDashboard() {
   const [confirmOrder, setConfirmOrder] = useState<Order | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderSteps, setOrderSteps] = useState<Record<string, number>>({});
+  const [stepData, setStepData] = useState<Record<string, Record<string, any>>>({});
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [photoStep, setPhotoStep] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [photoUploaded, setPhotoUploaded] = useState<Record<string, boolean>>({});
+  const [bagCountInput, setBagCountInput] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -336,6 +345,9 @@ export function OperatorDashboard() {
 
       if (updateError) throw updateError;
 
+      // Mark photo as uploaded for this order and step
+      setPhotoUploaded(prev => ({ ...prev, [`${orderId}-${stepNumber}`]: true }));
+
       toast({
         title: "Photo Uploaded",
         description: `Step ${stepNumber} photo uploaded successfully.`,
@@ -355,6 +367,111 @@ export function OperatorDashboard() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const openGPSNavigation = async (address: string) => {
+    try {
+      // Try to get current location first
+      const position = await getCurrentLocation();
+      const { latitude, longitude } = position;
+      
+      // Create maps URL for navigation
+      const destination = encodeURIComponent(address);
+      const mapsUrl = `https://www.google.com/maps/dir/${latitude},${longitude}/${destination}`;
+      
+      // Open in browser/native maps app
+      window.open(mapsUrl, '_blank');
+      
+      toast({
+        title: "Opening Navigation",
+        description: "Directions opened in your maps app",
+      });
+    } catch (error) {
+      console.error('Error opening navigation:', error);
+      // Fallback: just open maps with the address
+      const destination = encodeURIComponent(address);
+      const fallbackUrl = `https://www.google.com/maps/search/${destination}`;
+      window.open(fallbackUrl, '_blank');
+      
+      toast({
+        title: "Opening Maps",
+        description: "Address opened in maps",
+      });
+    }
+  };
+
+  const canCompleteStep = (stepNumber: number, orderId: string) => {
+    // Step 4 and 13 require photos
+    if (stepNumber === 4 || stepNumber === 13) {
+      return photoUploaded[`${orderId}-${stepNumber}`] || false;
+    }
+    
+    // Step 6 requires bag count verification
+    if (stepNumber === 6) {
+      const stepInfo = stepData[orderId]?.[`step_${stepNumber}`];
+      return stepInfo?.bagCount !== undefined;
+    }
+    
+    return true;
+  };
+
+  const updateStepData = (orderId: string, stepNumber: number, data: any) => {
+    setStepData(prev => ({
+      ...prev,
+      [orderId]: {
+        ...prev[orderId],
+        [`step_${stepNumber}`]: { ...prev[orderId]?.[`step_${stepNumber}`], ...data }
+      }
+    }));
+  };
+
+  const getCustomerPreferences = (order: Order) => {
+    const preferences = [];
+    
+    if (order.service_type === 'wash_fold') {
+      preferences.push('Wash & Fold');
+    } else if (order.service_type === 'wash_hang_dry') {
+      preferences.push('Wash & Hang Dry');
+    }
+    
+    if (order.is_express) {
+      preferences.push('Express Service (same day)');
+    }
+    
+    if (order.special_instructions) {
+      preferences.push(`Special Instructions: ${order.special_instructions}`);
+    }
+    
+    return preferences;
+  };
+
+  const getLabelText = (order: Order, isDelivery: boolean = false) => {
+    const customerName = `${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}`.trim();
+    const orderNumber = order.id.slice(0, 8);
+    const bagCount = order.bag_count;
+    
+    if (isDelivery) {
+      return `DELIVERY - ${customerName} - Order #${orderNumber} - ${bagCount} bag(s)`;
+    }
+    
+    return `${customerName} - Order #${orderNumber} - ${bagCount} bag(s)`;
+  };
+
+  const getDeliveryTimeInfo = (order: Order) => {
+    if (!order.delivery_window_start || !order.delivery_window_end) {
+      return "No delivery time specified";
+    }
+    
+    const startTime = new Date(order.delivery_window_start);
+    const endTime = new Date(order.delivery_window_end);
+    
+    return `${startTime.toLocaleDateString()} ${startTime.toLocaleTimeString([], { 
+      hour: 'numeric', 
+      minute: '2-digit' 
+    })} - ${endTime.toLocaleTimeString([], { 
+      hour: 'numeric', 
+      minute: '2-digit' 
+    })}`;
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -869,70 +986,182 @@ export function OperatorDashboard() {
                   </div>
                 )}
 
-                {/* All Steps List */}
+                {/* Enhanced All Steps List */}
                 <div className="space-y-3">
                   {[
                     { num: 1, title: "PREPARE FOR PICKUP", desc: "Get clear bags, labels, pen", completed: selectedOrder.status !== 'claimed' },
                     { num: 2, title: "GO TO ADDRESS", desc: "Navigate to pickup location", completed: false },
                     { num: 3, title: "LOCATE BAGS", desc: "Find customer's laundry bag", completed: false },
-                    { num: 4, title: "TAKE A PHOTO", desc: "Document pickup condition", completed: false },
+                    { num: 4, title: "TAKE A PHOTO", desc: "Document pickup condition (PHOTO REQUIRED)", completed: false },
                     { num: 5, title: "LABEL BAGS", desc: "Attach identification label", completed: false },
                     { num: 6, title: "COUNT BAGS", desc: "Verify bag count", completed: false },
                     { num: 7, title: "PICKUP", desc: "Collect items and confirm pickup", completed: false },
                     { num: 8, title: "GET TO WASHER", desc: "Transport to washing facility", completed: false },
-                    { num: 9, title: "WASH FOLLOWING INSTRUCTIONS", desc: "Wash & dry according to customer needs", completed: false },
+                    { num: 9, title: "WASH FOLLOWING INSTRUCTIONS", desc: "Follow customer preferences", completed: false },
                     { num: 10, title: "FOLD/HANG", desc: "Properly prepare clean items", completed: false },
                     { num: 11, title: "BAG PROPERLY", desc: "Package items professionally", completed: false },
                     { num: 12, title: "RE-LABEL", desc: "Attach delivery label", completed: false },
-                    { num: 13, title: "RETURN & TAKE PHOTO", desc: "Deliver within pickup window time, document delivery", completed: false }
+                    { num: 13, title: "RETURN & TAKE PHOTO", desc: "Deliver on time and document (PHOTO REQUIRED)", completed: false }
                   ].map((step) => {
                     const currentStep = selectedOrder ? (orderSteps[selectedOrder.id] || 1) : 1;
                     const isActive = step.num === currentStep && selectedOrder.status === 'claimed';
                     const isCompleted = step.completed || step.num < currentStep;
-                    
-                    // Debug logging for step 1
-                    if (step.num === 1) {
-                      console.log(`Step 1 debug - currentStep: ${currentStep}, selectedOrder.status: ${selectedOrder.status}, step.completed: ${step.completed}, isCompleted: ${isCompleted}, isActive: ${isActive}`);
-                    }
+                    const stepCanComplete = canCompleteStep(step.num, selectedOrder.id);
+                    const hasPhoto = photoUploaded[`${selectedOrder.id}-${step.num}`];
                     
                     return (
-                      <div key={step.num} className={`flex items-start gap-3 p-3 rounded-lg ${
-                        isActive ? 'bg-primary-light/10 border border-primary-light/30' : 
-                        isCompleted ? 'bg-accent/10 border border-accent/30' : 
-                        'bg-muted'
+                      <div key={step.num} className={`flex items-start gap-3 p-4 rounded-lg border transition-all ${
+                        isActive ? 'bg-primary/5 border-primary/20 shadow-sm' : 
+                        isCompleted ? 'bg-green-50 border-green-200' : 
+                        'bg-muted/30 border-border'
                       }`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
                           isActive ? 'bg-primary text-primary-foreground' :
-                          isCompleted ? 'bg-accent text-accent-foreground' :
+                          isCompleted ? 'bg-green-500 text-white' :
                           'bg-muted-foreground text-background'
                         }`}>
                           {isCompleted ? '✓' : step.num}
                         </div>
-                         <div className="flex-1">
-                           <h4 className="font-medium">{step.title}</h4>
-                           <p className="text-sm text-muted-foreground">{step.desc}</p>
-                           <div className="flex gap-2 mt-2">
-                             {isActive && (
-                               <Button 
-                                 size="sm" 
-                                 onClick={() => selectedOrder && completeStep(selectedOrder.id, step.num)}
-                               >
-                                 Complete Step
-                               </Button>
-                             )}
-                             {(step.num === 4 || step.num === 13) && (
-                               <Button 
-                                 size="sm" 
-                                 variant="outline"
-                                 onClick={() => triggerPhotoUpload(step.num)}
-                                 disabled={uploading}
-                               >
-                                 <Camera className="h-3 w-3 mr-1" />
-                                 {uploading && photoStep === step.num ? "Uploading..." : "Take Photo"}
-                               </Button>
-                             )}
-                           </div>
-                         </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm">{step.title}</h4>
+                          <p className="text-xs text-muted-foreground mb-2">{step.desc}</p>
+                          
+                          {/* Step-specific content */}
+                          {isActive && (
+                            <div className="bg-background rounded-md p-3 mb-3 text-xs space-y-2">
+                              {step.num === 2 && (
+                                <div className="space-y-2">
+                                  <p className="font-medium">📍 Pickup Address:</p>
+                                  <p className="text-muted-foreground">{selectedOrder.pickup_address}</p>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    onClick={() => selectedOrder.pickup_address && openGPSNavigation(selectedOrder.pickup_address)}
+                                    className="w-full"
+                                  >
+                                    <Navigation className="h-3 w-3 mr-1" />
+                                    Open GPS Navigation
+                                  </Button>
+                                </div>
+                              )}
+                              
+                              {step.num === 5 && (
+                                <div className="space-y-2">
+                                  <p className="font-medium">🏷️ Label the bag with:</p>
+                                  <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
+                                    <p className="font-mono text-xs font-medium text-yellow-800">
+                                      {getLabelText(selectedOrder)}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {step.num === 6 && (
+                                <div className="space-y-2">
+                                  <p className="font-medium">📝 Verify bag count:</p>
+                                  <div className="flex items-center gap-2">
+                                    <Label htmlFor="bagCount" className="text-xs">Expected: {selectedOrder.bag_count}</Label>
+                                    <Input 
+                                      id="bagCount"
+                                      type="number" 
+                                      placeholder="Actual count"
+                                      value={bagCountInput}
+                                      onChange={(e) => {
+                                        setBagCountInput(e.target.value);
+                                        updateStepData(selectedOrder.id, 6, { bagCount: parseInt(e.target.value) });
+                                      }}
+                                      className="h-7 text-xs w-20"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {step.num === 9 && (
+                                <div className="space-y-2">
+                                  <p className="font-medium">🧺 Customer Preferences:</p>
+                                  <ul className="text-xs space-y-1">
+                                    {getCustomerPreferences(selectedOrder).map((pref, idx) => (
+                                      <li key={idx} className="flex items-center gap-1">
+                                        <Check className="h-3 w-3 text-green-500" />
+                                        {pref}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              
+                              {step.num === 12 && (
+                                <div className="space-y-2">
+                                  <p className="font-medium">🏷️ Delivery label format:</p>
+                                  <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                                    <p className="font-mono text-xs font-medium text-blue-800">
+                                      {getLabelText(selectedOrder, true)}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {step.num === 13 && (
+                                <div className="space-y-2">
+                                  <p className="font-medium">⏰ Delivery Window:</p>
+                                  <div className="bg-orange-50 border border-orange-200 rounded p-2">
+                                    <p className="text-xs font-medium text-orange-800">
+                                      {getDeliveryTimeInfo(selectedOrder)}
+                                    </p>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    📍 Delivery to: {selectedOrder.delivery_address}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Action buttons */}
+                          <div className="flex gap-2 flex-wrap">
+                            {isActive && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => selectedOrder && completeStep(selectedOrder.id, step.num)}
+                                disabled={!stepCanComplete}
+                                className="text-xs h-7"
+                              >
+                                {stepCanComplete ? 'Complete Step' : 'Requirements not met'}
+                              </Button>
+                            )}
+                            
+                            {(step.num === 4 || step.num === 13) && (
+                              <Button 
+                                size="sm" 
+                                variant={hasPhoto ? "default" : "outline"}
+                                onClick={() => triggerPhotoUpload(step.num)}
+                                disabled={uploading}
+                                className="text-xs h-7"
+                              >
+                                <Camera className="h-3 w-3 mr-1" />
+                                {uploading && photoStep === step.num 
+                                  ? "Uploading..." 
+                                  : hasPhoto 
+                                  ? "Photo ✓" 
+                                  : "Take Photo"
+                                }
+                              </Button>
+                            )}
+                            
+                            {step.num === 2 && selectedOrder.pickup_address && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => openGPSNavigation(selectedOrder.pickup_address!)}
+                                className="text-xs h-7"
+                              >
+                                <Navigation className="h-3 w-3 mr-1" />
+                                GPS
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
