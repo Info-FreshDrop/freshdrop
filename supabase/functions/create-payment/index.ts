@@ -89,7 +89,7 @@ serve(async (req) => {
       const { data: order, error: orderError } = await supabaseService.from("orders").insert({
         ...orderData,
         customer_id: user.id,
-        status: 'placed', // Mark as placed since no payment needed
+        status: 'unclaimed', // Mark as unclaimed so operators can see it
         stripe_session_id: null, // No Stripe session for free orders
         promo_code: orderData.promoCode || null,
         discount_amount_cents: discountAmount,
