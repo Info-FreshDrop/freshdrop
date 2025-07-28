@@ -33,6 +33,7 @@ import {
   Settings
 } from "lucide-react";
 import { ServiceAreaModal } from './ServiceAreaModal';
+import { LiveOrderMap } from '../orders/LiveOrderMap';
 
 interface Order {
   id: string;
@@ -99,11 +100,15 @@ export function OperatorDashboard() {
   const [newZipCode, setNewZipCode] = useState<string>("");
   const [isAddingZipCode, setIsAddingZipCode] = useState(false);
   const [showServiceAreaModal, setShowServiceAreaModal] = useState(false);
+  const [showLiveMap, setShowLiveMap] = useState(false);
+  const [selectedMapOrder, setSelectedMapOrder] = useState<Order | null>(null);
+  const [operatorLocation, setOperatorLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
       loadDashboardData();
+      getCurrentOperatorLocation();
     }
   }, [user]);
 
@@ -602,6 +607,23 @@ export function OperatorDashboard() {
     }
   };
 
+  const getCurrentOperatorLocation = async () => {
+    try {
+      const position = await getCurrentLocation();
+      setOperatorLocation({
+        latitude: position.latitude,
+        longitude: position.longitude
+      });
+    } catch (error) {
+      console.warn('Could not get operator location:', error);
+    }
+  };
+
+  const openLiveOrderMap = (order: Order) => {
+    setSelectedMapOrder(order);
+    setShowLiveMap(true);
+  };
+
   const canCompleteStep = (stepNumber: number, orderId: string) => {
     // Step 3 and 12 require photos (pickup and delivery)
     if (stepNumber === 3 || stepNumber === 12) {
@@ -869,18 +891,26 @@ export function OperatorDashboard() {
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={() => setConfirmOrder(order)}
-                        className="flex-1"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Claim Order
-                      </Button>
-                      <Button variant="outline" size="icon">
-                        <MapPin className="h-4 w-4" />
-                      </Button>
-                    </div>
+                     <div className="flex gap-2">
+                       <Button 
+                         onClick={() => setConfirmOrder(order)}
+                         className="flex-1"
+                       >
+                         <CheckCircle className="h-4 w-4 mr-2" />
+                         Claim Order
+                       </Button>
+                       <Button 
+                         variant="outline" 
+                         size="icon"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           openLiveOrderMap(order);
+                         }}
+                         title="View on Map"
+                       >
+                         <MapPin className="h-4 w-4" />
+                       </Button>
+                     </div>
                   </Card>
                 ))}
               </div>
@@ -906,12 +936,11 @@ export function OperatorDashboard() {
                   const { progressText, progressColor, currentStep } = getOrderProgressInfo(order);
                   
                   return (
-                    <Card 
-                      key={order.id} 
-                      className="cursor-pointer hover:shadow-md transition-shadow"
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      <CardContent className="p-4">
+                     <Card 
+                       key={order.id} 
+                       className="hover:shadow-md transition-shadow"
+                     >
+                       <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-3">
                           <div>
                             <h4 className="font-semibold">Order #{order.id.slice(0, 8)}</h4>
@@ -935,40 +964,71 @@ export function OperatorDashboard() {
                           </div>
                         </div>
                         
-                        {/* Progress Information */}
-                        <div className="border-t pt-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
-                              <span className={`text-sm font-medium ${progressColor}`}>
-                                {progressText}
-                              </span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              Step {currentStep}/13
-                            </span>
-                          </div>
-                          
-                          {/* Progress bar */}
-                          <div className="w-full bg-muted rounded-full h-1.5 mt-2">
-                            <div 
-                              className="bg-primary h-1.5 rounded-full transition-all" 
-                              style={{ width: `${(currentStep / 13) * 100}%` }}
-                            />
-                          </div>
-                          
-                          {/* Quick status info */}
-                          {order.status === 'washed' && (
-                            <p className="text-xs text-orange-600 mt-1">
-                              💧 Items are currently washing/drying
-                            </p>
-                          )}
-                          {order.status === 'folded' && (
-                            <p className="text-xs text-green-600 mt-1">
-                              📦 Ready for delivery preparation
-                            </p>
-                          )}
-                        </div>
+                         {/* Progress Information */}
+                         <div className="border-t pt-3">
+                           <div className="flex items-center justify-between">
+                             <div className="flex items-center gap-2">
+                               <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
+                               <span className={`text-sm font-medium ${progressColor}`}>
+                                 {progressText}
+                               </span>
+                             </div>
+                             <span className="text-xs text-muted-foreground">
+                               Step {currentStep}/13
+                             </span>
+                           </div>
+                           
+                           {/* Progress bar */}
+                           <div className="w-full bg-muted rounded-full h-1.5 mt-2">
+                             <div 
+                               className="bg-primary h-1.5 rounded-full transition-all" 
+                               style={{ width: `${(currentStep / 13) * 100}%` }}
+                             />
+                           </div>
+                           
+                           {/* Action buttons */}
+                           <div className="flex gap-2 mt-3">
+                             <Button 
+                               variant="outline" 
+                               size="sm" 
+                               className="flex-1"
+                               onClick={() => setSelectedOrder(order)}
+                             >
+                               View Workflow
+                             </Button>
+                             <Button 
+                               variant="outline" 
+                               size="sm"
+                               onClick={() => openLiveOrderMap(order)}
+                             >
+                               <MapPin className="h-4 w-4 mr-1" />
+                               Map
+                             </Button>
+                             <Button 
+                               variant="outline" 
+                               size="sm"
+                               onClick={() => openGPSNavigation(
+                                 order.status === 'claimed' || order.status === 'in_progress' 
+                                   ? order.pickup_address 
+                                   : order.delivery_address
+                               )}
+                             >
+                               <Navigation className="h-4 w-4" />
+                             </Button>
+                           </div>
+                           
+                           {/* Quick status info */}
+                           {order.status === 'washed' && (
+                             <p className="text-xs text-orange-600 mt-1">
+                               💧 Items are currently washing/drying
+                             </p>
+                           )}
+                           {order.status === 'folded' && (
+                             <p className="text-xs text-green-600 mt-1">
+                               📦 Ready for delivery preparation
+                             </p>
+                           )}
+                         </div>
                       </CardContent>
                     </Card>
                   );
@@ -1227,21 +1287,31 @@ export function OperatorDashboard() {
         <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setSelectedOrder(null)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  Order Workflow
-                </div>
-                <Badge variant={selectedOrder?.is_express ? "destructive" : "secondary"}>
-                  {selectedOrder?.is_express ? "Express" : "Standard"}
-                </Badge>
+               <DialogTitle className="flex items-center justify-between">
+                 <div className="flex items-center gap-2">
+                   <Button 
+                     variant="ghost" 
+                     size="sm" 
+                     onClick={() => setSelectedOrder(null)}
+                     className="h-8 w-8 p-0"
+                   >
+                     <ArrowLeft className="h-4 w-4" />
+                   </Button>
+                   Order Workflow
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => selectedOrder && openLiveOrderMap(selectedOrder)}
+                   >
+                     <MapPin className="h-4 w-4 mr-1" />
+                     View Map
+                   </Button>
+                   <Badge variant={selectedOrder?.is_express ? "destructive" : "secondary"}>
+                     {selectedOrder?.is_express ? "Express" : "Standard"}
+                   </Badge>
+                 </div>
               </DialogTitle>
               <DialogDescription>
                 Pickup Deadline: {selectedOrder?.pickup_window_end && 
@@ -1519,6 +1589,19 @@ export function OperatorDashboard() {
           currentZipCodes={washerData?.zip_codes || []}
           onUpdate={handleUpdateZipCodes}
         />
+
+        {/* Live Order Map Modal */}
+        {selectedMapOrder && (
+          <LiveOrderMap
+            isOpen={showLiveMap}
+            onClose={() => {
+              setShowLiveMap(false);
+              setSelectedMapOrder(null);
+            }}
+            order={selectedMapOrder}
+            operatorLocation={operatorLocation}
+          />
+        )}
       </div>
     </div>
   );
