@@ -34,6 +34,8 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
   const [isExpress, setIsExpress] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [lockers, setLockers] = useState<any[]>([]);
   const [clothesItems, setClothesItems] = useState<any[]>([]);
   const [serviceAreas, setServiceAreas] = useState<any[]>([]);
@@ -120,12 +122,62 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     }
   };
 
-  // Handle location detection
+  // Address autocomplete function
+  const searchAddresses = async (query: string) => {
+    if (query.length < 3) {
+      setAddressSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=US&limit=5&addressdetails=1`
+      );
+      const data = await response.json();
+      
+      const suggestions = data.map((item: any) => ({
+        display_name: item.display_name,
+        address: item.address,
+        formatted: `${item.address?.house_number || ''} ${item.address?.road || ''}, ${item.address?.city || item.address?.town || ''}, ${item.address?.state || ''} ${item.address?.postcode || ''}`.trim()
+      }));
+      
+      setAddressSuggestions(suggestions);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Address search failed:', error);
+    }
+  };
+
+  // Handle address suggestion selection
+  const handleAddressSelect = (suggestion: any) => {
+    const zipCode = suggestion.address?.postcode || '';
+    handleInputChange('pickupAddress', suggestion.formatted);
+    handleInputChange('deliveryAddress', suggestion.formatted);
+    if (zipCode) {
+      handleInputChange('zipCode', zipCode);
+    }
+    setShowSuggestions(false);
+    setAddressSuggestions([]);
+  };
+
+  // Handle location detection with better error handling
   const handleDetectLocation = async () => {
     setIsDetectingLocation(true);
+    console.log('Starting location detection...');
+    
     try {
+      // Check if geolocation is supported
+      if (!navigator.geolocation) {
+        throw new Error('Geolocation is not supported by this browser');
+      }
+
+      console.log('Requesting current position...');
       const location = await getCurrentLocation();
+      console.log('Location received:', location);
+      
       const addressData = await reverseGeocode(location.latitude, location.longitude);
+      console.log('Address data:', addressData);
       
       // Update form data with detected address and zip code
       handleInputChange('pickupAddress', addressData.address);
@@ -140,9 +192,22 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
       });
     } catch (error) {
       console.error('Location detection failed:', error);
+      
+      // More specific error messages
+      let errorMessage = "Unable to detect your location. Please enter your address manually.";
+      if (error instanceof Error) {
+        if (error.message.includes('Permission denied')) {
+          errorMessage = "Location access denied. Please allow location permissions and try again.";
+        } else if (error.message.includes('Position unavailable')) {
+          errorMessage = "Your location is currently unavailable. Please enter your address manually.";
+        } else if (error.message.includes('Timeout')) {
+          errorMessage = "Location request timed out. Please try again or enter your address manually.";
+        }
+      }
+      
       toast({
         title: "Location Error",
-        description: "Unable to detect your location. Please enter your address manually.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -341,7 +406,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
 
                 <TabsContent value="pickup_delivery" className="space-y-4 mt-6">
                   <div className="space-y-4">
-                    <div className="space-y-2">
+                    <div className="space-y-2 relative">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="service-address">Service Address</Label>
                         <Button
@@ -370,14 +435,43 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                         placeholder="Enter your address for both pickup and delivery, or use auto-detect"
                         value={formData.pickupAddress}
                         onChange={(e) => {
-                          handleInputChange('pickupAddress', e.target.value);
-                          handleInputChange('deliveryAddress', e.target.value); // Same address for both
+                          const value = e.target.value;
+                          handleInputChange('pickupAddress', value);
+                          handleInputChange('deliveryAddress', value); // Same address for both
+                          searchAddresses(value); // Trigger address search
+                        }}
+                        onFocus={() => {
+                          if (formData.pickupAddress.length >= 3) {
+                            searchAddresses(formData.pickupAddress);
+                          }
+                        }}
+                        onBlur={() => {
+                          // Delay hiding suggestions to allow clicking on them
+                          setTimeout(() => setShowSuggestions(false), 200);
                         }}
                         required={orderType === 'pickup_delivery'}
                         rows={3}
                       />
+                      
+                      {/* Address Suggestions Dropdown */}
+                      {showSuggestions && addressSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                          {addressSuggestions.map((suggestion, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 text-sm"
+                              onClick={() => handleAddressSelect(suggestion)}
+                            >
+                              <div className="font-medium">{suggestion.formatted}</div>
+                              <div className="text-xs text-gray-500 mt-1">{suggestion.display_name}</div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      
                       <p className="text-xs text-muted-foreground">
-                        We'll pickup and deliver to the same address. Click "Auto-detect" to use your current location.
+                        We'll pickup and deliver to the same address. Click "Auto-detect" to use your current location or start typing for suggestions.
                       </p>
                     </div>
                   </div>
