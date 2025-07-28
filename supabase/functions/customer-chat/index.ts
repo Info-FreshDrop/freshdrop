@@ -123,7 +123,7 @@ If the user seems frustrated or has a complex issue, offer: "I'd like to connect
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: messages,
         temperature: 0.7,
         max_tokens: 500,
@@ -131,6 +131,8 @@ If the user seems frustrated or has a complex issue, offer: "I'd like to connect
     });
 
     if (!response.ok) {
+      const errorData = await response.text();
+      console.error(`OpenAI API error: ${response.status} - ${errorData}`);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
