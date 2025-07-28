@@ -223,6 +223,7 @@ export type Database = {
       orders: {
         Row: {
           bag_count: number | null
+          business_cut_cents: number | null
           claimed_at: string | null
           completed_at: string | null
           created_at: string
@@ -236,6 +237,7 @@ export type Database = {
           is_express: boolean | null
           items: Json | null
           locker_id: string | null
+          operator_payout_cents: number | null
           pickup_address: string | null
           pickup_photo_url: string | null
           pickup_type: Database["public"]["Enums"]["pickup_type"]
@@ -253,6 +255,7 @@ export type Database = {
         }
         Insert: {
           bag_count?: number | null
+          business_cut_cents?: number | null
           claimed_at?: string | null
           completed_at?: string | null
           created_at?: string
@@ -266,6 +269,7 @@ export type Database = {
           is_express?: boolean | null
           items?: Json | null
           locker_id?: string | null
+          operator_payout_cents?: number | null
           pickup_address?: string | null
           pickup_photo_url?: string | null
           pickup_type: Database["public"]["Enums"]["pickup_type"]
@@ -283,6 +287,7 @@ export type Database = {
         }
         Update: {
           bag_count?: number | null
+          business_cut_cents?: number | null
           claimed_at?: string | null
           completed_at?: string | null
           created_at?: string
@@ -296,6 +301,7 @@ export type Database = {
           is_express?: boolean | null
           items?: Json | null
           locker_id?: string | null
+          operator_payout_cents?: number | null
           pickup_address?: string | null
           pickup_photo_url?: string | null
           pickup_type?: Database["public"]["Enums"]["pickup_type"]

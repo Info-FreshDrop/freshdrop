@@ -33,7 +33,9 @@ export function OwnerDashboard() {
     pendingApplications: 0,
     totalLockers: 0,
     activeLockers: 0,
-    totalRevenue: 0
+    totalRevenue: 0,
+    freshDropPay: 0,
+    operatorPay: 0
   });
 
   useEffect(() => {
@@ -58,13 +60,15 @@ export function OwnerDashboard() {
       console.log('Owner dashboard - all orders query:', { allOrdersData, allOrdersError });
       setAllOrders(allOrdersData || []);
 
-      // Get total revenue (sum of all completed orders)
-      const { data: revenueData } = await supabase
+      // Get financial data (sum of all completed orders)
+      const { data: financialData } = await supabase
         .from('orders')
-        .select('total_amount_cents')
+        .select('total_amount_cents, business_cut_cents, operator_payout_cents')
         .eq('status', 'completed');
 
-      const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.total_amount_cents || 0), 0) || 0;
+      const totalRevenue = financialData?.reduce((sum, order) => sum + (order.total_amount_cents || 0), 0) || 0;
+      const freshDropPay = financialData?.reduce((sum, order) => sum + (order.business_cut_cents || 0), 0) || 0;
+      const operatorPay = financialData?.reduce((sum, order) => sum + (order.operator_payout_cents || 0), 0) || 0;
 
       // Get active operators count
       const { count: operatorsCount } = await supabase
@@ -104,7 +108,9 @@ export function OwnerDashboard() {
         pendingApplications: pendingApplicationsCount || 0,
         totalLockers: totalLockersCount || 0,
         activeLockers: activeLockersCount || 0,
-        totalRevenue: totalRevenue
+        totalRevenue: totalRevenue,
+        freshDropPay: freshDropPay,
+        operatorPay: operatorPay
       });
 
       // Set up real-time subscription for pending approvals and applications
@@ -124,6 +130,14 @@ export function OwnerDashboard() {
         )
         .on('postgres_changes', 
           { event: 'UPDATE', schema: 'public', table: 'operator_applications' },
+          () => loadDashboardStats()
+        )
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'orders' },
+          () => loadDashboardStats()
+        )
+        .on('postgres_changes', 
+          { event: 'UPDATE', schema: 'public', table: 'orders' },
           () => loadDashboardStats()
         )
         .subscribe();
@@ -293,8 +307,50 @@ export function OwnerDashboard() {
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Financial Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card className="border-0 shadow-soft">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Revenue</p>
+                  <p className="text-xs text-muted-foreground">All customer payments</p>
+                  <p className="text-2xl font-bold">${(stats.totalRevenue / 100).toFixed(2)}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-success" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">FreshDrop Pay</p>
+                  <p className="text-xs text-muted-foreground">Business cut after operator pay</p>
+                  <p className="text-2xl font-bold text-primary">${(stats.freshDropPay / 100).toFixed(2)}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Operator Pay</p>
+                  <p className="text-xs text-muted-foreground">Washer payouts</p>
+                  <p className="text-2xl font-bold text-accent">${(stats.operatorPay / 100).toFixed(2)}</p>
+                </div>
+                <Users className="h-8 w-8 text-accent" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Operational Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="border-0 shadow-soft">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -334,18 +390,6 @@ export function OwnerDashboard() {
                   <p className="text-2xl font-bold">{stats.activeLockers}/{stats.totalLockers}</p>
                 </div>
                 <MapPin className="h-8 w-8 text-secondary" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Revenue</p>
-                  <p className="text-2xl font-bold">${(stats.totalRevenue / 100).toFixed(2)}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-success" />
               </div>
             </CardContent>
           </Card>

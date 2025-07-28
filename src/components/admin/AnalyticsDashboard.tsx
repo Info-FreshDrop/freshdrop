@@ -27,6 +27,8 @@ interface AnalyticsDashboardProps {
 interface AnalyticsData {
   totalOrders: number;
   totalRevenue: number;
+  freshDropPay: number;
+  operatorPay: number;
   activeWashers: number;
   completionRate: number;
   avgTurnaroundTime: number;
@@ -40,6 +42,8 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalOrders: 0,
     totalRevenue: 0,
+    freshDropPay: 0,
+    operatorPay: 0,
     activeWashers: 0,
     completionRate: 0,
     avgTurnaroundTime: 0,
@@ -92,6 +96,8 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
       if (orders) {
         const totalOrders = orders.length;
         const totalRevenue = orders.reduce((sum, order) => sum + order.total_amount_cents, 0) / 100;
+        const freshDropPay = orders.reduce((sum, order) => sum + (order.business_cut_cents || 0), 0) / 100;
+        const operatorPay = orders.reduce((sum, order) => sum + (order.operator_payout_cents || 0), 0) / 100;
         const completedOrders = orders.filter(order => order.status === 'completed');
         const completionRate = totalOrders > 0 ? (completedOrders.length / totalOrders) * 100 : 0;
 
@@ -134,6 +140,8 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
         setAnalytics({
           totalOrders,
           totalRevenue,
+          freshDropPay,
+          operatorPay,
           activeWashers: washers?.length || 0,
           completionRate,
           avgTurnaroundTime: avgTurnaround,
@@ -215,8 +223,62 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
           </div>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Financial Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card className="border-0 shadow-soft">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Revenue</p>
+                  <p className="text-xs text-muted-foreground">All customer payments</p>
+                  <p className="text-3xl font-bold">{formatCurrency(analytics.totalRevenue)}</p>
+                  <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
+                    <ArrowUp className="h-3 w-3" />
+                    <span>+18% vs last period</span>
+                  </div>
+                </div>
+                <DollarSign className="h-8 w-8 text-success" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">FreshDrop Pay</p>
+                  <p className="text-xs text-muted-foreground">Business cut (30%)</p>
+                  <p className="text-3xl font-bold text-primary">{formatCurrency(analytics.freshDropPay)}</p>
+                  <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
+                    <ArrowUp className="h-3 w-3" />
+                    <span>+15% vs last period</span>
+                  </div>
+                </div>
+                <TrendingUp className="h-8 w-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Operator Pay</p>
+                  <p className="text-xs text-muted-foreground">Washer payouts (70%)</p>
+                  <p className="text-3xl font-bold text-accent">{formatCurrency(analytics.operatorPay)}</p>
+                  <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
+                    <ArrowUp className="h-3 w-3" />
+                    <span>+20% vs last period</span>
+                  </div>
+                </div>
+                <Users className="h-8 w-8 text-accent" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Performance Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="border-0 shadow-soft">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -229,22 +291,6 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
                   </div>
                 </div>
                 <Package className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-3xl font-bold">{formatCurrency(analytics.totalRevenue)}</p>
-                  <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
-                    <ArrowUp className="h-3 w-3" />
-                    <span>+18% vs last period</span>
-                  </div>
-                </div>
-                <DollarSign className="h-8 w-8 text-success" />
               </div>
             </CardContent>
           </Card>
