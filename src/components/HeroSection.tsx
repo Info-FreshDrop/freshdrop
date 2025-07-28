@@ -29,7 +29,7 @@ export function HeroSection() {
           <img 
             src={freshDropLogo} 
             alt="FreshDrop Logo" 
-            className="h-48 md:h-72 w-auto drop-shadow-lg"
+            className="h-48 md:h-72 w-auto drop-shadow-lg bg-primary/90 rounded-2xl p-4"
             style={{ 
               filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))'
             }}
