@@ -113,20 +113,19 @@ export default function PaymentSuccess() {
                   </ul>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <Button 
-                    onClick={() => navigate('/dashboard')}
-                    className="w-full"
-                  >
-                    View Dashboard
-                  </Button>
-                  <Button 
-                    variant="outline" 
                     onClick={() => navigate('/')}
                     className="w-full"
                   >
-                    Back to Home
+                    Return to Dashboard
                   </Button>
+                </div>
+
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>Note:</strong> You will now be redirected to your dashboard where you can track your order in the "Active Orders" section.
+                  </p>
                 </div>
               </>
             ) : (

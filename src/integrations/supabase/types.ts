@@ -100,6 +100,7 @@ export type Database = {
           delivery_photo_url: string | null
           delivery_window_end: string | null
           delivery_window_start: string | null
+          discount_amount_cents: number | null
           id: string
           is_express: boolean | null
           items: Json | null
@@ -109,6 +110,7 @@ export type Database = {
           pickup_type: Database["public"]["Enums"]["pickup_type"]
           pickup_window_end: string | null
           pickup_window_start: string | null
+          promo_code: string | null
           service_type: Database["public"]["Enums"]["service_type"]
           special_instructions: string | null
           status: Database["public"]["Enums"]["order_status"] | null
@@ -127,6 +129,7 @@ export type Database = {
           delivery_photo_url?: string | null
           delivery_window_end?: string | null
           delivery_window_start?: string | null
+          discount_amount_cents?: number | null
           id?: string
           is_express?: boolean | null
           items?: Json | null
@@ -136,6 +139,7 @@ export type Database = {
           pickup_type: Database["public"]["Enums"]["pickup_type"]
           pickup_window_end?: string | null
           pickup_window_start?: string | null
+          promo_code?: string | null
           service_type: Database["public"]["Enums"]["service_type"]
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
@@ -154,6 +158,7 @@ export type Database = {
           delivery_photo_url?: string | null
           delivery_window_end?: string | null
           delivery_window_start?: string | null
+          discount_amount_cents?: number | null
           id?: string
           is_express?: boolean | null
           items?: Json | null
@@ -163,6 +168,7 @@ export type Database = {
           pickup_type?: Database["public"]["Enums"]["pickup_type"]
           pickup_window_end?: string | null
           pickup_window_start?: string | null
+          promo_code?: string | null
           service_type?: Database["public"]["Enums"]["service_type"]
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null

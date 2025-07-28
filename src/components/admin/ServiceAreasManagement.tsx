@@ -8,6 +8,9 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, MapPin, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ServiceAreasMap } from "./ServiceAreasMap";
+import { Badge } from "@/components/ui/badge";
 
 interface ServiceAreasManagementProps {
   onBack: () => void;
@@ -26,6 +29,7 @@ interface ServiceArea {
 export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ onBack }) => {
   const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showMap, setShowMap] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newArea, setNewArea] = useState({
     zip_code: '',
@@ -207,6 +211,10 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
     }
   };
 
+  if (showMap) {
+    return <ServiceAreasMap onBack={() => setShowMap(false)} />;
+  }
+
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
   }
@@ -258,13 +266,23 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
           <h1 className="text-3xl font-bold">Service Areas Management</h1>
           <p className="text-muted-foreground">Manage zip codes and their service capabilities</p>
         </div>
-        <Button 
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add Service Area
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Service Area
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => setShowMap(true)}
+            className="flex items-center gap-2"
+          >
+            <MapPin className="h-4 w-4" />
+            View Coverage Map
+          </Button>
+        </div>
       </div>
 
       {showAddForm && (

@@ -7,6 +7,7 @@ import { OperatorManagement } from "@/components/admin/OperatorManagement";
 import { ServiceAreasManagement } from "@/components/admin/ServiceAreasManagement";
 import { ClothesShopManagement } from "@/components/admin/ClothesShopManagement";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
+import { PromoCodeManagement } from "@/components/admin/PromoCodeManagement";
 import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -23,7 +24,7 @@ import {
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes'>('dashboard');
   const [stats, setStats] = useState({
     totalOrders: 0,
     activeOperators: 0,
@@ -154,6 +155,10 @@ export function OwnerDashboard() {
 
   if (currentView === 'analytics') {
     return <AnalyticsDashboard onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'promo-codes') {
+    return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} />;
   }
 
   return (
@@ -297,7 +302,11 @@ export function OwnerDashboard() {
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Manage Service Areas
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('service-areas')}
+                >
                   View Coverage Map
                 </Button>
               </div>
@@ -373,6 +382,32 @@ export function OwnerDashboard() {
                 </Button>
                 <Button variant="outline" className="w-full">
                   Export Reports
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-green-600" />
+                Promo Codes
+              </CardTitle>
+              <CardDescription>
+                Create and manage discount codes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('promo-codes')}
+                >
+                  Manage Codes
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Usage Analytics
                 </Button>
               </div>
             </CardContent>

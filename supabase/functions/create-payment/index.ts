@@ -43,10 +43,24 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    // Calculate total amount from order data
+    // Calculate total amount from order data including add-ons
     const bagCost = orderData.bag_count * 3500; // $35 per bag
     const expressCost = orderData.is_express ? 2000 : 0; // $20 express fee
-    const totalAmount = bagCost + expressCost;
+    const fragranceFreeCost = orderData.fragranceFree ? 300 : 0; // $3 fragrance-free
+    const shirtsOnHangersCost = orderData.shirtsOnHangers ? 800 : 0; // $8 shirts on hangers
+    const extraRinseCost = orderData.extraRinse ? 200 : 0; // $2 extra rinse
+    
+    let totalAmount = bagCost + expressCost + fragranceFreeCost + shirtsOnHangersCost + extraRinseCost;
+    let discountAmount = 0;
+    
+    // Apply promo code discount
+    if (orderData.promoCode) {
+      // For now, only handle the TEST promo code (100% off)
+      if (orderData.promoCode === 'TEST') {
+        discountAmount = totalAmount;
+        totalAmount = 0;
+      }
+    }
 
     // Create a one-time payment session
     const session = await stripe.checkout.sessions.create({
@@ -86,6 +100,8 @@ serve(async (req) => {
       customer_id: user.id,
       status: 'payment_pending',
       stripe_session_id: session.id,
+      promo_code: orderData.promoCode || null,
+      discount_amount_cents: discountAmount,
       created_at: new Date().toISOString()
     });
 
