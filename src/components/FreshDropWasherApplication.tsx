@@ -15,7 +15,7 @@ interface ApplicationFormData {
   fullName: string;
   email: string;
   phone: string;
-  zipCode: string;
+  zipCodes: string[];
 
   // Washer & Dryer Verification
   washerPhoto: File | null;
@@ -59,7 +59,7 @@ export function FreshDropWasherApplication() {
     fullName: '',
     email: '',
     phone: '',
-    zipCode: '',
+    zipCodes: [],
     washerPhoto: null,
     washerInsidePhoto: null,
     dryerPhoto: null,
@@ -86,6 +86,7 @@ export function FreshDropWasherApplication() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [zipCodeInput, setZipCodeInput] = useState('');
   const { toast } = useToast();
 
   const handleInputChange = (field: keyof ApplicationFormData, value: any) => {
@@ -114,10 +115,28 @@ export function FreshDropWasherApplication() {
     }));
   };
 
+  const addZipCode = () => {
+    const zipCode = zipCodeInput.trim();
+    if (zipCode && !formData.zipCodes.includes(zipCode)) {
+      setFormData(prev => ({
+        ...prev,
+        zipCodes: [...prev.zipCodes, zipCode]
+      }));
+      setZipCodeInput('');
+    }
+  };
+
+  const removeZipCode = (zipCodeToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      zipCodes: prev.zipCodes.filter(zip => zip !== zipCodeToRemove)
+    }));
+  };
+
   const validateCurrentStep = (): boolean => {
     switch (currentStep) {
       case 1:
-        return !!(formData.fullName && formData.email && formData.phone && formData.zipCode);
+        return !!(formData.fullName && formData.email && formData.phone && formData.zipCodes.length > 0);
       case 2:
         return !!(
           formData.washerPhoto && 
@@ -233,7 +252,7 @@ export function FreshDropWasherApplication() {
             address: 'Home-based washer/dryer application', // Required field
             city: 'N/A', // Required field
             state: 'N/A', // Required field
-            zip_code: formData.zipCode,
+            zip_code: formData.zipCodes.join(', '), // Store multiple zip codes as comma-separated
             drivers_license: 'N/A',
             vehicle_type: formData.hasVehicle ? formData.vehicleDetails : 'none',
             availability: formData.weeklyAvailability,
@@ -256,7 +275,7 @@ export function FreshDropWasherApplication() {
         fullName: '',
         email: '',
         phone: '',
-        zipCode: '',
+        zipCodes: [],
         washerPhoto: null,
         washerInsidePhoto: null,
         dryerPhoto: null,
@@ -361,14 +380,38 @@ export function FreshDropWasherApplication() {
               </div>
             </div>
             <div>
-              <Label htmlFor="zipCode">Zip Code *</Label>
-              <Input
-                id="zipCode"
-                value={formData.zipCode}
-                onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                placeholder="For service area filtering"
-                required
-              />
+              <Label htmlFor="zipCodeInput">Service Area Zip Codes *</Label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  id="zipCodeInput"
+                  value={zipCodeInput}
+                  onChange={(e) => setZipCodeInput(e.target.value)}
+                  placeholder="Enter zip code and click Add"
+                  onKeyPress={(e) => e.key === 'Enter' && addZipCode()}
+                />
+                <Button type="button" onClick={addZipCode} disabled={!zipCodeInput.trim()}>
+                  Add
+                </Button>
+              </div>
+              {formData.zipCodes.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.zipCodes.map((zip) => (
+                    <div key={zip} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
+                      {zip}
+                      <button
+                        type="button"
+                        onClick={() => removeZipCode(zip)}
+                        className="text-primary hover:text-primary/70 ml-1"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground mt-1">
+                Add all zip codes where you can provide service
+              </p>
             </div>
           </div>
         );

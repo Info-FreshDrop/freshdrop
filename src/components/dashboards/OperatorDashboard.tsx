@@ -94,6 +94,8 @@ export function OperatorDashboard() {
   const [uploading, setUploading] = useState(false);
   const [photoUploaded, setPhotoUploaded] = useState<Record<string, boolean>>({});
   const [bagCountInput, setBagCountInput] = useState<string>("");
+  const [newZipCode, setNewZipCode] = useState<string>("");
+  const [isAddingZipCode, setIsAddingZipCode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -431,6 +433,111 @@ export function OperatorDashboard() {
     }
   };
 
+  const toggleOnlineStatus = async (isOnline: boolean) => {
+    if (!washerData) return;
+
+    try {
+      const { error } = await supabase
+        .from('washers')
+        .update({ is_online: isOnline })
+        .eq('id', washerData.id);
+
+      if (error) throw error;
+
+      setWasherData(prev => prev ? { ...prev, is_online: isOnline } : null);
+      
+      toast({
+        title: isOnline ? "Now Online" : "Now Offline",
+        description: isOnline 
+          ? "You're now receiving orders in your service areas." 
+          : "You've stopped receiving new orders.",
+      });
+    } catch (error) {
+      console.error('Error updating online status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update status. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddZipCode = async () => {
+    if (!newZipCode.trim() || !washerData) return;
+    
+    const zipCode = newZipCode.trim();
+    if (washerData.zip_codes.includes(zipCode)) {
+      toast({
+        title: "Duplicate Zip Code",
+        description: "This zip code is already in your service areas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const updatedZipCodes = [...washerData.zip_codes, zipCode];
+      
+      const { error } = await supabase
+        .from('washers')
+        .update({ zip_codes: updatedZipCodes })
+        .eq('id', washerData.id);
+
+      if (error) throw error;
+
+      setWasherData(prev => prev ? { ...prev, zip_codes: updatedZipCodes } : null);
+      setNewZipCode('');
+      setIsAddingZipCode(false);
+      
+      toast({
+        title: "Zip Code Added",
+        description: `${zipCode} has been added to your service areas.`,
+      });
+      
+      // Refresh data to show new orders
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error adding zip code:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add zip code. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRemoveZipCode = async (zipCodeToRemove: string) => {
+    if (!washerData) return;
+
+    try {
+      const updatedZipCodes = washerData.zip_codes.filter(zip => zip !== zipCodeToRemove);
+      
+      const { error } = await supabase
+        .from('washers')
+        .update({ zip_codes: updatedZipCodes })
+        .eq('id', washerData.id);
+
+      if (error) throw error;
+
+      setWasherData(prev => prev ? { ...prev, zip_codes: updatedZipCodes } : null);
+      
+      toast({
+        title: "Zip Code Removed",
+        description: `${zipCodeToRemove} has been removed from your service areas.`,
+      });
+      
+      // Refresh data to update available orders
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error removing zip code:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove zip code. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const openGPSNavigation = async (address: string) => {
     try {
       // Try to get current location first
@@ -580,27 +687,6 @@ export function OperatorDashboard() {
     setTimeout(() => fileInputRef.current?.click(), 100);
   };
 
-  const toggleOnlineStatus = async (isOnline: boolean) => {
-    if (!washerData) return;
-
-    try {
-      const { error } = await supabase
-        .from('washers')
-        .update({ is_online: isOnline })
-        .eq('id', washerData.id);
-
-      if (error) throw error;
-
-      setWasherData({ ...washerData, is_online: isOnline });
-      
-      toast({
-        title: isOnline ? "Now Online" : "Now Offline",
-        description: isOnline ? "You'll receive new orders" : "You won't receive new orders",
-      });
-    } catch (error) {
-      console.error('Error updating online status:', error);
-    }
-  };
 
   const formatTimeWindow = (start: string | null, end: string | null) => {
     if (!start || !end) return "No time specified";
@@ -881,10 +967,53 @@ export function OperatorDashboard() {
                     <p className="text-muted-foreground">{operatorProfile?.phone}</p>
                   </div>
                   <div>
-                    <p className="font-medium">Service Areas</p>
-                    <p className="text-muted-foreground">
-                      {washerData?.zip_codes?.join(', ') || 'None assigned'}
-                    </p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium">Service Areas</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setIsAddingZipCode(true)}
+                        disabled={isAddingZipCode}
+                      >
+                        Add Zip Code
+                      </Button>
+                    </div>
+                    {isAddingZipCode && (
+                      <div className="flex gap-2 mb-2">
+                        <Input
+                          placeholder="Enter zip code"
+                          value={newZipCode}
+                          onChange={(e) => setNewZipCode(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleAddZipCode()}
+                        />
+                        <Button size="sm" onClick={handleAddZipCode}>Add</Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            setIsAddingZipCode(false);
+                            setNewZipCode('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {washerData?.zip_codes?.map((zipCode) => (
+                        <div key={zipCode} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
+                          {zipCode}
+                          <button
+                            onClick={() => handleRemoveZipCode(zipCode)}
+                            className="text-primary hover:text-primary/70 ml-1"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )) || (
+                        <p className="text-muted-foreground text-sm">No service areas assigned</p>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
