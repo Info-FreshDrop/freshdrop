@@ -62,6 +62,7 @@ interface OperatorApplication {
   motivation: string;
   status: string;
   created_at: string;
+  updated_at?: string;
   washer_photo_url?: string;
   washer_inside_photo_url?: string;
   dryer_photo_url?: string;
@@ -84,7 +85,7 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
     selectedLockers: [] as string[],
   });
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'applications' | 'operators' | 'invite'>('applications');
+  const [activeTab, setActiveTab] = useState<'applications' | 'rejected' | 'operators' | 'invite'>('applications');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -293,10 +294,20 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
       // Update application status
       const { error } = await supabase
         .from('operator_applications')
-        .update({ status: action })
+        .update({ 
+          status: action,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', applicationId);
 
       if (error) throw error;
+
+      if (action === 'rejected') {
+        toast({
+          title: "Application Rejected",
+          description: "Application has been rejected and moved to the rejected applications tab for future review.",
+        });
+      }
 
       loadData(); // Reload data to update the UI
     } catch (error) {
@@ -304,6 +315,34 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
       toast({
         title: "Error",
         description: `Failed to update application status: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const reinstateApplication = async (applicationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('operator_applications')
+        .update({ 
+          status: 'pending',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Application Reinstated",
+        description: "Application has been moved back to pending applications for review.",
+      });
+
+      loadData(); // Reload data to update the UI
+    } catch (error) {
+      console.error('Error reinstating application:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reinstate application",
         variant: "destructive"
       });
     }
@@ -392,6 +431,8 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
   };
 
   const pendingApplications = applications.filter(app => app.status === 'pending');
+  const rejectedApplications = applications.filter(app => app.status === 'rejected');
+  const rejectedCount = rejectedApplications.length;
   const pendingOperators = operators.filter(op => op.approval_status === 'pending');
   const activeOperators = operators.filter(op => op.approval_status === 'approved');
 
@@ -421,6 +462,17 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
           Applications {pendingApplications.length > 0 && (
             <Badge variant="destructive" className="ml-2">
               {pendingApplications.length}
+            </Badge>
+          )}
+        </Button>
+        <Button
+          variant={activeTab === 'rejected' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('rejected')}
+          className="rounded-b-none"
+        >
+          Rejected Applications {rejectedCount > 0 && (
+            <Badge variant="secondary" className="ml-2">
+              {rejectedCount}
             </Badge>
           )}
         </Button>
@@ -603,6 +655,76 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
                         >
                           <UserX className="h-4 w-4 mr-1" />
                           Reject
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Rejected Applications Tab */}
+      {activeTab === 'rejected' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserX className="h-5 w-5" />
+              Rejected Applications ({rejectedCount})
+            </CardTitle>
+            <CardDescription>Review and reinstate rejected applications</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {rejectedCount === 0 ? (
+              <div className="text-center py-8">
+                <UserX className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No rejected applications</h3>
+                <p className="text-muted-foreground">Rejected applications will appear here for future review</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {rejectedApplications.map((application) => (
+                  <div key={application.id} className="border border-red-200 rounded-lg p-4 space-y-3 bg-red-50">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium text-lg">
+                            {application.first_name} {application.last_name}
+                          </h4>
+                          <Badge variant="destructive">Rejected</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                          <p><strong>Email:</strong> {application.email}</p>
+                          <p><strong>Phone:</strong> {application.phone}</p>
+                          <p><strong>Address:</strong> {application.address}, {application.city}, {application.state}</p>
+                          <p><strong>Zip Code:</strong> {application.zip_code}</p>
+                          <p><strong>Vehicle:</strong> {application.vehicle_type}</p>
+                          <p><strong>Availability:</strong> {application.availability}</p>
+                        </div>
+                        {application.experience && (
+                          <div className="mt-2">
+                            <p className="text-sm"><strong>Experience:</strong> {application.experience}</p>
+                          </div>
+                        )}
+                        <div className="mt-2">
+                          <p className="text-sm"><strong>Motivation:</strong> {application.motivation}</p>
+                        </div>
+                        
+                        <div className="flex gap-4 text-xs text-muted-foreground mt-4 pt-4 border-t border-red-200">
+                          <p>Applied: {new Date(application.created_at).toLocaleDateString()}</p>
+                          <p>Rejected: {new Date(application.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => reinstateApplication(application.id)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <UserCheck className="h-4 w-4 mr-1" />
+                          Reinstate
                         </Button>
                       </div>
                     </div>
