@@ -40,7 +40,6 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     zipCode: '',
     specialInstructions: '',
     bagCount: 1,
-    bagType: 'basic',
     timeWindow: ''
   });
 
@@ -132,7 +131,6 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
 
       // Prepare order data
       const orderData = {
-        customer_id: user?.id,
         pickup_type: orderType,
         service_type: serviceType as any,
         zip_code: formData.zipCode,
@@ -142,9 +140,8 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
         locker_id: orderType === 'locker' ? formData.lockerId : null,
         special_instructions: formData.specialInstructions,
         bag_count: formData.bagCount,
-        items: [{ bag_type: formData.bagType, time_window: formData.timeWindow }],
+        items: [{ time_window: formData.timeWindow }],
         total_amount_cents: calculateTotal(),
-        status: 'unclaimed' as const,
         pickup_window_start: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
         pickup_window_end: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
         delivery_window_start: isExpress 
@@ -155,28 +152,29 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
           : new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString()
       };
 
-      const { error } = await supabase
-        .from('orders')
-        .insert(orderData);
+      // Create payment session
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { orderData }
+      });
 
       if (error) throw error;
 
-      toast({
-        title: "Order Placed Successfully!",
-        description: `Your ${isExpress ? 'express' : 'standard'} order has been submitted.`,
-      });
+      if (data?.url) {
+        // Redirect to Stripe checkout
+        window.location.href = data.url;
+      } else {
+        throw new Error("Failed to create payment session");
+      }
 
-      onBack(); // Return to dashboard
     } catch (error) {
       console.error('Error creating order:', error);
       toast({
         title: "Order Failed",
-        description: "Failed to place order. Please try again.",
+        description: "Failed to process order. Please try again.",
         variant: "destructive",
       });
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const selectedLocker = lockers.find(l => l.id === formData.lockerId);
@@ -334,6 +332,17 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Service Description */}
+              <div className="p-4 bg-primary/5 rounded-lg border">
+                <h4 className="font-medium mb-2">Service Details</h4>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  <li>• Each bag holds up to 15 lbs of laundry</li>
+                  <li>• Bag options: Basic bag, 13-gallon trash bag, or FreshDrop basket</li>
+                  <li>• Pickup in your selected time window</li>
+                  <li>• Delivery in the same window the following day</li>
+                </ul>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="service-type">Wash Type</Label>
                 <Select value={serviceType} onValueChange={setServiceType} required>
@@ -360,7 +369,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                       type="button"
                       variant={isExpress ? "default" : "outline"}
                       size="sm"
-                     onClick={() => setIsExpress(!isExpress)}
+                      onClick={() => setIsExpress(!isExpress)}
                     >
                       {isExpress ? "Selected" : "Add +$20"}
                     </Button>
@@ -385,20 +394,6 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                   </p>
                 </div>
               )}
-
-              <div className="space-y-2">
-                <Label htmlFor="bag-type">Bag Type (15 lbs capacity each)</Label>
-                <Select value={formData.bagType} onValueChange={(value) => handleInputChange('bagType', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="basic">Basic Bag</SelectItem>
-                    <SelectItem value="trash_13gal">Trash Bag (13 gallons)</SelectItem>
-                    <SelectItem value="freshdrop_basket">FreshDrop Laundry Basket</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="bag-count">Number of Bags ($35 each)</Label>
@@ -462,10 +457,6 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                   <span className="capitalize">{serviceType.replace('_', ' ')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Bag Type:</span>
-                  <span className="capitalize">{formData.bagType.replace('_', ' ')}</span>
-                </div>
-                <div className="flex justify-between">
                   <span>Number of Bags:</span>
                   <span>{formData.bagCount} × $35.00 = ${(formData.bagCount * 35).toFixed(2)}</span>
                 </div>
@@ -499,9 +490,9 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
             size="xl"
             className="w-full"
             disabled={isLoading || !validateServiceArea().valid || !serviceType || !formData.timeWindow}
-          >
-            {isLoading ? "Placing Order..." : `Place Order - $${(calculateTotal() / 100).toFixed(2)}`}
-          </Button>
+            >
+              {isLoading ? "Processing Payment..." : `Pay Now - $${(calculateTotal() / 100).toFixed(2)}`}
+            </Button>
         </form>
       </div>
     </div>
