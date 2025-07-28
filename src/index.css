@@ -41,7 +41,7 @@ All colors MUST be HSL.
 
     /* Custom FreshDrop gradients */
     --gradient-primary: linear-gradient(135deg, hsl(186 44% 45%), hsl(186 80% 70%));
-    --gradient-hero: linear-gradient(135deg, hsl(186 80% 70%) 0%, hsl(186 60% 55%) 50%, hsl(186 70% 60%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(186 80% 70%) 0%, hsl(186 44% 45%) 50%, hsl(214 100% 25%) 100%);
     --gradient-wave: linear-gradient(180deg, hsl(186 80% 70% / 0.1) 0%, hsl(186 44% 45% / 0.2) 100%);
     
     /* Shadows */

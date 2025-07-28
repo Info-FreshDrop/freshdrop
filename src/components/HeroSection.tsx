@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Droplets, Clock, Shield, Smartphone } from "lucide-react";
-import freshDropLogo from "@/assets/freshdrop-logo-teal-bg.png";
+import freshDropLogo from "@/assets/freshdrop-logo.png";
 
 export function HeroSection() {
   return (
@@ -31,7 +31,8 @@ export function HeroSection() {
             alt="FreshDrop Logo" 
             className="h-48 md:h-72 w-auto drop-shadow-lg"
             style={{ 
-              filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))'
+              filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))',
+              mixBlendMode: 'multiply' 
             }}
           />
         </div>
