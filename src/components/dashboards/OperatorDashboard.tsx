@@ -103,8 +103,11 @@ export function OperatorDashboard() {
       setWasherData(washer);
 
       if (washer) {
+        console.log('Washer data:', washer);
+        console.log('Looking for orders in zip codes:', washer.zip_codes);
+        
         // Load available orders in operator's zip codes
-        const { data: available } = await supabase
+        const { data: available, error: availableError } = await supabase
           .from('orders')
           .select(`
             *,
@@ -114,6 +117,7 @@ export function OperatorDashboard() {
           .in('zip_code', washer.zip_codes)
           .order('created_at', { ascending: true });
 
+        console.log('Available orders query result:', { available, availableError });
         setAvailableOrders((available as any) || []);
 
         // Load operator's claimed orders

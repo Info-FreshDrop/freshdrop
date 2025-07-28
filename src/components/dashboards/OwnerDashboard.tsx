@@ -24,7 +24,8 @@ import {
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders'>('dashboard');
+  const [allOrders, setAllOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
     activeOperators: 0,
@@ -42,9 +43,20 @@ export function OwnerDashboard() {
   const loadDashboardStats = async () => {
     try {
       // Get total orders count
-      const { count: ordersCount } = await supabase
+      const { count: ordersCount, error: ordersError } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true });
+      
+      console.log('Owner dashboard - orders count query:', { ordersCount, ordersError });
+
+      // Get all orders for owner dashboard
+      const { data: allOrdersData, error: allOrdersError } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      console.log('Owner dashboard - all orders query:', { allOrdersData, allOrdersError });
+      setAllOrders(allOrdersData || []);
 
       // Get total revenue (sum of all completed orders)
       const { data: revenueData } = await supabase
@@ -175,6 +187,79 @@ export function OwnerDashboard() {
 
   if (currentView === 'promo-codes') {
     return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'live-orders') {
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentView('dashboard')}
+              className="p-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              All Orders
+            </h1>
+            <p className="text-muted-foreground">
+              Complete order management and monitoring
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {allOrders.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No orders found</h3>
+                <p className="text-muted-foreground">Orders will appear here when customers place them.</p>
+              </Card>
+            ) : (
+              allOrders.map((order) => (
+                <Card key={order.id} className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Status: <Badge variant="outline">{order.status}</Badge>
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Zip: {order.zip_code} • {order.pickup_type}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-green-600">
+                        ${(order.total_amount_cents / 100).toFixed(2)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p><strong>Service:</strong> {order.service_type}</p>
+                      <p><strong>Bags:</strong> {order.bag_count}</p>
+                    </div>
+                    <div>
+                      <p><strong>Express:</strong> {order.is_express ? 'Yes' : 'No'}</p>
+                      <p><strong>Washer ID:</strong> {order.washer_id || 'Unassigned'}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -343,8 +428,12 @@ export function OwnerDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="outline" className="w-full">
-                  Live Orders
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('live-orders')}
+                >
+                  Live Orders ({allOrders.length})
                 </Button>
                 <Button variant="outline" className="w-full">
                   Order History
