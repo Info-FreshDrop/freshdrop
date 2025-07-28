@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, MapPin, Trash2, Search, Filter, MoreHorizontal } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ServiceAreasMap } from "./ServiceAreasMap";
+import { InteractiveServiceMap } from "./InteractiveServiceMap";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -326,7 +326,7 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
   };
 
   if (showMap) {
-    return <ServiceAreasMap onBack={() => setShowMap(false)} />;
+    return <InteractiveServiceMap onBack={() => setShowMap(false)} />;
   }
 
   if (loading) {

@@ -18,12 +18,16 @@ import {
   Trash2,
   Edit,
   Save,
-  ArrowLeft
+  ArrowLeft,
+  BarChart3,
+  Users
 } from "lucide-react";
+import { ServiceAreasManagement } from "@/components/admin/ServiceAreasManagement";
 
 export default function OwnerDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [lockers, setLockers] = useState<any[]>([]);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'service-areas'>('dashboard');
   const [prices, setPrices] = useState({
     bagPrice: 3500, // $35.00 in cents
     expressPrice: 2000 // $20.00 in cents
@@ -127,6 +131,9 @@ export default function OwnerDashboard() {
     });
   };
 
+  if (currentView === 'service-areas') {
+    return <ServiceAreasManagement onBack={() => setCurrentView('dashboard')} />;
+  }
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
@@ -154,7 +161,7 @@ export default function OwnerDashboard() {
         </div>
 
         <Tabs defaultValue="pricing" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pricing">
               <DollarSign className="h-4 w-4 mr-2" />
               Pricing
@@ -162,6 +169,10 @@ export default function OwnerDashboard() {
             <TabsTrigger value="locations">
               <MapPin className="h-4 w-4 mr-2" />
               Locations
+            </TabsTrigger>
+            <TabsTrigger value="service-areas" onClick={() => setCurrentView('service-areas')}>
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Service Areas
             </TabsTrigger>
           </TabsList>
 

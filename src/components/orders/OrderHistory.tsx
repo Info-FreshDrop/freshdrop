@@ -68,7 +68,7 @@ export function OrderHistory({ onBack }: OrderHistoryProps) {
         .from('orders')
         .select(`
           *,
-          profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone)
+          profiles!inner(first_name, last_name, phone)
         `)
         .eq('customer_id', user?.id)
         .order('created_at', { ascending: false });
