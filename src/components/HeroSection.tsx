@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Droplets, Clock, Shield, Smartphone } from "lucide-react";
-import freshDropLogo from "@/assets/freshdrop-logo.png";
+import freshDropLogo from "@/assets/freshdrop-logo-transparent.png";
 
 export function HeroSection() {
   return (
