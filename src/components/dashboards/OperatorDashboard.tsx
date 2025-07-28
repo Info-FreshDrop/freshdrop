@@ -106,7 +106,34 @@ export function OperatorDashboard() {
         console.log('Washer data:', washer);
         console.log('Looking for orders in zip codes:', washer.zip_codes);
         
-        // Load available orders in operator's zip codes
+        // First, let's check if there are ANY unclaimed orders at all
+        const { data: allUnclaimed, error: allUnclaimedError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('status', 'unclaimed');
+        
+        console.log('ALL unclaimed orders in database:', { allUnclaimed, allUnclaimedError });
+        
+        // Then check unclaimed orders in this specific zip code
+        const { data: unclaimedInZip, error: unclaimedInZipError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('status', 'unclaimed')
+          .in('zip_code', washer.zip_codes);
+        
+        console.log('Unclaimed orders in zip codes:', { unclaimedInZip, unclaimedInZipError });
+        
+        // Now try the join without profiles first to see if that works
+        const { data: ordersWithoutProfiles, error: ordersWithoutProfilesError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('status', 'unclaimed')
+          .in('zip_code', washer.zip_codes)
+          .order('created_at', { ascending: true });
+        
+        console.log('Orders without profiles join:', { ordersWithoutProfiles, ordersWithoutProfilesError });
+        
+        // Finally, try with profiles
         const { data: available, error: availableError } = await supabase
           .from('orders')
           .select(`
