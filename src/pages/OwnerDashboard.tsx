@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Settings, 
@@ -36,6 +37,7 @@ export default function OwnerDashboard() {
 
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
@@ -125,13 +127,18 @@ export default function OwnerDashboard() {
     });
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-wave">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={signOut}
+            onClick={handleSignOut}
             className="p-0 h-auto text-muted-foreground hover:text-foreground mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
