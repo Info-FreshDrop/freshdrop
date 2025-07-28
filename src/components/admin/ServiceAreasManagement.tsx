@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, MapPin, Trash2 } from 'lucide-react';
+import { Plus, MapPin, Trash2, Search, Filter, MoreHorizontal } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ServiceAreasMap } from "./ServiceAreasMap";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface ServiceAreasManagementProps {
   onBack: () => void;
@@ -28,9 +30,14 @@ interface ServiceArea {
 
 export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ onBack }) => {
   const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
+  const [filteredAreas, setFilteredAreas] = useState<ServiceArea[]>([]);
   const [loading, setLoading] = useState(true);
   const [showMap, setShowMap] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [serviceFilter, setServiceFilter] = useState<'all' | 'delivery' | 'locker' | 'express'>('all');
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [newArea, setNewArea] = useState({
     zip_code: '',
     allows_delivery: true,
@@ -62,6 +69,39 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
     };
   }, []);
 
+  // Filter areas based on search and filters
+  useEffect(() => {
+    let filtered = serviceAreas;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(area => 
+        area.zip_code.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(area => 
+        statusFilter === 'active' ? area.is_active : !area.is_active
+      );
+    }
+
+    // Service filter
+    if (serviceFilter !== 'all') {
+      filtered = filtered.filter(area => {
+        switch (serviceFilter) {
+          case 'delivery': return area.allows_delivery;
+          case 'locker': return area.allows_locker;
+          case 'express': return area.allows_express;
+          default: return true;
+        }
+      });
+    }
+
+    setFilteredAreas(filtered);
+  }, [serviceAreas, searchTerm, statusFilter, serviceFilter]);
+
   const loadServiceAreas = async () => {
     try {
       const { data, error } = await supabase
@@ -71,6 +111,7 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
 
       if (error) throw error;
       setServiceAreas(data || []);
+      setFilteredAreas(data || []);
     } catch (error) {
       console.error('Error loading service areas:', error);
       toast({
@@ -211,6 +252,79 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
     }
   };
 
+  const handleBulkAction = async (action: 'activate' | 'deactivate' | 'delete') => {
+    if (selectedAreas.length === 0) {
+      toast({
+        title: "No areas selected",
+        description: "Please select areas to perform bulk actions",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      if (action === 'delete') {
+        const { error } = await supabase
+          .from('service_areas')
+          .delete()
+          .in('id', selectedAreas);
+
+        if (error) throw error;
+        toast({
+          title: "Success",
+          description: `${selectedAreas.length} areas deleted successfully`
+        });
+      } else {
+        const is_active = action === 'activate';
+        const { error } = await supabase
+          .from('service_areas')
+          .update({ is_active })
+          .in('id', selectedAreas);
+
+        if (error) throw error;
+        toast({
+          title: "Success",
+          description: `${selectedAreas.length} areas ${action}d successfully`
+        });
+      }
+
+      setSelectedAreas([]);
+    } catch (error: any) {
+      console.error('Error in bulk action:', error);
+      toast({
+        title: "Error",
+        description: `Failed to ${action} selected areas`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const toggleAreaSelection = (areaId: string) => {
+    setSelectedAreas(prev => 
+      prev.includes(areaId) 
+        ? prev.filter(id => id !== areaId)
+        : [...prev, areaId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedAreas(prev => 
+      prev.length === filteredAreas.length 
+        ? [] 
+        : filteredAreas.map(area => area.id)
+    );
+  };
+
+  // Calculate statistics
+  const stats = {
+    total: serviceAreas.length,
+    active: serviceAreas.filter(a => a.is_active).length,
+    inactive: serviceAreas.filter(a => !a.is_active).length,
+    delivery: serviceAreas.filter(a => a.allows_delivery && a.is_active).length,
+    locker: serviceAreas.filter(a => a.allows_locker && a.is_active).length,
+    express: serviceAreas.filter(a => a.allows_express && a.is_active).length
+  };
+
   if (showMap) {
     return <ServiceAreasMap onBack={() => setShowMap(false)} />;
   }
@@ -285,6 +399,107 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
         </div>
       </div>
 
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-primary">{stats.total}</div>
+            <div className="text-sm text-muted-foreground">Total Areas</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+            <div className="text-sm text-muted-foreground">Active</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">{stats.inactive}</div>
+            <div className="text-sm text-muted-foreground">Inactive</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{stats.delivery}</div>
+            <div className="text-sm text-muted-foreground">Delivery</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-purple-600">{stats.locker}</div>
+            <div className="text-sm text-muted-foreground">Locker</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-orange-600">{stats.express}</div>
+            <div className="text-sm text-muted-foreground">Express</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters and Search */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search zip codes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+          <SelectTrigger className="w-full md:w-[180px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active Only</SelectItem>
+            <SelectItem value="inactive">Inactive Only</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={serviceFilter} onValueChange={(value: any) => setServiceFilter(value)}>
+          <SelectTrigger className="w-full md:w-[180px]">
+            <SelectValue placeholder="Filter by service" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Services</SelectItem>
+            <SelectItem value="delivery">Delivery</SelectItem>
+            <SelectItem value="locker">Locker</SelectItem>
+            <SelectItem value="express">Express</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {selectedAreas.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <MoreHorizontal className="h-4 w-4" />
+                Bulk Actions ({selectedAreas.length})
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleBulkAction('activate')}>
+                Activate Selected
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleBulkAction('deactivate')}>
+                Deactivate Selected
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleBulkAction('delete')}
+                className="text-destructive"
+              >
+                Delete Selected
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+
       {showAddForm && (
         <Card>
           <CardHeader>
@@ -341,18 +556,45 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
         </Card>
       )}
 
+      {/* Area List with Selection */}
+      {filteredAreas.length > 0 && (
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={selectedAreas.length === filteredAreas.length}
+              onCheckedChange={toggleSelectAll}
+            />
+            <Label className="text-sm">
+              Select All ({filteredAreas.length} areas)
+            </Label>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Showing {filteredAreas.length} of {serviceAreas.length} areas
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4">
-        {serviceAreas.map((area) => (
+        {filteredAreas.map((area) => (
           <Card key={area.id} className={!area.is_active ? 'opacity-50' : ''}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={selectedAreas.includes(area.id)}
+                    onCheckedChange={() => toggleAreaSelection(area.id)}
+                  />
                   <MapPin className="h-5 w-5 text-primary" />
                   <div>
                     <h3 className="font-semibold text-lg">{area.zip_code}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Added {new Date(area.created_at).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">
+                        Added {new Date(area.created_at).toLocaleDateString()}
+                      </p>
+                      {!area.is_active && (
+                        <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
@@ -407,6 +649,25 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
             </CardContent>
           </Card>
         ))}
+        
+        {filteredAreas.length === 0 && serviceAreas.length > 0 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <Filter className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No areas match your filters</h3>
+                <p className="text-muted-foreground mb-4">Try adjusting your search or filter criteria</p>
+                <Button variant="outline" onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('all');
+                  setServiceFilter('all');
+                }}>
+                  Clear Filters
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
         {serviceAreas.length === 0 && (
           <Card>
