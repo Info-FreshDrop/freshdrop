@@ -14,6 +14,16 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Create payment function started");
+    
+    // Check if Stripe secret key exists
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeSecretKey) {
+      console.error("STRIPE_SECRET_KEY not found");
+      throw new Error("Stripe secret key not configured");
+    }
+    console.log("Stripe secret key found");
+
     // Create Supabase client using the anon key for user authentication
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -26,15 +36,18 @@ serve(async (req) => {
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
+    console.log("User authenticated:", user.email);
 
     // Parse request body
     const { orderData } = await req.json();
     if (!orderData) throw new Error("Order data is required");
+    console.log("Order data received:", JSON.stringify(orderData));
 
     // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2023-10-16",
     });
+    console.log("Stripe initialized");
 
     // Check if a Stripe customer record exists for this user
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
