@@ -12,7 +12,6 @@ import OperatorSignup from "./pages/OperatorSignup";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
-import MobileTest from "./pages/MobileTest";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -32,7 +31,6 @@ const App = () => (
             <Route path="/operator-signup" element={<OperatorSignup />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/mobile-test" element={<MobileTest />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

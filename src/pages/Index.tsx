@@ -22,21 +22,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-wave relative">
-      {/* Dashboard Links */}
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
-        {user && userRole === 'owner' && (
+      {/* Owner Dashboard Link */}
+      {user && userRole === 'owner' && (
+        <div className="absolute top-4 right-4 z-10">
           <Link to="/owner-dashboard">
             <button className="bg-white/90 backdrop-blur-sm text-primary px-4 py-2 rounded-lg shadow-lg hover:bg-white transition-colors">
               Owner Dashboard
             </button>
           </Link>
-        )}
-        <Link to="/mobile-test">
-          <button className="bg-white/90 backdrop-blur-sm text-primary px-4 py-2 rounded-lg shadow-lg hover:bg-white transition-colors">
-            📱 Mobile Test
-          </button>
-        </Link>
-      </div>
+        </div>
+      )}
       
       <Homepage />
     </div>
