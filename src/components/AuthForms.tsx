@@ -299,7 +299,7 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
           onClick={onOperatorLogin}
           className="w-full"
         >
-          Operator Login (Owner, Staff, Marketing)
+          Operator Login
         </Button>
       </div>
     </div>
