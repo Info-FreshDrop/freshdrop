@@ -147,42 +147,43 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         });
       }
       
-      // Use reverse geocoding to get address
-      try {
-        const response = await supabase.functions.invoke('geocoding', {
-          body: { 
-            query: `${location.longitude},${location.latitude}`,
-            type: 'reverse'
-          }
-        });
-        
-        console.log('Reverse geocoding response:', response);
-        
-        if (response.data?.suggestions?.[0]) {
-          const address = response.data.suggestions[0].display_name;
-          handleInputChange('pickupAddress', address);
-          handleInputChange('deliveryAddress', address);
+        // Use reverse geocoding to get address
+        try {
+          const response = await supabase.functions.invoke('geocoding', {
+            body: { 
+              lat: location.latitude,
+              lon: location.longitude,
+              type: 'reverse'
+            }
+          });
           
-          // Extract zip code from address
-          const zipMatch = address.match(/\b\d{5}\b/);
-          if (zipMatch) {
-            handleInputChange('zipCode', zipMatch[0]);
+          console.log('Reverse geocoding response:', response);
+          
+          if (response.data?.display_name) {
+            const address = response.data.display_name;
+            handleInputChange('pickupAddress', address);
+            handleInputChange('deliveryAddress', address);
+            
+            // Extract zip code from address
+            const zipMatch = address.match(/\b\d{5}\b/);
+            if (zipMatch) {
+              handleInputChange('zipCode', zipMatch[0]);
+            }
+          } else {
+            // Fallback address
+            const mockAddress = "123 Main St, Springfield, MO 65804";
+            handleInputChange('pickupAddress', mockAddress);
+            handleInputChange('deliveryAddress', mockAddress);
+            handleInputChange('zipCode', '65804');
           }
-        } else {
-          // Fallback address
+        } catch (error) {
+          console.error('Geocoding error:', error);
+          // Fallback address  
           const mockAddress = "123 Main St, Springfield, MO 65804";
           handleInputChange('pickupAddress', mockAddress);
           handleInputChange('deliveryAddress', mockAddress);
           handleInputChange('zipCode', '65804');
         }
-      } catch (error) {
-        console.error('Geocoding error:', error);
-        // Fallback address
-        const mockAddress = "123 Main St, Springfield, MO 65804";
-        handleInputChange('pickupAddress', mockAddress);
-        handleInputChange('deliveryAddress', mockAddress);
-        handleInputChange('zipCode', '65804');
-      }
       
       toast({
         title: "Location Detected",
@@ -218,6 +219,68 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
     return area?.allows_express || false;
   };
 
+  const [validatedPromoCode, setValidatedPromoCode] = useState<any>(null);
+  const [promoCodeError, setPromoCodeError] = useState('');
+
+  const validatePromoCode = async (code: string) => {
+    if (!code.trim()) {
+      setValidatedPromoCode(null);
+      setPromoCodeError('');
+      return;
+    }
+
+    try {
+      const { data: promoCodes, error } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('code', code.toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !promoCodes) {
+        setValidatedPromoCode(null);
+        setPromoCodeError('Invalid promo code');
+        return;
+      }
+
+      // Check if user has already used this one-time promo code
+      if (promoCodes.one_time_use_per_user && user) {
+        const { data: usage } = await supabase
+          .from('promo_code_usage')
+          .select('id')
+          .eq('promo_code_id', promoCodes.id)
+          .eq('user_id', user.id)
+          .single();
+
+        if (usage) {
+          setValidatedPromoCode(null);
+          setPromoCodeError('This promo code has already been used');
+          return;
+        }
+      }
+
+      // Check if promo code is restricted to specific items
+      if (promoCodes.restricted_to_item_ids && promoCodes.restricted_to_item_ids.length > 0) {
+        const hasRestrictedItems = selectedShopItems.some(item => 
+          promoCodes.restricted_to_item_ids.includes(item.id)
+        );
+        
+        if (!hasRestrictedItems) {
+          setValidatedPromoCode(null);
+          setPromoCodeError('This promo code is only valid for specific items');
+          return;
+        }
+      }
+
+      setValidatedPromoCode(promoCodes);
+      setPromoCodeError('');
+    } catch (error) {
+      console.error('Error validating promo code:', error);
+      setValidatedPromoCode(null);
+      setPromoCodeError('Error validating promo code');
+    }
+  };
+
   const calculateTotal = () => {
     let total = formData.bagCount * 3500; // $35 per bag
     
@@ -237,8 +300,16 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
     });
     
     // Apply promo code discount
-    if (formData.promoCode === 'TEST') {
-      total = 0; // 100% off for testing
+    if (validatedPromoCode) {
+      let discountAmount = 0;
+      
+      if (validatedPromoCode.discount_type === 'percentage') {
+        discountAmount = total * (validatedPromoCode.discount_value / 100);
+      } else if (validatedPromoCode.discount_type === 'fixed') {
+        discountAmount = validatedPromoCode.discount_value * 100; // Convert dollars to cents
+      }
+      
+      total = Math.max(0, total - discountAmount);
     }
     
     return total;
@@ -354,7 +425,8 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         pickup_window_start: pickupStart.toISOString(),
         pickup_window_end: pickupEnd.toISOString(),
         delivery_window_start: isExpress ? pickupEnd.toISOString() : deliveryStart.toISOString(),
-        delivery_window_end: isExpress ? new Date(pickupEnd.getTime() + 2 * 60 * 60 * 1000).toISOString() : deliveryEnd.toISOString()
+        delivery_window_end: isExpress ? new Date(pickupEnd.getTime() + 2 * 60 * 60 * 1000).toISOString() : deliveryEnd.toISOString(),
+        promoCode: formData.promoCode || null
       };
 
       // Create payment session
@@ -489,17 +561,17 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                     try {
                       const response = await supabase.functions.invoke('geocoding', {
                         body: { 
-                          query: value,
+                          q: value,
                           type: 'search'
                         }
                       });
                       
-                      if (response.data?.suggestions?.[0]) {
-                        const suggestion = response.data.suggestions[0];
+                      if (response.data?.[0]) {
+                        const suggestion = response.data[0];
                         console.log('Address suggestion:', suggestion);
                         
-                        // Extract zip code from the formatted address
-                        const zipMatch = suggestion.formatted.match(/\b\d{5}\b/);
+                        // Extract zip code from the display name
+                        const zipMatch = suggestion.display_name?.match(/\b\d{5}\b/);
                         if (zipMatch) {
                           handleInputChange('zipCode', zipMatch[0]);
                         }
@@ -866,11 +938,23 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
               <Input
                 placeholder="Enter promo code"
                 value={formData.promoCode}
-                onChange={(e) => handleInputChange('promoCode', e.target.value.toUpperCase())}
+                onChange={async (e) => {
+                  const code = e.target.value.toUpperCase();
+                  handleInputChange('promoCode', code);
+                  await validatePromoCode(code);
+                }}
                 className="h-12"
               />
-              {formData.promoCode === 'TEST' && (
-                <p className="text-xs text-green-600">Test promo applied - order is free!</p>
+              {promoCodeError && (
+                <p className="text-xs text-red-600">{promoCodeError}</p>
+              )}
+              {validatedPromoCode && (
+                <p className="text-xs text-green-600">
+                  {validatedPromoCode.discount_type === 'percentage' 
+                    ? `${validatedPromoCode.discount_value}% off applied!`
+                    : `$${(validatedPromoCode.discount_value).toFixed(2)} off applied!`
+                  }
+                </p>
               )}
             </div>
 

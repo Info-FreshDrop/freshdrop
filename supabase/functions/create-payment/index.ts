@@ -45,22 +45,72 @@ serve(async (req) => {
     let totalAmount = bagCost + expressCost + fragranceFreeCost + shirtsOnHangersCost + extraRinseCost;
     let discountAmount = 0;
     
-    // Apply promo code discount
-    if (orderData.promoCode) {
-      if (orderData.promoCode === 'TEST') {
-        discountAmount = totalAmount;
-        totalAmount = 0;
-      }
-    }
-
-    console.log("Bypassing Stripe payment - creating order directly");
-    
-    // Store order directly in database (bypassing Stripe for testing)
+    // Create Supabase service client for database operations
     const supabaseService = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+    
+    // Apply promo code discount
+    if (orderData.promoCode) {
+      console.log("Processing promo code:", orderData.promoCode);
+      
+      // Get promo code details
+      const { data: promoCode, error: promoError } = await supabaseService
+        .from('promo_codes')
+        .select('*')
+        .eq('code', orderData.promoCode)
+        .eq('is_active', true)
+        .single();
+
+      if (!promoError && promoCode) {
+        console.log("Found promo code:", promoCode);
+        
+        // Check if it's a one-time use and user hasn't used it
+        if (promoCode.one_time_use_per_user) {
+          const { data: existingUsage } = await supabaseService
+            .from('promo_code_usage')
+            .select('id')
+            .eq('promo_code_id', promoCode.id)
+            .eq('user_id', user.id)
+            .single();
+
+          if (existingUsage) {
+            console.log("Promo code already used by user");
+          } else {
+            // Apply discount
+            if (promoCode.discount_type === 'percentage') {
+              discountAmount = totalAmount * (promoCode.discount_value / 100);
+            } else if (promoCode.discount_type === 'fixed') {
+              discountAmount = promoCode.discount_value * 100; // Convert dollars to cents
+            }
+            totalAmount = Math.max(0, totalAmount - discountAmount);
+            console.log("Applied discount:", discountAmount, "New total:", totalAmount);
+            
+            // Record promo code usage
+            await supabaseService.from('promo_code_usage').insert({
+              promo_code_id: promoCode.id,
+              user_id: user.id,
+              used_at: new Date().toISOString()
+            });
+          }
+        } else {
+          // Apply discount for non-one-time codes
+          if (promoCode.discount_type === 'percentage') {
+            discountAmount = totalAmount * (promoCode.discount_value / 100);
+          } else if (promoCode.discount_type === 'fixed') {
+            discountAmount = promoCode.discount_value * 100; // Convert dollars to cents
+          }
+          totalAmount = Math.max(0, totalAmount - discountAmount);
+          console.log("Applied discount:", discountAmount, "New total:", totalAmount);
+        }
+      } else {
+        console.log("Promo code not found or inactive");
+      }
+    }
+
+    console.log("Bypassing Stripe payment - creating order directly");
 
     const { data: order, error: orderError } = await supabaseService.from("orders").insert({
       ...orderData,
