@@ -74,8 +74,10 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
     // Set up real-time subscription for order updates
     if (!user) return;
     
+    console.log('Setting up real-time subscription for user:', user.id);
+    
     const channel = supabase
-      .channel('order-updates')
+      .channel('customer-order-updates')
       .on(
         'postgres_changes',
         {
@@ -85,23 +87,33 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
           filter: `customer_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Real-time order update received:', payload.new);
-          console.log('Current order status:', payload.new.status);
-          console.log('Current step:', payload.new.current_step);
+          console.log('🔄 Real-time order update received:', {
+            orderId: payload.new.id,
+            status: payload.new.status,
+            currentStep: payload.new.current_step,
+            fullPayload: payload.new
+          });
           
           // Update the specific order in state
-          setOrders(prev => prev.map(order => 
-            order.id === payload.new.id 
-              ? { ...order, ...payload.new }
-              : order
-          ));
+          setOrders(prev => {
+            const updated = prev.map(order => 
+              order.id === payload.new.id 
+                ? { ...order, ...payload.new }
+                : order
+            );
+            console.log('📊 Updated orders state after real-time update');
+            return updated;
+          });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Subscription status:', status);
+      });
       
-      console.log('Real-time subscription setup complete for user:', user.id);
+    console.log('✅ Real-time subscription setup complete for user:', user.id);
 
     return () => {
+      console.log('🔌 Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, [user]);
@@ -224,6 +236,10 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={loadOrders}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Orders
+            </Button>
             <Button variant="outline" onClick={() => setShowHistory(true)}>
               <History className="h-4 w-4 mr-2" />
               View All History
