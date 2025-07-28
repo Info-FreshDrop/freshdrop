@@ -9,6 +9,9 @@ import { ClothesShopManagement } from "@/components/admin/ClothesShopManagement"
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { PromoCodeManagement } from "@/components/admin/PromoCodeManagement";
 import { AllOperatorsView } from "@/components/admin/AllOperatorsView";
+import { LiveOrderManagement } from "@/components/admin/LiveOrderManagement";
+import { OrderIssueTracking } from "@/components/admin/OrderIssueTracking";
+import { OperatorWorkloadBalance } from "@/components/admin/OperatorWorkloadBalance";
 import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -25,7 +28,7 @@ import {
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -206,6 +209,18 @@ export function OwnerDashboard() {
 
   if (currentView === 'promo-codes') {
     return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'live-order-management') {
+    return <LiveOrderManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'order-issues') {
+    return <OrderIssueTracking onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'workload-balance') {
+    return <OperatorWorkloadBalance onBack={() => setCurrentView('dashboard')} />;
   }
   if (currentView === 'live-orders') {
     return (
