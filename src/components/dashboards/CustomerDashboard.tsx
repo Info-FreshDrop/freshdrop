@@ -295,7 +295,7 @@ export function CustomerDashboard() {
 
           <TabsContent value="payments" className="flex-1 px-4 py-6 mt-0">
             <div className="space-y-6">
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-6 text-white">
                 <div className="absolute inset-0 opacity-20">
                   <img 
                     src={laundryDeliveryImg} 
@@ -318,7 +318,7 @@ export function CustomerDashboard() {
 
           <TabsContent value="referrals" className="flex-1 px-4 py-6 mt-0">
             <div className="space-y-6">
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 p-6 text-white">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-6 text-white">
                 <div className="absolute inset-0 opacity-20">
                   <img 
                     src={cleanLaundryImg} 
