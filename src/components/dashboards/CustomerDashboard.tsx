@@ -11,6 +11,7 @@ import { WalletInterface } from "@/components/customer/WalletInterface";
 import { ReferralInterface } from "@/components/customer/ReferralInterface";
 import { TipModal } from "@/components/customer/TipModal";
 import { RatingModal } from "@/components/customer/RatingModal";
+import { OrderPlacement } from "@/components/orders/OrderPlacement";
 import { 
   Package, 
   User, 
@@ -35,6 +36,7 @@ export function CustomerDashboard() {
   const [showTipModal, setShowTipModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [showOrderPlacement, setShowOrderPlacement] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -67,6 +69,11 @@ export function CustomerDashboard() {
       console.error('Error loading orders:', error);
     }
   };
+
+  // Show OrderPlacement component if requested
+  if (showOrderPlacement) {
+    return <OrderPlacement onBack={() => setShowOrderPlacement(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-wave">
@@ -107,6 +114,7 @@ export function CustomerDashboard() {
             <Button 
               size="lg" 
               className="bg-gradient-primary text-white px-8 py-6 text-lg font-semibold"
+              onClick={() => setShowOrderPlacement(true)}
             >
               <Plus className="h-5 w-5 mr-2" />
               Place New Order
@@ -119,14 +127,18 @@ export function CustomerDashboard() {
             {orders.length === 0 ? (
               <Card className="p-8 text-center border-0 shadow-soft">
                 <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No orders yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Ready to get your laundry done? Place your first order!
-                </p>
-                <Button variant="hero" className="bg-gradient-primary">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Place New Order
-                </Button>
+                  <h3 className="text-lg font-medium mb-2">No orders yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Ready to get your laundry done? Place your first order!
+                  </p>
+                  <Button 
+                    variant="hero" 
+                    className="bg-gradient-primary"
+                    onClick={() => setShowOrderPlacement(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Place New Order
+                  </Button>
               </Card>
             ) : (
               <div className="space-y-4">
