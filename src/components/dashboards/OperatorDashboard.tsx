@@ -80,7 +80,7 @@ export function OperatorDashboard() {
   const [loading, setLoading] = useState(true);
   const [confirmOrder, setConfirmOrder] = useState<Order | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [orderSteps, setOrderSteps] = useState<Record<string, number>>({});
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [photoStep, setPhotoStep] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -266,8 +266,11 @@ export function OperatorDashboard() {
 
   const completeStep = async (orderId: string, stepNumber: number) => {
     try {
-      // Update step completion in database or local state
-      setCurrentStep(stepNumber + 1);
+      // Update step completion for this specific order
+      const newCurrentStep = stepNumber + 1;
+      console.log(`Before completing step ${stepNumber}, currentStep was:`, orderSteps[orderId] || 1);
+      setOrderSteps(prev => ({ ...prev, [orderId]: newCurrentStep }));
+      console.log(`After completing step ${stepNumber}, currentStep should be:`, newCurrentStep);
       
       // Notify customer of progress
       console.log(`Step ${stepNumber} completed for order ${orderId}`);
@@ -276,6 +279,11 @@ export function OperatorDashboard() {
         title: "Step Complete",
         description: `Step ${stepNumber} completed. Moving to next step.`,
       });
+
+      // Force component re-render by updating the selected order
+      if (selectedOrder) {
+        setSelectedOrder({...selectedOrder});
+      }
     } catch (error) {
       console.error('Error completing step:', error);
     }
@@ -878,8 +886,14 @@ export function OperatorDashboard() {
                     { num: 12, title: "RE-LABEL", desc: "Attach delivery label", completed: false },
                     { num: 13, title: "RETURN & TAKE PHOTO", desc: "Deliver within pickup window time, document delivery", completed: false }
                   ].map((step) => {
+                    const currentStep = selectedOrder ? (orderSteps[selectedOrder.id] || 1) : 1;
                     const isActive = step.num === currentStep && selectedOrder.status === 'claimed';
                     const isCompleted = step.completed || step.num < currentStep;
+                    
+                    // Debug logging for step 1
+                    if (step.num === 1) {
+                      console.log(`Step 1 debug - currentStep: ${currentStep}, selectedOrder.status: ${selectedOrder.status}, step.completed: ${step.completed}, isCompleted: ${isCompleted}, isActive: ${isActive}`);
+                    }
                     
                     return (
                       <div key={step.num} className={`flex items-start gap-3 p-3 rounded-lg ${
