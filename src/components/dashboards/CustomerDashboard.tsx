@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 export function CustomerDashboard() {
   const { user, signOut } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
+  const [orderHistory, setOrderHistory] = useState<any[]>([]);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
@@ -50,7 +51,18 @@ export function CustomerDashboard() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      
+      const allOrders = data || [];
+      // Separate active orders from completed/canceled ones
+      const activeOrders = allOrders.filter(order => 
+        !['completed', 'cancelled'].includes(order.status)
+      );
+      const completedOrders = allOrders.filter(order => 
+        ['completed', 'cancelled'].includes(order.status)
+      );
+      
+      setOrders(activeOrders);
+      setOrderHistory(completedOrders);
     } catch (error) {
       console.error('Error loading orders:', error);
     }
@@ -87,6 +99,17 @@ export function CustomerDashboard() {
             >
               <Settings className="h-4 w-4" />
               Account Settings
+            </Button>
+          </div>
+
+          {/* Place Order Button */}
+          <div className="flex justify-center">
+            <Button 
+              size="lg" 
+              className="bg-gradient-primary text-white px-8 py-6 text-lg font-semibold"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Place New Order
             </Button>
           </div>
 
@@ -187,6 +210,73 @@ export function CustomerDashboard() {
 
           {/* Coupons Carousel */}
           <CouponsCarousel />
+
+          {/* Order History Section */}
+          {orderHistory.length > 0 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Order History
+              </h2>
+              <div className="space-y-3">
+                {orderHistory.slice(0, 3).map((order) => (
+                  <Card key={order.id} className="border-0 shadow-soft">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="font-medium">Order #{order.id.slice(0, 8)}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(order.created_at).toLocaleDateString()} • 
+                            {order.service_type?.replace('_', ' ')} • 
+                            {order.bag_count} bag{order.bag_count > 1 ? 's' : ''}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
+                            {order.status}
+                          </Badge>
+                          <p className="text-sm font-semibold mt-1">
+                            ${(order.total_amount_cents / 100).toFixed(2)}
+                          </p>
+                          {order.status === 'completed' && (
+                            <div className="flex gap-1 mt-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setShowTipModal(true);
+                                }}
+                              >
+                                <Heart className="h-3 w-3 mr-1" />
+                                Tip
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setShowRatingModal(true);
+                                }}
+                              >
+                                <Star className="h-3 w-3 mr-1" />
+                                Rate
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {orderHistory.length > 3 && (
+                  <Button variant="outline" className="w-full">
+                    View All Order History ({orderHistory.length} orders)
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Wallet Section */}
           <div>
