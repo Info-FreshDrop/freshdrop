@@ -376,6 +376,13 @@ export type Database = {
             referencedRelation: "lockers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orders_washer_id_washers_fkey"
+            columns: ["washer_id"]
+            isOneToOne: false
+            referencedRelation: "washers"
+            referencedColumns: ["id"]
+          },
         ]
       }
       payment_methods: {

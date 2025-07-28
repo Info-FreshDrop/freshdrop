@@ -203,6 +203,10 @@ export function OperatorDashboard() {
         throw error;
       }
 
+      // TODO: Send notification to customer (email/SMS)
+      // This would typically call an edge function to send notifications
+      console.log('Order claimed successfully - customer notification would be sent here');
+
       toast({
         title: "Order Claimed!",
         description: "You've successfully claimed this order. Customer has been notified.",
@@ -464,18 +468,105 @@ export function OperatorDashboard() {
                       </Badge>
                     </div>
 
-                    {/* Progress Timeline */}
+                    {/* Detailed Workflow Steps */}
                     <div className="mb-4">
-                      <h4 className="font-medium mb-2">Progress</h4>
-                      <div className="space-y-2">
-                        {getOrderProgress(order.status).map((step, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            {getStatusIcon(step.name, step.completed)}
-                            <span className={`text-sm ${step.completed ? 'text-foreground' : 'text-muted-foreground'}`}>
-                              {step.name.charAt(0).toUpperCase() + step.name.slice(1).replace('_', ' ')}
-                            </span>
+                      <h4 className="font-medium mb-3">Order Workflow</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className={`flex items-start gap-2 p-2 rounded ${order.status === 'claimed' ? 'bg-blue-50 border border-blue-200' : 'bg-muted'}`}>
+                          <CheckCircle className={`h-4 w-4 mt-0.5 ${order.status === 'claimed' ? 'text-blue-600' : 'text-green-600'}`} />
+                          <div>
+                            <p className="font-medium">Step 1: Prepare for Pickup</p>
+                            <p className="text-muted-foreground">Get clear bags, labels, pen</p>
                           </div>
-                        ))}
+                        </div>
+                        
+                        <div className={`flex items-start gap-2 p-2 rounded ${order.status === 'claimed' ? 'bg-muted border' : 'bg-muted'}`}>
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 2: Go to Address</p>
+                            <p className="text-muted-foreground">Navigate to pickup location</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 3: Locate Bag</p>
+                            <p className="text-muted-foreground">Find customer's laundry bag</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 4: Label Bag</p>
+                            <p className="text-muted-foreground">Attach identification label</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 5: Take Photo</p>
+                            <p className="text-muted-foreground">Document pickup condition</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 6: Pickup/Confirm</p>
+                            <p className="text-muted-foreground">Collect items and confirm pickup</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 7: Get to Washer</p>
+                            <p className="text-muted-foreground">Transport to washing facility</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 8: Wash Following Instructions</p>
+                            <p className="text-muted-foreground">Wash & dry according to customer needs</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 9: Fold/Hang</p>
+                            <p className="text-muted-foreground">Properly prepare clean items</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 10: Bag Properly</p>
+                            <p className="text-muted-foreground">Package items professionally</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 11: Re-label</p>
+                            <p className="text-muted-foreground">Attach delivery label</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2 p-2 rounded bg-muted">
+                          <Circle className="h-4 w-4 mt-0.5 text-gray-400" />
+                          <div>
+                            <p className="font-medium">Step 12: Return & Take Photo</p>
+                            <p className="text-muted-foreground">Deliver within pickup window time, document delivery</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
