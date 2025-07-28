@@ -33,11 +33,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Fetch user role after setting session
           setTimeout(async () => {
             try {
-              const { data } = await supabase
+              const { data, error } = await supabase
                 .from('user_roles')
                 .select('role')
                 .eq('user_id', session.user.id)
-                .single();
+                .maybeSingle();
+              
+              if (error) {
+                console.error('Error fetching user role:', error);
+                setUserRole('customer');
+                return;
+              }
               
               setUserRole(data?.role || 'customer');
             } catch (error) {
@@ -54,9 +60,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        try {
+          const { data, error } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('Error fetching user role:', error);
+            setUserRole('customer');
+          } else {
+            setUserRole(data?.role || 'customer');
+          }
+        } catch (error) {
+          console.error('Error fetching user role:', error);
+          setUserRole('customer');
+        }
+      }
+      
       setLoading(false);
     });
 
