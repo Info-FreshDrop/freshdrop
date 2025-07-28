@@ -273,28 +273,65 @@ export function OrderHistory({ onBack }: OrderHistoryProps) {
                         Order Photos
                       </h4>
                       <div className="flex gap-4 flex-wrap">
+                        {/* Priority photos first: Pickup and Drop-off */}
                         {order.pickup_photo_url && (
                           <PhotoPreview 
                             src={order.pickup_photo_url} 
                             alt="Pickup photo"
-                            label="Pickup"
+                            label="Pickup Photo"
+                          />
+                        )}
+                        {order.step_photos?.step_12 && (
+                          <PhotoPreview 
+                            src={order.step_photos.step_12} 
+                            alt="Drop-off confirmation photo"
+                            label="Drop-off Photo"
                           />
                         )}
                         {order.delivery_photo_url && (
                           <PhotoPreview 
                             src={order.delivery_photo_url} 
                             alt="Delivery photo"
-                            label="Delivery"
+                            label="Delivery Photo"
                           />
                         )}
-                        {order.step_photos && Object.entries(order.step_photos).map(([step, photoUrl]) => (
-                          <PhotoPreview 
-                            key={step}
-                            src={photoUrl as string} 
-                            alt={`Step ${step} photo`}
-                            label={step.replace('_', ' ')}
-                          />
-                        ))}
+                        
+                        {/* Process photos */}
+                        {order.step_photos && Object.entries(order.step_photos)
+                          .filter(([step]) => step !== 'step_12') // Exclude step_12 since we show it above
+                          .sort(([a], [b]) => {
+                            const stepA = parseInt(a.replace('step_', ''));
+                            const stepB = parseInt(b.replace('step_', ''));
+                            return stepA - stepB;
+                          })
+                          .map(([step, photoUrl]) => {
+                            const stepNumber = step.replace('step_', '');
+                            const getStepLabel = (stepNum: string) => {
+                              switch (stepNum) {
+                                case '1': return 'Pickup Photo';
+                                case '2': return 'Pre-wash Photo';
+                                case '3': return 'Washing Photo';
+                                case '4': return 'Drying Photo';
+                                case '5': return 'Folding Photo';
+                                case '6': return 'Quality Check';
+                                case '7': return 'Packaging Photo';
+                                case '8': return 'Ready for Delivery';
+                                case '9': return 'In Transit';
+                                case '10': return 'Delivery Prep';
+                                case '11': return 'Final Check';
+                                default: return `Step ${stepNum}`;
+                              }
+                            };
+                            
+                            return (
+                              <PhotoPreview 
+                                key={step}
+                                src={photoUrl as string} 
+                                alt={`${getStepLabel(stepNumber)} photo`}
+                                label={getStepLabel(stepNumber)}
+                              />
+                            );
+                          })}
                       </div>
                     </div>
                   )}
