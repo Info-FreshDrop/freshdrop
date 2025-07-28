@@ -29,8 +29,10 @@ import {
   X,
   Navigation,
   ArrowLeft,
-  Check
+  Check,
+  Settings
 } from "lucide-react";
+import { ServiceAreaModal } from './ServiceAreaModal';
 
 interface Order {
   id: string;
@@ -96,6 +98,7 @@ export function OperatorDashboard() {
   const [bagCountInput, setBagCountInput] = useState<string>("");
   const [newZipCode, setNewZipCode] = useState<string>("");
   const [isAddingZipCode, setIsAddingZipCode] = useState(false);
+  const [showServiceAreaModal, setShowServiceAreaModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -501,6 +504,36 @@ export function OperatorDashboard() {
       toast({
         title: "Error",
         description: "Failed to add zip code. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateZipCodes = async (newZipCodes: string[]) => {
+    if (!washerData) return;
+
+    try {
+      const { error } = await supabase
+        .from('washers')
+        .update({ zip_codes: newZipCodes })
+        .eq('id', washerData.id);
+
+      if (error) throw error;
+
+      setWasherData(prev => prev ? { ...prev, zip_codes: newZipCodes } : null);
+      
+      toast({
+        title: "Service Areas Updated",
+        description: "Your service areas have been updated successfully.",
+      });
+      
+      // Refresh data to update available orders
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error updating zip codes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update service areas. Please try again.",
         variant: "destructive"
       });
     }
@@ -967,17 +1000,27 @@ export function OperatorDashboard() {
                     <p className="text-muted-foreground">{operatorProfile?.phone}</p>
                   </div>
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-medium">Service Areas</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setIsAddingZipCode(true)}
-                        disabled={isAddingZipCode}
-                      >
-                        Add Zip Code
-                      </Button>
-                    </div>
+                     <div className="flex items-center justify-between mb-2">
+                       <p className="font-medium">Service Areas ({washerData?.zip_codes?.length || 0})</p>
+                       <div className="flex gap-2">
+                         <Button 
+                           variant="outline" 
+                           size="sm" 
+                           onClick={() => setShowServiceAreaModal(true)}
+                         >
+                           <Settings className="h-4 w-4 mr-1" />
+                           Manage
+                         </Button>
+                         <Button 
+                           variant="outline" 
+                           size="sm" 
+                           onClick={() => setIsAddingZipCode(true)}
+                           disabled={isAddingZipCode}
+                         >
+                           Add Zip Code
+                         </Button>
+                       </div>
+                     </div>
                     {isAddingZipCode && (
                       <div className="flex gap-2 mb-2">
                         <Input
@@ -1467,6 +1510,14 @@ export function OperatorDashboard() {
           capture="environment"
           style={{ display: 'none' }}
           onChange={handleFileSelect}
+        />
+
+        {/* Service Area Management Modal */}
+        <ServiceAreaModal
+          isOpen={showServiceAreaModal}
+          onClose={() => setShowServiceAreaModal(false)}
+          currentZipCodes={washerData?.zip_codes || []}
+          onUpdate={handleUpdateZipCodes}
         />
       </div>
     </div>

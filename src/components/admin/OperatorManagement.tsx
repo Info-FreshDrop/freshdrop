@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Users, UserCheck, UserX, Clock, Copy, Link as LinkIcon } from 'lucide-react';
+import { Plus, Users, UserCheck, UserX, Clock, Copy, Link as LinkIcon, Edit, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { OperatorZipCodeEditModal } from './OperatorZipCodeEditModal';
 
 interface OperatorManagementProps {
   onBack: () => void;
@@ -86,6 +87,7 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
   });
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'applications' | 'rejected' | 'operators' | 'invite'>('applications');
+  const [editingOperator, setEditingOperator] = useState<Operator | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -834,16 +836,32 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-4">
-                        {getStatusBadge(operator)}
-                        <div className="flex items-center gap-2">
-                          <Label className="text-sm">Active</Label>
-                          <Switch
-                            checked={operator.is_active}
-                            onCheckedChange={(checked) => toggleOperatorStatus(operator.id, checked)}
-                          />
-                        </div>
-                      </div>
+                       <div className="flex items-center gap-4">
+                         {getStatusBadge(operator)}
+                         <div className="flex items-center gap-2">
+                           <Label className="text-sm">Active</Label>
+                           <Switch
+                             checked={operator.is_active}
+                             onCheckedChange={(checked) => toggleOperatorStatus(operator.id, checked)}
+                           />
+                         </div>
+                         <div className="flex gap-2">
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => setEditingOperator(operator)}
+                           >
+                             <Edit className="h-4 w-4" />
+                           </Button>
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => toggleOperatorStatus(operator.id, false)}
+                           >
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
+                         </div>
+                       </div>
                     </div>
                   ))}
                 </div>
@@ -925,6 +943,19 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Zip Code Edit Modal */}
+      {editingOperator && (
+        <OperatorZipCodeEditModal
+          isOpen={!!editingOperator}
+          onClose={() => setEditingOperator(null)}
+          operator={editingOperator}
+          onSuccess={() => {
+            loadData();
+            setEditingOperator(null);
+          }}
+        />
       )}
     </div>
   );
