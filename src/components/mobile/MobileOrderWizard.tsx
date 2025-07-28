@@ -45,7 +45,7 @@ interface ShopItem {
 
 export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [orderType, setOrderType] = useState<'pickup_delivery'>('pickup_delivery');
+  const [orderType, setOrderType] = useState<'pickup_delivery' | 'locker'>('pickup_delivery');
   const [serviceType, setServiceType] = useState('');
   const [isExpress, setIsExpress] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -147,11 +147,31 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         });
       }
       
-      // Mock address for demo - in real app, use reverse geocoding
-      const mockAddress = "123 Main St, Springfield, MO 65804";
-      handleInputChange('pickupAddress', mockAddress);
-      handleInputChange('deliveryAddress', mockAddress);
-      handleInputChange('zipCode', '65804');
+      // Use reverse geocoding to get address
+      const response = await supabase.functions.invoke('geocoding', {
+        body: { 
+          query: `${location.longitude},${location.latitude}`,
+          type: 'reverse'
+        }
+      });
+      
+      if (response.data?.suggestions?.[0]) {
+        const address = response.data.suggestions[0].display_name;
+        handleInputChange('pickupAddress', address);
+        handleInputChange('deliveryAddress', address);
+        
+        // Extract zip code from address
+        const zipMatch = address.match(/\b\d{5}\b/);
+        if (zipMatch) {
+          handleInputChange('zipCode', zipMatch[0]);
+        }
+      } else {
+        // Fallback address
+        const mockAddress = "123 Main St, Springfield, MO 65804";
+        handleInputChange('pickupAddress', mockAddress);
+        handleInputChange('deliveryAddress', mockAddress);
+        handleInputChange('zipCode', '65804');
+      }
       
       toast({
         title: "Location Detected",
@@ -359,18 +379,51 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
             {/* Service Type Selection */}
             <div className="space-y-3">
               <h3 className="text-lg font-semibold">Service Type</h3>
-              <Card className="border-primary bg-primary/5">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Truck className="h-6 w-6 text-primary" />
-                    <div className="flex-1">
-                      <h4 className="font-medium">Pickup & Delivery</h4>
-                      <p className="text-sm text-muted-foreground">We handle pickup and delivery</p>
+              <div className="grid grid-cols-1 gap-3">
+                <Card 
+                  className={`cursor-pointer transition-all hover:shadow-md ${orderType === 'pickup_delivery' ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-gray-50'}`}
+                  onClick={() => setOrderType('pickup_delivery')}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Truck className="h-6 w-6 text-primary" />
+                      <div className="flex-1">
+                        <h4 className="font-medium">Pickup & Delivery</h4>
+                        <p className="text-sm text-muted-foreground">We handle pickup and delivery</p>
+                      </div>
+                      <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                        {orderType === 'pickup_delivery' && <div className="w-2 h-2 bg-primary rounded-full" />}
+                      </div>
                     </div>
-                    <CheckCircle className="h-5 w-5 text-primary" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+                
+                <Card 
+                  className={`cursor-pointer transition-all hover:shadow-md ${orderType === 'locker' ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-gray-50'}`}
+                  onClick={() => {
+                    setOrderType('locker');
+                    toast({
+                      title: "Coming Soon!",
+                      description: "Locker service will be available soon. Please use pickup & delivery for now.",
+                    });
+                    setTimeout(() => setOrderType('pickup_delivery'), 1500);
+                  }}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Package className="h-6 w-6 text-muted-foreground" />
+                      <div className="flex-1">
+                        <h4 className="font-medium text-muted-foreground">Locker Service</h4>
+                        <p className="text-sm text-muted-foreground">Drop off and pick up at secure lockers</p>
+                        <Badge variant="secondary" className="mt-1 text-xs">Coming Soon</Badge>
+                      </div>
+                      <div className="w-4 h-4 rounded-full border-2 border-muted-foreground flex items-center justify-center">
+                        {orderType === 'locker' && <div className="w-2 h-2 bg-muted-foreground rounded-full" />}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
             {/* Wash Type */}
