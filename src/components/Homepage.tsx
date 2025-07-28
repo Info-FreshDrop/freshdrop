@@ -48,13 +48,13 @@ export function Homepage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with embedded login */}
-      <div className="relative">
-        <HeroSection />
-        
-        {/* Login form positioned in top-right corner without covering content */}
-        <div className="absolute top-6 right-6 z-20">
-          <Card className="bg-background/95 backdrop-blur-md border-0 shadow-glow p-4 w-72">
+      {/* Hero Section */}
+      <HeroSection />
+      
+      {/* Login Section */}
+      <section className="py-16 bg-background">
+        <div className="max-w-md mx-auto px-6">
+          <Card className="shadow-glow">
             {showOperatorLogin ? (
               <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
             ) : (
@@ -62,7 +62,7 @@ export function Homepage() {
             )}
           </Card>
         </div>
-      </div>
+      </section>
 
       {/* Public sections */}
       <ServicesSection />
