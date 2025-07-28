@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useCapacitor } from "@/hooks/useCapacitor";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Package, 
@@ -18,7 +19,9 @@ import {
   Calendar,
   AlertCircle,
   CheckCircle,
-  ArrowLeft
+  ArrowLeft,
+  Crosshair,
+  Loader2
 } from "lucide-react";
 
 interface OrderPlacementProps {
@@ -30,6 +33,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
   const [serviceType, setServiceType] = useState('');
   const [isExpress, setIsExpress] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [lockers, setLockers] = useState<any[]>([]);
   const [clothesItems, setClothesItems] = useState<any[]>([]);
   const [serviceAreas, setServiceAreas] = useState<any[]>([]);
@@ -50,6 +54,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
 
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getCurrentLocation } = useCapacitor();
 
   useEffect(() => {
     loadData();
@@ -78,6 +83,71 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Reverse geocoding function to convert coordinates to address
+  const reverseGeocode = async (latitude: number, longitude: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.display_name) {
+        // Extract zip code from the address
+        const zipCode = data.address?.postcode || '';
+        
+        // Format the address nicely
+        const addressParts = [
+          data.address?.house_number,
+          data.address?.road,
+          data.address?.city || data.address?.town || data.address?.village,
+          data.address?.state,
+          zipCode
+        ].filter(Boolean);
+        
+        const formattedAddress = addressParts.join(', ');
+        
+        return {
+          address: formattedAddress,
+          zipCode: zipCode
+        };
+      }
+      throw new Error('No address found');
+    } catch (error) {
+      console.error('Reverse geocoding failed:', error);
+      throw error;
+    }
+  };
+
+  // Handle location detection
+  const handleDetectLocation = async () => {
+    setIsDetectingLocation(true);
+    try {
+      const location = await getCurrentLocation();
+      const addressData = await reverseGeocode(location.latitude, location.longitude);
+      
+      // Update form data with detected address and zip code
+      handleInputChange('pickupAddress', addressData.address);
+      handleInputChange('deliveryAddress', addressData.address);
+      if (addressData.zipCode) {
+        handleInputChange('zipCode', addressData.zipCode);
+      }
+      
+      toast({
+        title: "Location Detected",
+        description: "Your address has been automatically filled in.",
+      });
+    } catch (error) {
+      console.error('Location detection failed:', error);
+      toast({
+        title: "Location Error",
+        description: "Unable to detect your location. Please enter your address manually.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDetectingLocation(false);
+    }
   };
 
   const isExpressAvailable = () => {
@@ -272,10 +342,32 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                 <TabsContent value="pickup_delivery" className="space-y-4 mt-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="service-address">Service Address</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="service-address">Service Address</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDetectLocation}
+                          disabled={isDetectingLocation}
+                          className="text-xs"
+                        >
+                          {isDetectingLocation ? (
+                            <>
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              Detecting...
+                            </>
+                          ) : (
+                            <>
+                              <Crosshair className="h-3 w-3 mr-1" />
+                              Auto-detect
+                            </>
+                          )}
+                        </Button>
+                      </div>
                       <Textarea
                         id="service-address"
-                        placeholder="Enter your address for both pickup and delivery"
+                        placeholder="Enter your address for both pickup and delivery, or use auto-detect"
                         value={formData.pickupAddress}
                         onChange={(e) => {
                           handleInputChange('pickupAddress', e.target.value);
@@ -285,7 +377,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                         rows={3}
                       />
                       <p className="text-xs text-muted-foreground">
-                        We'll pickup and deliver to the same address
+                        We'll pickup and deliver to the same address. Click "Auto-detect" to use your current location.
                       </p>
                     </div>
                   </div>
