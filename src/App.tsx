@@ -9,6 +9,7 @@ import OwnerDashboard from "./pages/OwnerDashboard";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
 import OperatorSignup from "./pages/OperatorSignup";
+import ResetPassword from "./pages/ResetPassword";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/owner-dashboard" element={<OwnerDashboard />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/operator-signup" element={<OperatorSignup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
