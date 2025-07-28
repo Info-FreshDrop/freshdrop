@@ -87,30 +87,34 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Reverse geocoding function using Supabase edge function
+  // Reverse geocoding function using free API with CORS proxy
   const reverseGeocode = async (latitude: number, longitude: number) => {
     try {
-      const { data, error } = await supabase.functions.invoke('geocoding', {
-        body: { 
-          query: `${longitude},${latitude}`,
-          type: 'reverse'
-        }
-      });
-
-      if (error) {
-        console.error('Reverse geocoding error:', error);
-        throw error;
-      }
-
-      if (data && data.suggestions && data.suggestions.length > 0) {
-        const suggestion = data.suggestions[0];
+      const response = await fetch(
+        `https://api.allorigins.win/get?url=${encodeURIComponent(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+        )}`
+      );
+      const data = await response.json();
+      const result = JSON.parse(data.contents);
+      
+      if (result && result.display_name) {
         // Extract zip code from the address
-        const zipRegex = /\b\d{5}(-\d{4})?\b/;
-        const zipMatch = suggestion.formatted.match(zipRegex);
-        const zipCode = zipMatch ? zipMatch[0] : '';
+        const zipCode = result.address?.postcode || '';
+        
+        // Format the address nicely
+        const addressParts = [
+          result.address?.house_number,
+          result.address?.road,
+          result.address?.city || result.address?.town || result.address?.village,
+          result.address?.state,
+          zipCode
+        ].filter(Boolean);
+        
+        const formattedAddress = addressParts.join(', ');
         
         return {
-          address: suggestion.formatted,
+          address: formattedAddress,
           zipCode: zipCode
         };
       }
@@ -121,7 +125,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     }
   };
 
-  // Address autocomplete function using Supabase edge function
+  // Address autocomplete function using free geocoding API
   const searchAddresses = async (query: string) => {
     if (query.length < 3) {
       setAddressSuggestions([]);
@@ -130,21 +134,24 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('geocoding', {
-        body: { 
-          query: query,
-          type: 'search'
-        }
-      });
-
-      if (error) {
-        console.error('Geocoding error:', error);
-        return;
-      }
-
-      if (data && data.suggestions) {
-        setAddressSuggestions(data.suggestions);
-        setShowSuggestions(data.suggestions.length > 0);
+      // Use Nominatim with CORS proxy for development
+      const response = await fetch(
+        `https://api.allorigins.win/get?url=${encodeURIComponent(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=US&limit=5&addressdetails=1`
+        )}`
+      );
+      const data = await response.json();
+      const results = JSON.parse(data.contents);
+      
+      if (results && Array.isArray(results)) {
+        const suggestions = results.map((item: any) => ({
+          display_name: item.display_name,
+          formatted: item.display_name,
+          address: item.address
+        }));
+        
+        setAddressSuggestions(suggestions);
+        setShowSuggestions(suggestions.length > 0);
       }
     } catch (error) {
       console.error('Address search failed:', error);
