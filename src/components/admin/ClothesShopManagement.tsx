@@ -23,7 +23,9 @@ import {
   EyeOff,
   Percent,
   Calculator,
-  Settings
+  Settings,
+  Upload,
+  X
 } from "lucide-react";
 
 interface ClothesShopManagementProps {
@@ -49,6 +51,7 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
   const [showPreferencesManagement, setShowPreferencesManagement] = useState(false);
   const [editingItem, setEditingItem] = useState<ClothesItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [bulkPricingData, setBulkPricingData] = useState({
     category: '',
     priceAdjustment: '',
@@ -114,17 +117,61 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
     setShowCreateForm(true);
   };
 
+  const handlePhotoUpload = async (file: File, itemId?: string) => {
+    setIsUploadingPhoto(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${itemId || Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('shop-photos')
+        .upload(filePath, file, {
+          contentType: file.type,
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('shop-photos')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload photo. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      // Handle photo upload if a new photo was selected
+      let imageUrl = formData.imageUrl;
+      const fileInput = document.querySelector('#photo-upload') as HTMLInputElement;
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        const uploadedUrl = await handlePhotoUpload(fileInput.files[0], editingItem?.id);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+
       const itemData = {
         name: formData.name,
         category: formData.category,
         price_cents: Math.round(parseFloat(formData.price) * 100),
         description: formData.description || null,
-        image_url: formData.imageUrl || null,
+        image_url: imageUrl || null,
         is_active: formData.isActive
       };
 
@@ -462,16 +509,52 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="imageUrl">Image URL (Optional)</Label>
-                    <Input
-                      id="imageUrl"
-                      type="url"
-                      value={formData.imageUrl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-                      placeholder="https://example.com/image.jpg"
-                    />
+                    <Label htmlFor="photo-upload">Photo Upload</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="photo-upload"
+                        type="file"
+                        accept="image/*"
+                        className="flex-1"
+                      />
+                      {isUploadingPhoto && (
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                          Uploading...
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Upload a new photo or keep existing one
+                    </p>
                   </div>
                 </div>
+
+                {/* Current Image Preview */}
+                {(formData.imageUrl || editingItem?.image_url) && (
+                  <div className="space-y-2">
+                    <Label>Current Image</Label>
+                    <div className="relative inline-block">
+                      <img
+                        src={formData.imageUrl || editingItem?.image_url}
+                        alt="Current item"
+                        className="w-32 h-32 object-cover rounded-lg border"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="absolute -top-2 -right-2"
+                        onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
@@ -497,10 +580,10 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
                   <Button
                     type="submit"
                     variant="hero"
-                    disabled={isLoading}
+                    disabled={isLoading || isUploadingPhoto}
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {isLoading ? "Saving..." : editingItem ? "Update Item" : "Add Item"}
+                    {isLoading || isUploadingPhoto ? "Saving..." : editingItem ? "Update Item" : "Add Item"}
                   </Button>
                   <Button
                     type="button"
@@ -669,16 +752,23 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
                         </p>
                       )}
 
-                      {item.image_url && (
+                      {item.image_url ? (
                         <div className="mb-4">
                           <img
                             src={item.image_url}
                             alt={item.name}
-                            className="w-full h-32 object-cover rounded-lg"
+                            className="w-full h-48 object-cover rounded-lg border hover-scale"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                             }}
                           />
+                        </div>
+                      ) : (
+                        <div className="mb-4 w-full h-48 bg-muted rounded-lg border flex items-center justify-center">
+                          <div className="text-center text-muted-foreground">
+                            <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No image</p>
+                          </div>
                         </div>
                       )}
 

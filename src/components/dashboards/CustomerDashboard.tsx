@@ -4,16 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CouponsCarousel } from "@/components/customer/CouponsCarousel";
-import { OrderStatusProgress } from "@/components/customer/OrderStatusProgress"; 
-import { ChatWidget } from "@/components/customer/ChatWidget";
-import { ProfileModal } from "@/components/customer/ProfileModal";
-import { WalletInterface } from "@/components/customer/WalletInterface";
-import { ReferralInterface } from "@/components/customer/ReferralInterface";
-import { TipModal } from "@/components/customer/TipModal";
 import { RatingModal } from "@/components/customer/RatingModal";
+import { OrderStatusProgress } from "@/components/customer/OrderStatusProgress"; 
+import { CouponsCarousel } from "@/components/customer/CouponsCarousel";
+import { OrderTracking } from "@/components/orders/OrderTracking";
+import { ClothesShop } from "@/components/customer/ClothesShop";
+import { ReferralInterface } from "@/components/customer/ReferralInterface";
+import { WalletInterface } from "@/components/customer/WalletInterface";
 import { OrderPlacement } from "@/components/orders/OrderPlacement";
 import { OrderHistory } from "@/components/orders/OrderHistory";
+import { ProfileModal } from "@/components/customer/ProfileModal";
+import { TipModal } from "@/components/customer/TipModal";
+import { ChatWidget } from "@/components/customer/ChatWidget";
 import { 
   Package, 
   User, 
@@ -28,7 +30,9 @@ import {
   Heart,
   CreditCard,
   Gift,
-  LogOut
+  LogOut,
+  ShoppingBag,
+  History
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,12 +44,14 @@ export function CustomerDashboard() {
   const { user, signOut } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [orderHistory, setOrderHistory] = useState<any[]>([]);
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showWallet, setShowWallet] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showOrderPlacement, setShowOrderPlacement] = useState(false);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
+  const [showClothesShop, setShowClothesShop] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeTab, setActiveTab] = useState('orders');
   const [userProfile, setUserProfile] = useState<any>(null);
 
@@ -127,6 +133,11 @@ export function CustomerDashboard() {
   // Show OrderHistory component if requested
   if (showOrderHistory) {
     return <OrderHistory onBack={() => setShowOrderHistory(false)} />;
+  }
+  
+  // Show ClothesShop component if requested
+  if (showClothesShop) {
+    return <ClothesShop onBack={() => setShowClothesShop(false)} />;
   }
 
   return (
@@ -283,14 +294,37 @@ export function CustomerDashboard() {
                           )}
                         </CardContent>
                       </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
+                     ))}
+                   </div>
+                 )}
+               </div>
 
-              {/* Coupons */}
-              <CouponsCarousel />
-            </div>
+               {/* Quick Actions */}
+               <div>
+                 <h3 className="text-lg font-semibold text-slate-900 mb-3">Quick Actions</h3>
+                 <div className="grid grid-cols-2 gap-3">
+                   <Button
+                     variant="outline"
+                     className="flex items-center justify-center gap-2 h-16 border-dashed"
+                     onClick={() => setShowClothesShop(true)}
+                   >
+                     <ShoppingBag className="h-5 w-5" />
+                     <span className="text-sm font-medium">Shop</span>
+                   </Button>
+                   <Button
+                     variant="outline"
+                     className="flex items-center justify-center gap-2 h-16 border-dashed"
+                     onClick={() => setShowOrderHistory(true)}
+                   >
+                     <History className="h-5 w-5" />
+                     <span className="text-sm font-medium">History</span>
+                   </Button>
+                 </div>
+               </div>
+
+               {/* Coupons */}
+               <CouponsCarousel />
+             </div>
           </TabsContent>
 
           <TabsContent value="payments" className="flex-1 px-4 py-6 mt-0">
