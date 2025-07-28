@@ -691,7 +691,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                 onClick={() => setShowShopModal(true)}
                 className="w-full h-12"
               >
-                Browse Shop Items
+                Items
               </Button>
             </div>
             

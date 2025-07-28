@@ -577,7 +577,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         <h3 className="text-lg font-semibold mb-2">Add Shop Items (Optional)</h3>
         <p className="text-muted-foreground mb-4">Browse our selection of clothing and accessories</p>
         <Button variant="outline" onClick={() => {/* TODO: Implement shop modal */}}>
-          Browse Shop Items
+          Items
         </Button>
       </div>
       
