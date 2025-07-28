@@ -124,14 +124,21 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
     try {
       setLoading(true);
       
+      // Create a proper file path with user ID folder structure
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user?.id}.${fileExt}`;
+      const fileName = `${user?.id}/avatar.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, { 
+          upsert: true,
+          contentType: file.type
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
