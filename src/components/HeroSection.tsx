@@ -31,8 +31,7 @@ export function HeroSection() {
             alt="FreshDrop Logo" 
             className="h-48 md:h-72 w-auto drop-shadow-lg"
             style={{ 
-              filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))',
-              mixBlendMode: 'multiply' 
+              filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))'
             }}
           />
         </div>
