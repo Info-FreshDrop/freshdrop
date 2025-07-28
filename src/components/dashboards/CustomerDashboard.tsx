@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { OrderTracking } from "@/components/orders/OrderTracking";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Package, MapPin, Clock, Star, Plus } from "lucide-react";
 import { OrderPlacement } from "@/components/orders/OrderPlacement";
-import { OrderTracking } from "@/components/orders/OrderTracking";
+import { FindLockers } from "@/components/FindLockers";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 export function CustomerDashboard() {
   const { user, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'order' | 'tracking'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'order' | 'tracking' | 'lockers'>('dashboard');
   const [activeOrders, setActiveOrders] = useState<any[]>([]);
   const [orderCount, setOrderCount] = useState(0);
 
@@ -46,6 +47,10 @@ export function CustomerDashboard() {
 
   if (currentView === 'tracking') {
     return <OrderTracking onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'lockers') {
+    return <FindLockers onBack={() => setCurrentView('dashboard')} />;
   }
 
   return (
@@ -99,7 +104,11 @@ export function CustomerDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setCurrentView('lockers')}
+              >
                 View Map
               </Button>
             </CardContent>

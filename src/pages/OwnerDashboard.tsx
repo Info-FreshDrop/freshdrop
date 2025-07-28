@@ -22,7 +22,6 @@ import {
 export default function OwnerDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [lockers, setLockers] = useState<any[]>([]);
-  const [promoCodes, setPromoCodes] = useState<any[]>([]);
   const [prices, setPrices] = useState({
     bagPrice: 3500, // $35.00 in cents
     expressPrice: 2000 // $20.00 in cents
@@ -32,12 +31,6 @@ export default function OwnerDashboard() {
     address: '',
     zip_code: '',
     locker_count: 1
-  });
-  const [newPromoCode, setNewPromoCode] = useState({
-    code: '',
-    discount_type: 'percentage',
-    discount_value: 0,
-    description: ''
   });
 
   const { user } = useAuth();
@@ -49,13 +42,9 @@ export default function OwnerDashboard() {
 
   const loadData = async () => {
     try {
-      const [lockersRes, promoCodesRes] = await Promise.all([
-        supabase.from('lockers').select('*').eq('is_active', true),
-        supabase.from('promo_codes').select('*').eq('is_active', true)
-      ]);
-
+      const lockersRes = await supabase.from('lockers').select('*').eq('is_active', true);
+      
       if (lockersRes.data) setLockers(lockersRes.data);
-      if (promoCodesRes.data) setPromoCodes(promoCodesRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
@@ -127,63 +116,6 @@ export default function OwnerDashboard() {
     }
   };
 
-  const addPromoCode = async () => {
-    if (!newPromoCode.code || !newPromoCode.discount_value) {
-      toast({
-        title: "Error",
-        description: "Please fill in all promo code fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.from('promo_codes').insert(newPromoCode);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Promo code added successfully",
-      });
-
-      setNewPromoCode({ code: '', discount_type: 'percentage', discount_value: 0, description: '' });
-      loadData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add promo code",
-        variant: "destructive",
-      });
-    }
-    setIsLoading(false);
-  };
-
-  const deletePromoCode = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('promo_codes')
-        .update({ is_active: false })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Promo code removed successfully",
-      });
-
-      loadData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to remove promo code",
-        variant: "destructive",
-      });
-    }
-  };
-
   const updatePrices = async () => {
     // This would update a settings table or similar
     toast({
@@ -205,7 +137,7 @@ export default function OwnerDashboard() {
         </div>
 
         <Tabs defaultValue="pricing" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="pricing">
               <DollarSign className="h-4 w-4 mr-2" />
               Pricing
@@ -213,10 +145,6 @@ export default function OwnerDashboard() {
             <TabsTrigger value="locations">
               <MapPin className="h-4 w-4 mr-2" />
               Locations
-            </TabsTrigger>
-            <TabsTrigger value="promo-codes">
-              <Tag className="h-4 w-4 mr-2" />
-              Promo Codes
             </TabsTrigger>
           </TabsList>
 
@@ -362,106 +290,6 @@ export default function OwnerDashboard() {
             </div>
           </TabsContent>
 
-          <TabsContent value="promo-codes">
-            <div className="space-y-6">
-              <Card className="border-0 shadow-soft">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Plus className="h-5 w-5 text-primary" />
-                    Add New Promo Code
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="promo-code">Promo Code</Label>
-                      <Input
-                        id="promo-code"
-                        placeholder="e.g., SAVE20"
-                        value={newPromoCode.code}
-                        onChange={(e) => setNewPromoCode(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="discount-type">Discount Type</Label>
-                      <select
-                        id="discount-type"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={newPromoCode.discount_type}
-                        onChange={(e) => setNewPromoCode(prev => ({ ...prev, discount_type: e.target.value }))}
-                      >
-                        <option value="percentage">Percentage (%)</option>
-                        <option value="fixed">Fixed Amount ($)</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="discount-value">
-                        Discount {newPromoCode.discount_type === 'percentage' ? '(%)' : '($)'}
-                      </Label>
-                      <Input
-                        id="discount-value"
-                        type="number"
-                        step={newPromoCode.discount_type === 'percentage' ? "1" : "0.01"}
-                        value={newPromoCode.discount_value}
-                        onChange={(e) => setNewPromoCode(prev => ({ ...prev, discount_value: parseFloat(e.target.value) }))}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="promo-description">Description</Label>
-                    <Input
-                      id="promo-description"
-                      placeholder="e.g., 20% off your first order"
-                      value={newPromoCode.description}
-                      onChange={(e) => setNewPromoCode(prev => ({ ...prev, description: e.target.value }))}
-                    />
-                  </div>
-                  <Button onClick={addPromoCode} disabled={isLoading} className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Promo Code
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-soft">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Tag className="h-5 w-5 text-primary" />
-                    Active Promo Codes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {promoCodes.map((promo) => (
-                      <div key={promo.id} className="flex justify-between items-center p-3 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{promo.code}</h4>
-                          <p className="text-sm text-muted-foreground">{promo.description}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {promo.discount_type === 'percentage' 
-                              ? `${promo.discount_value}% off` 
-                              : `$${promo.discount_value} off`}
-                          </p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => deletePromoCode(promo.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    {promoCodes.length === 0 && (
-                      <p className="text-center text-muted-foreground py-8">
-                        No promo codes added yet
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
         </Tabs>
       </div>
     </div>

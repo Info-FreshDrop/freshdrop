@@ -227,58 +227,43 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                 </TabsList>
 
                 <TabsContent value="locker" className="space-y-4 mt-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="locker-select">Select Locker Location</Label>
-                    <Select value={formData.lockerId} onValueChange={(value) => handleInputChange('lockerId', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a locker location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {lockers.map((locker) => (
-                          <SelectItem key={locker.id} value={locker.id}>
-                            <div>
-                              <div className="font-medium">{locker.name}</div>
-                              <div className="text-sm text-muted-foreground">{locker.address}</div>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {selectedLocker && (
-                      <div className="p-3 bg-primary/5 rounded-lg">
-                        <p className="text-sm">
-                          <strong>Selected:</strong> {selectedLocker.name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">{selectedLocker.address}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Available lockers: {selectedLocker.locker_count}
-                        </p>
-                      </div>
-                    )}
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="h-4 w-4 text-amber-600" />
+                      <span className="font-medium text-amber-800">No Lockers Available</span>
+                    </div>
+                    <p className="text-sm text-amber-700">
+                      There are no lockers near you at this moment. Please use our pickup and delivery service instead.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-3"
+                      onClick={() => setOrderType('pickup_delivery')}
+                    >
+                      Switch to Pickup & Delivery
+                    </Button>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="pickup_delivery" className="space-y-4 mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="pickup-address">Pickup Address</Label>
+                      <Label htmlFor="service-address">Service Address</Label>
                       <Textarea
-                        id="pickup-address"
-                        placeholder="Enter your pickup address"
+                        id="service-address"
+                        placeholder="Enter your address for both pickup and delivery"
                         value={formData.pickupAddress}
-                        onChange={(e) => handleInputChange('pickupAddress', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('pickupAddress', e.target.value);
+                          handleInputChange('deliveryAddress', e.target.value); // Same address for both
+                        }}
                         required={orderType === 'pickup_delivery'}
+                        rows={3}
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="delivery-address">Delivery Address</Label>
-                      <Textarea
-                        id="delivery-address"
-                        placeholder="Enter your delivery address (or same as pickup)"
-                        value={formData.deliveryAddress}
-                        onChange={(e) => handleInputChange('deliveryAddress', e.target.value)}
-                        required={orderType === 'pickup_delivery'}
-                      />
+                      <p className="text-xs text-muted-foreground">
+                        We'll pickup and deliver to the same address
+                      </p>
                     </div>
                   </div>
                 </TabsContent>
@@ -489,7 +474,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
             variant="hero"
             size="xl"
             className="w-full"
-            disabled={isLoading || !validateServiceArea().valid || !serviceType || !formData.timeWindow}
+            disabled={isLoading || !validateServiceArea().valid || !serviceType || !formData.timeWindow || (orderType === 'pickup_delivery' && !formData.pickupAddress)}
             >
               {isLoading ? "Processing Payment..." : `Pay Now - $${(calculateTotal() / 100).toFixed(2)}`}
             </Button>
