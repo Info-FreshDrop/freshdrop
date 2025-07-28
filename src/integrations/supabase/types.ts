@@ -987,7 +987,11 @@ export type Database = {
         | "picked_up"
         | "folded"
       pickup_type: "locker" | "pickup_delivery"
-      service_type: "wash_fold" | "wash_hang_dry" | "express"
+      service_type:
+        | "wash_fold"
+        | "wash_hang_dry"
+        | "express"
+        | "delicates_airdry"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1130,7 +1134,12 @@ export const Constants = {
         "folded",
       ],
       pickup_type: ["locker", "pickup_delivery"],
-      service_type: ["wash_fold", "wash_hang_dry", "express"],
+      service_type: [
+        "wash_fold",
+        "wash_hang_dry",
+        "express",
+        "delicates_airdry",
+      ],
     },
   },
 } as const
