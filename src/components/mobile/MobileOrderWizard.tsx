@@ -682,17 +682,55 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
       case 3:
         return (
           <div className="space-y-4 p-1">
-            <div className="text-center py-6">
-              <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-primary" />
-              <h3 className="text-lg font-semibold mb-2">Shop Items</h3>
-              <p className="text-muted-foreground mb-4 text-sm">Add clothing and accessories (optional)</p>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowShopModal(true)}
-                className="w-full h-12"
-              >
-                Items
-              </Button>
+            {/* Shop Items */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Shop Items (Optional)</h3>
+              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+                {clothesItems.map((item) => (
+                  <Card key={item.id} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm">{item.name}</h4>
+                        <p className="text-xs text-muted-foreground">{item.category}</p>
+                        <p className="text-sm font-semibold text-primary">${(item.price_cents / 100).toFixed(2)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {selectedShopItems.find(si => si.id === item.id) ? (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => removeShopItem(item.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="text-sm font-medium w-6 text-center">
+                              {selectedShopItems.find(si => si.id === item.id)?.quantity || 0}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => addShopItem(item)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() => addShopItem(item)}
+                            className="h-8"
+                          >
+                            Add
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
             </div>
             
             {selectedShopItems.length > 0 && (
