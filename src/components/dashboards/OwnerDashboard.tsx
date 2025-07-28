@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { WasherManagement } from "@/components/washers/WasherManagement";
+import { ClothesShopManagement } from "@/components/admin/ClothesShopManagement";
+import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { 
   Users, 
   Package, 
@@ -17,10 +19,18 @@ import {
 
 export function OwnerDashboard() {
   const { signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'washers'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'washers' | 'shop' | 'analytics'>('dashboard');
 
   if (currentView === 'washers') {
     return <WasherManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'shop') {
+    return <ClothesShopManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'analytics') {
+    return <AnalyticsDashboard onBack={() => setCurrentView('dashboard')} />;
   }
 
   return (
@@ -183,7 +193,11 @@ export function OwnerDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('shop')}
+                >
                   Edit Items
                 </Button>
                 <Button variant="outline" className="w-full">
@@ -205,7 +219,11 @@ export function OwnerDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('analytics')}
+                >
                   Performance Dashboard
                 </Button>
                 <Button variant="outline" className="w-full">

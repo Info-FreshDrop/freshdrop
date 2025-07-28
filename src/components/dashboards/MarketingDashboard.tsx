@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { NotificationSystem } from "@/components/admin/NotificationSystem";
 import { 
   Megaphone, 
   Mail, 
@@ -15,6 +17,11 @@ import {
 
 export function MarketingDashboard() {
   const { signOut } = useAuth();
+  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications'>('dashboard');
+
+  if (currentView === 'notifications') {
+    return <NotificationSystem onBack={() => setCurrentView('dashboard')} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-wave">
@@ -156,7 +163,11 @@ export function MarketingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="hero" className="w-full">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('notifications')}
+                >
                   Send Notification
                 </Button>
                 <Button variant="outline" className="w-full">
