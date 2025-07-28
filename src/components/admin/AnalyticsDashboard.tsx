@@ -35,7 +35,15 @@ interface AnalyticsData {
   ordersByStatus: Record<string, number>;
   revenueByDay: Array<{ date: string; revenue: number }>;
   topServices: Array<{ service: string; count: number; revenue: number }>;
-  washersPerformance: Array<{ name: string; orders: number; rating: number }>;
+  operatorsPerformance: Array<{ 
+    id: string; 
+    name: string; 
+    orders: number; 
+    completedOrders: number;
+    rating: number; 
+    revenue: number;
+    user_id: string;
+  }>;
 }
 
 export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
@@ -50,8 +58,10 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
     ordersByStatus: {},
     revenueByDay: [],
     topServices: [],
-    washersPerformance: []
+    operatorsPerformance: []
   });
+  const [selectedOperator, setSelectedOperator] = useState<string | null>(null);
+  const [operatorDetails, setOperatorDetails] = useState<any>(null);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -87,11 +97,30 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
-      // Load washers data
-      const { data: washers } = await supabase
+      // Load approved operators data (fetch profiles separately)
+      const { data: operators } = await supabase
         .from('washers')
-        .select('*, profiles!washers_user_id_fkey(first_name, last_name)')
-        .eq('is_active', true);
+        .select('*')
+        .eq('is_active', true)
+        .eq('approval_status', 'approved');
+
+      // Fetch profiles for all operators
+      const operatorsWithProfiles = await Promise.all(
+        (operators || []).map(async (operator) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('user_id', operator.user_id)
+            .maybeSingle();
+
+          return {
+            ...operator,
+            profiles: profile
+          };
+        })
+      );
+
+      const activeOperators = operatorsWithProfiles.length;
 
       if (orders) {
         const totalOrders = orders.length;
@@ -131,24 +160,59 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
           acc[service].revenue += order.total_amount_cents / 100;
           return acc;
         }, {});
-
+        
         const topServices = Object.entries(serviceStats)
           .map(([service, stats]) => ({ service, ...stats }))
           .sort((a, b) => b.revenue - a.revenue)
           .slice(0, 5);
+
+        // Calculate operator performance
+        const operatorsPerformance = await Promise.all(
+          operatorsWithProfiles.map(async (operator) => {
+            const operatorOrders = orders.filter(order => order.washer_id === operator.id);
+            const completedOperatorOrders = operatorOrders.filter(order => order.status === 'completed');
+            
+            // Get ratings for this operator's completed orders
+            const { data: ratings } = await supabase
+              .from('order_ratings')
+              .select('overall_rating')
+              .in('order_id', completedOperatorOrders.map(o => o.id));
+            
+            const avgRating = ratings && ratings.length > 0 
+              ? ratings.reduce((sum, r) => sum + (r.overall_rating || 0), 0) / ratings.length
+              : 0;
+              
+            const operatorRevenue = completedOperatorOrders.reduce((sum, order) => sum + (order.total_amount_cents || 0), 0) / 100;
+            
+            return {
+              id: operator.id,
+              user_id: operator.user_id,
+              name: operator.profiles 
+                ? `${operator.profiles.first_name || ''} ${operator.profiles.last_name || ''}`.trim()
+                : `Operator #${operator.id.slice(0, 8)}`,
+              orders: operatorOrders.length,
+              completedOrders: completedOperatorOrders.length,
+              rating: avgRating,
+              revenue: operatorRevenue
+            };
+          })
+        );
+        
+        // Sort by completed orders descending
+        operatorsPerformance.sort((a, b) => b.completedOrders - a.completedOrders);
 
         setAnalytics({
           totalOrders,
           totalRevenue,
           freshDropPay,
           operatorPay,
-          activeWashers: washers?.length || 0,
+          activeWashers: activeOperators,
           completionRate,
           avgTurnaroundTime: avgTurnaround,
           ordersByStatus,
           revenueByDay: Object.entries(revenueByDay).map(([date, revenue]) => ({ date, revenue })),
           topServices,
-          washersPerformance: [] // This would require more complex queries
+          operatorsPerformance
         });
       }
     } catch (error) {
@@ -156,6 +220,47 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
     }
     
     setIsLoading(false);
+  };
+
+  const loadOperatorDetails = async (operatorId: string, userId: string) => {
+    try {
+      // Get all orders for this operator
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('washer_id', operatorId)
+        .order('created_at', { ascending: false });
+
+      // Get all ratings for completed orders
+      const completedOrders = orders?.filter(o => o.status === 'completed') || [];
+      const { data: ratings } = await supabase
+        .from('order_ratings')
+        .select('*')
+        .in('order_id', completedOrders.map(o => o.id));
+
+      // Get operator profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      const totalRevenue = completedOrders.reduce((sum, order) => sum + (order.total_amount_cents || 0), 0) / 100;
+      const avgRating = ratings && ratings.length > 0 
+        ? ratings.reduce((sum, r) => sum + (r.overall_rating || 0), 0) / ratings.length
+        : 0;
+
+      setOperatorDetails({
+        orders: orders || [],
+        completedOrders,
+        ratings: ratings || [],
+        totalRevenue,
+        avgRating,
+        profile
+      });
+    } catch (error) {
+      console.error('Error loading operator details:', error);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -168,6 +273,149 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;
   };
+
+  if (selectedOperator && operatorDetails) {
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setSelectedOperator(null);
+                setOperatorDetails(null);
+              }}
+              className="mb-4"
+            >
+              <ArrowUp className="h-4 w-4 mr-2 rotate-180" />
+              Back to Analytics
+            </Button>
+            
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Operator Performance Details
+            </h1>
+            <p className="text-muted-foreground">
+              Detailed performance metrics for {operatorDetails.profile?.first_name} {operatorDetails.profile?.last_name}
+            </p>
+          </div>
+
+          {/* Performance Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="border-0 shadow-soft">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-primary">{operatorDetails.orders.length}</p>
+                  <p className="text-sm text-muted-foreground">Total Orders</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-soft">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{operatorDetails.completedOrders.length}</p>
+                  <p className="text-sm text-muted-foreground">Completed Orders</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-soft">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-yellow-600">{operatorDetails.avgRating.toFixed(1)}★</p>
+                  <p className="text-sm text-muted-foreground">Average Rating</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-soft">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{formatCurrency(operatorDetails.totalRevenue)}</p>
+                  <p className="text-sm text-muted-foreground">Total Revenue</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Orders */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="border-0 shadow-soft">
+              <CardHeader>
+                <CardTitle>Recent Orders</CardTitle>
+                <CardDescription>Latest order activity</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {operatorDetails.orders.slice(0, 10).map((order: any) => (
+                    <div key={order.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div>
+                        <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <Badge 
+                          variant={order.status === 'completed' ? 'default' : 'secondary'}
+                        >
+                          {order.status}
+                        </Badge>
+                        <p className="text-sm font-medium mt-1">
+                          {formatCurrency(order.total_amount_cents / 100)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Reviews */}
+            <Card className="border-0 shadow-soft">
+              <CardHeader>
+                <CardTitle>Customer Reviews</CardTitle>
+                <CardDescription>Recent ratings and feedback</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {operatorDetails.ratings.slice(0, 10).map((rating: any) => (
+                    <div key={rating.id} className="p-3 bg-muted rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span
+                              key={star}
+                              className={`text-sm ${
+                                star <= (rating.overall_rating || 0)
+                                  ? 'text-yellow-500'
+                                  : 'text-gray-300'
+                              }`}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(rating.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {rating.feedback && (
+                        <p className="text-sm text-muted-foreground">{rating.feedback}</p>
+                      )}
+                    </div>
+                  ))}
+                  {operatorDetails.ratings.length === 0 && (
+                    <p className="text-center text-muted-foreground py-4">No reviews yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -417,33 +665,37 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                Washer Performance
+                Operator Performance
               </CardTitle>
-              <CardDescription>Top performing washers</CardDescription>
+              <CardDescription>Top performing approved operators</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div>
-                    <p className="font-medium">Sarah Johnson</p>
-                    <p className="text-sm text-muted-foreground">24 orders completed</p>
-                  </div>
-                  <Badge variant="default">4.9★</Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div>
-                    <p className="font-medium">Mike Chen</p>
-                    <p className="text-sm text-muted-foreground">21 orders completed</p>
-                  </div>
-                  <Badge variant="default">4.8★</Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div>
-                    <p className="font-medium">Lisa Wang</p>
-                    <p className="text-sm text-muted-foreground">19 orders completed</p>
-                  </div>
-                  <Badge variant="default">4.7★</Badge>
-                </div>
+                {analytics.operatorsPerformance.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">No approved operators found</p>
+                ) : (
+                  analytics.operatorsPerformance.slice(0, 5).map((operator) => (
+                    <div 
+                      key={operator.id} 
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors"
+                      onClick={() => {
+                        setSelectedOperator(operator.id);
+                        loadOperatorDetails(operator.id, operator.user_id);
+                      }}
+                    >
+                      <div>
+                        <p className="font-medium">{operator.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {operator.completedOrders} completed orders • {formatCurrency(operator.revenue)} revenue
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant="default">{operator.rating > 0 ? `${operator.rating.toFixed(1)}★` : 'No ratings'}</Badge>
+                        <p className="text-xs text-muted-foreground mt-1">Click for details</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
