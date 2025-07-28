@@ -35,18 +35,22 @@ export function InteractiveServiceMap({ onBack }: InteractiveServiceMapProps) {
 
   const fetchMapboxToken = async () => {
     try {
-      // Try to get token from edge function secrets via a simple test call
-      const response = await fetch('/api/get-mapbox-token');
-      if (response.ok) {
-        const data = await response.json();
+      // Get token from our edge function
+      const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+      
+      if (error) {
+        console.error('Error fetching Mapbox token:', error);
+        throw error;
+      }
+      
+      if (data?.token) {
         setMapboxToken(data.token);
       } else {
-        // Fallback: use environment variable or hardcoded token for development
-        const token = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'; // Mapbox demo token
-        setMapboxToken(token);
+        throw new Error('No token received from edge function');
       }
     } catch (error) {
-      console.warn('Could not fetch Mapbox token, using demo token');
+      console.warn('Could not fetch Mapbox token, using demo token:', error);
+      // Fallback to demo token
       const token = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
       setMapboxToken(token);
     }
@@ -121,7 +125,7 @@ export function InteractiveServiceMap({ onBack }: InteractiveServiceMapProps) {
             markerEl.style.backgroundColor = '#10b981'; // Green for basic
           }
 
-          markerEl.textContent = area.zip_code.slice(-3); // Show last 3 digits
+          markerEl.textContent = area.zip_code; // Show full zip code
 
           // Create popup content
           const services = [];
