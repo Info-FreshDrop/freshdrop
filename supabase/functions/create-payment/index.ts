@@ -141,14 +141,34 @@ serve(async (req) => {
       console.log("User has existing orders, no referral discount applied");
     }
 
-    console.log("Bypassing Stripe payment - creating order directly");
+    // Initialize Stripe
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+      apiVersion: "2023-10-16",
+    });
 
+    // Check if a Stripe customer already exists for this user
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let customerId;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+    } else {
+      // Create new customer
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: {
+          user_id: user.id
+        }
+      });
+      customerId = customer.id;
+    }
+
+    // Create pending order first to get order ID for metadata
     const { data: order, error: orderError } = await supabaseService.from("orders").insert({
       ...orderData,
       customer_id: user.id,
-      status: 'unclaimed', // Mark as unclaimed so operators can see it
-      stripe_session_id: null, // No Stripe session
-      promo_code: orderData.promoCode || null, // Map promoCode to promo_code
+      status: 'pending', // Will be updated to 'unclaimed' after payment
+      stripe_session_id: null, // Will be updated after session creation
+      promo_code: orderData.promoCode || null,
       discount_amount_cents: discountAmount,
       total_amount_cents: totalAmount,
       created_at: new Date().toISOString(),
@@ -163,9 +183,41 @@ serve(async (req) => {
 
     console.log("Order created successfully:", order.id);
 
-    // Return success URL directly
+    // Create Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `FreshDrop Laundry Service - ${orderData.bag_count} bag${orderData.bag_count > 1 ? 's' : ''}`,
+              description: `${orderData.is_express ? 'Express ' : ''}laundry service${orderData.special_instructions ? ': ' + orderData.special_instructions : ''}`,
+            },
+            unit_amount: totalAmount,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${req.headers.get("origin")}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get("origin")}/?payment=cancelled`,
+      metadata: {
+        order_id: order.id,
+        user_id: user.id
+      }
+    });
+
+    // Update order with Stripe session ID
+    await supabaseService
+      .from("orders")
+      .update({ stripe_session_id: session.id })
+      .eq('id', order.id);
+
+    console.log("Stripe session created:", session.id);
+
     return new Response(JSON.stringify({ 
-      url: `${req.headers.get("origin")}/payment-success?test_order=true&order_id=${order.id}` 
+      url: session.url 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
