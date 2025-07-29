@@ -296,6 +296,8 @@ export function OperatorDashboard() {
     const file = event.target.files?.[0];
     if (!file || !selectedOrder || !photoStep) return;
 
+    console.log(`Uploading photo for step ${photoStep} for order ${selectedOrder.id}`);
+    
     setUploading(true);
     try {
       // Create unique filename
@@ -321,30 +323,58 @@ export function OperatorDashboard() {
         [`step_${photoStep}`]: publicUrl
       };
 
+      const isLastStep = photoStep === 13; // Step 13 is the final step that requires a photo
+      const updateData: any = {
+        step_photos: updatedStepPhotos,
+        current_step: photoStep + 1
+      };
+      
+      // If this is the final step, mark order as completed
+      if (isLastStep) {
+        updateData.status = 'completed';
+        updateData.completed_at = new Date().toISOString();
+        console.log('This is the last step (photo upload) - marking order as completed:', updateData);
+      }
+
       const { error: updateError } = await supabase
         .from('orders')
-        .update({
-          step_photos: updatedStepPhotos,
-          current_step: photoStep + 1
-        })
+        .update(updateData)
         .eq('id', selectedOrder.id);
 
       if (updateError) throw updateError;
+
+      console.log('Database update successful');
 
       // Update local state
       setSelectedOrder({
         ...selectedOrder,
         step_photos: updatedStepPhotos,
-        current_step: photoStep + 1
+        current_step: photoStep + 1,
+        status: isLastStep ? 'completed' : selectedOrder.status,
+        completed_at: isLastStep ? new Date().toISOString() : selectedOrder.completed_at
       });
 
       toast({
-        title: "Photo Uploaded",
-        description: `Step ${photoStep} completed successfully!`
+        title: isLastStep ? "Order Completed!" : "Photo Uploaded",
+        description: isLastStep 
+          ? "Order has been successfully completed and delivered!" 
+          : `Step ${photoStep} completed successfully!`
       });
 
       setShowPhotoUpload(false);
       setPhotoStep(null);
+      
+      // If order is completed, close the detailed view and refresh
+      if (isLastStep) {
+        console.log('Order completed - closing view and refreshing data');
+        setSelectedOrder(null);
+        
+        // Force a data refresh
+        setTimeout(() => {
+          loadDashboardData();
+        }, 1000);
+      }
+      
       loadDashboardData(); // Refresh data
     } catch (error) {
       console.error('Error uploading photo:', error);
