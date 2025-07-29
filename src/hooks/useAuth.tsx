@@ -62,9 +62,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     const initAuth = async () => {
       try {
+        console.log('Starting auth initialization...');
+        
+        // Set a timeout to ensure loading doesn't hang forever
+        const authTimeout = setTimeout(() => {
+          console.warn('Auth initialization taking too long, setting loading to false');
+          setLoading(false);
+        }, 8000); // 8 second max for auth
+        
         // Get current session
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('Session check:', !!session, error);
+        
+        // Clear the timeout since we got a response
+        clearTimeout(authTimeout);
+        
+        if (error) {
+          console.error('Session error:', error);
+          setLoading(false);
+          return;
+        }
         
         setSession(session);
         setUser(session?.user ?? null);

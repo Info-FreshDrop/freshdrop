@@ -21,14 +21,17 @@ export function Homepage() {
   const { user, userRole, loading } = useAuth();
   
   useEffect(() => {
+    // Increase timeout to 10 seconds and add more detailed logging
     const timer = setTimeout(() => {
-      console.log('Loading timeout reached, forcing load');
+      console.log('Loading timeout reached after 10 seconds');
+      console.log('Current auth state:', { user: !!user, userRole, loading });
       setTimeoutReached(true);
-    }, 5000); // 5 second timeout
+    }, 10000); // Increased to 10 seconds
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [user, userRole, loading]);
 
+  // Show loading spinner for a reasonable amount of time
   if (loading && !timeoutReached) {
     return (
       <div className="min-h-screen bg-gradient-wave flex items-center justify-center">
@@ -40,20 +43,36 @@ export function Homepage() {
     );
   }
 
-  // If loading is stuck for too long, show the content anyway
+  // If loading is stuck, show error message with refresh option
   if (timeoutReached && loading) {
-    console.log('Forcing page load due to timeout');
+    console.log('Forcing page load due to timeout - this indicates an authentication issue');
     return (
-      <div className="min-h-screen">
-        <HeroSection />
-        <section id="auth-section" className="py-16 bg-background">
-          <div className="max-w-md mx-auto px-6">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-2">Welcome to FreshDrop</h2>
-              <p className="text-muted-foreground">Loading timeout - please refresh the page</p>
-            </div>
+      <div className="min-h-screen bg-gradient-wave flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold mb-2">Connection Issue</h2>
+            <p className="text-muted-foreground mb-4">
+              We're having trouble connecting to our servers. This usually resolves itself quickly.
+            </p>
           </div>
-        </section>
+          <div className="space-y-3">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Refresh Page
+            </button>
+            <button 
+              onClick={() => {
+                setTimeoutReached(false);
+                // Force continue anyway
+              }} 
+              className="w-full bg-muted text-muted-foreground px-4 py-2 rounded-lg hover:bg-muted/80 transition-colors"
+            >
+              Continue Anyway
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
