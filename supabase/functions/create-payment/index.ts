@@ -31,8 +31,14 @@ serve(async (req) => {
     console.log("User authenticated:", user.email);
 
     // Parse request body
-    const { orderData } = await req.json();
-    if (!orderData) throw new Error("Order data is required");
+    const requestBody = await req.json();
+    console.log("Full request body:", JSON.stringify(requestBody));
+    
+    const { orderData } = requestBody;
+    if (!orderData) {
+      console.error("orderData is missing from request body");
+      throw new Error("Order data is required");
+    }
     console.log("Order data received:", JSON.stringify(orderData));
 
     // Calculate total amount for record keeping
@@ -207,8 +213,9 @@ serve(async (req) => {
     const { data: order, error: orderError } = await supabaseService.from("orders").insert(orderRecord).select().single();
 
     if (orderError) {
-      console.error("Error storing order:", orderError);
-      throw new Error("Failed to store order data");
+      console.error("Error storing order:", JSON.stringify(orderError, null, 2));
+      console.error("Order record that failed:", JSON.stringify(orderRecord, null, 2));
+      throw new Error(`Failed to store order data: ${orderError.message || orderError.hint || 'Unknown database error'}`);
     }
 
     console.log("Order created successfully:", order.id);
@@ -254,7 +261,13 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Payment creation error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Error stack:", error.stack);
+    console.error("Error details:", JSON.stringify(error, null, 2));
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: error.stack,
+      timestamp: new Date().toISOString()
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
