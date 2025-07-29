@@ -54,6 +54,8 @@ export function CustomerDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeTab, setActiveTab] = useState('orders');
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -64,6 +66,7 @@ export function CustomerDashboard() {
 
   const loadUserProfile = async () => {
     try {
+      setIsLoadingProfile(true);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -79,11 +82,14 @@ export function CustomerDashboard() {
       }
     } catch (error) {
       console.error('Error loading profile:', error);
+    } finally {
+      setIsLoadingProfile(false);
     }
   };
 
   const loadOrders = async () => {
     try {
+      setIsLoadingOrders(true);
       const { data, error } = await supabase
         .from('orders')
         .select('*')
@@ -105,6 +111,8 @@ export function CustomerDashboard() {
       setOrderHistory(completedOrders);
     } catch (error) {
       console.error('Error loading orders:', error);
+    } finally {
+      setIsLoadingOrders(false);
     }
   };
 

@@ -12,6 +12,7 @@ import { OwnerDashboard } from "./dashboards/OwnerDashboard";
 import { OperatorDashboard } from "./dashboards/OperatorDashboard";
 import { MarketingDashboard } from "./dashboards/MarketingDashboard";
 import { WasherDashboard } from "./washers/WasherDashboard";
+import { FullScreenLoader } from "./LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 
@@ -33,14 +34,7 @@ export function Homepage() {
 
   // Show loading spinner for a reasonable amount of time
   if (loading && !timeoutReached) {
-    return (
-      <div className="min-h-screen bg-gradient-wave flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <FullScreenLoader text="Loading your dashboard..." />;
   }
 
   // If loading is stuck, show error message with refresh option
