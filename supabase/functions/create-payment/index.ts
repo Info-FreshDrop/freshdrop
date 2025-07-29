@@ -163,18 +163,34 @@ serve(async (req) => {
     }
 
     // Create pending order first to get order ID for metadata
-    const { data: order, error: orderError } = await supabaseService.from("orders").insert({
-      ...orderData,
+    const orderRecord = {
       customer_id: user.id,
+      pickup_type: orderData.pickup_type,
+      service_type: orderData.service_type,
+      pickup_address: orderData.pickup_address,
+      delivery_address: orderData.delivery_address,
+      zip_code: orderData.zip_code,
+      locker_id: orderData.locker_id,
+      is_express: orderData.is_express,
+      pickup_window_start: orderData.pickup_window_start,
+      pickup_window_end: orderData.pickup_window_end,
+      delivery_window_start: orderData.delivery_window_start,
+      delivery_window_end: orderData.delivery_window_end,
+      bag_count: orderData.bag_count,
+      soap_preference_id: orderData.soap_preference_id,
+      wash_temp_preference_id: orderData.wash_temp_preference_id,
+      dry_temp_preference_id: orderData.dry_temp_preference_id,
+      special_instructions: orderData.special_instructions,
+      items: orderData.items || [],
       status: 'pending', // Will be updated to 'unclaimed' after payment
       stripe_session_id: null, // Will be updated after session creation
       promo_code: orderData.promoCode || null,
       discount_amount_cents: discountAmount,
       total_amount_cents: totalAmount,
-      created_at: new Date().toISOString(),
-      // Remove promoCode from orderData to avoid column mismatch
-      promoCode: undefined
-    }).select().single();
+      created_at: new Date().toISOString()
+    };
+
+    const { data: order, error: orderError } = await supabaseService.from("orders").insert(orderRecord).select().single();
 
     if (orderError) {
       console.error("Error storing order:", orderError);
