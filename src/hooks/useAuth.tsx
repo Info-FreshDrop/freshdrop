@@ -24,27 +24,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('Auth effect started');
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           // Fetch user role after setting session
-          setTimeout(async () => {
-            try {
-              const { data, error } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', session.user.id);
-              
-              if (error) {
-                console.error('Error fetching user role:', error);
-                setUserRole('customer');
-                return;
-              }
-              
+          try {
+            const { data, error } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', session.user.id);
+            
+            if (error) {
+              console.error('Error fetching user role:', error);
+              setUserRole('customer');
+            } else {
               // Get the highest priority role (owner > marketing > operator > customer)
               const roles = data?.map(r => r.role) || [];
               let primaryRole: UserRole = 'customer';
@@ -59,22 +58,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 primaryRole = 'washer';
               }
               
+              console.log('User role set to:', primaryRole);
               setUserRole(primaryRole);
-            } catch (error) {
-              console.error('Error fetching user role:', error);
-              setUserRole('customer');
             }
-          }, 0);
+          } catch (error) {
+            console.error('Error fetching user role:', error);
+            setUserRole('customer');
+          }
         } else {
           setUserRole(null);
         }
         
+        console.log('Setting loading to false');
         setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('Initial session check:', !!session);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -103,14 +105,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               primaryRole = 'washer';
             }
             
+            console.log('Initial user role set to:', primaryRole);
             setUserRole(primaryRole);
           }
         } catch (error) {
           console.error('Error fetching user role:', error);
           setUserRole('customer');
         }
+      } else {
+        setUserRole(null);
       }
       
+      console.log('Initial loading set to false');
       setLoading(false);
     });
 
