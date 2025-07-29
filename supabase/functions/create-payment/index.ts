@@ -201,7 +201,7 @@ serve(async (req) => {
       dry_temp_preference_id: orderData.dry_temp_preference_id,
       special_instructions: orderData.special_instructions,
       items: orderData.items || [],
-      status: 'pending', // Will be updated to 'unclaimed' after payment
+      status: 'placed', // Will be updated to 'unclaimed' after payment
       stripe_session_id: null, // Will be updated after session creation
       promo_code: orderData.promoCode || null,
       discount_amount_cents: discountAmount,
