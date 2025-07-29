@@ -23,103 +23,83 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+      
+      if (!roleError && data && data.length > 0) {
+        const roles = data.map(r => r.role);
+        let primaryRole: UserRole = 'customer';
+        
+        if (roles.includes('owner')) {
+          primaryRole = 'owner';
+        } else if (roles.includes('marketing')) {
+          primaryRole = 'marketing';
+        } else if (roles.includes('operator')) {
+          primaryRole = 'operator';
+        } else if (roles.includes('washer')) {
+          primaryRole = 'washer';
+        }
+        
+        setUserRole(primaryRole);
+        console.log('User role set to:', primaryRole);
+        return primaryRole;
+      }
+    } catch (roleError) {
+      console.error('Role fetch error:', roleError);
+    }
+    
+    // Fallback to customer role
+    setUserRole('customer');
+    return 'customer';
+  };
+
   useEffect(() => {
     console.log('Auth effect started');
     
-    const fetchUserRole = async (userId: string) => {
-      try {
-        const { data, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId);
-        
-        if (!roleError && data && data.length > 0) {
-          const roles = data.map(r => r.role);
-          let primaryRole: UserRole = 'customer';
-          
-          if (roles.includes('owner')) {
-            primaryRole = 'owner';
-          } else if (roles.includes('marketing')) {
-            primaryRole = 'marketing';
-          } else if (roles.includes('operator')) {
-            primaryRole = 'operator';
-          } else if (roles.includes('washer')) {
-            primaryRole = 'washer';
-          }
-          
-          setUserRole(primaryRole);
-          console.log('User role set to:', primaryRole);
-          return primaryRole;
-        }
-      } catch (roleError) {
-        console.error('Role fetch error:', roleError);
-      }
-      
-      // Fallback to customer role
-      setUserRole('customer');
-      return 'customer';
-    };
-    
-    const initAuth = async () => {
-      try {
-        console.log('Starting auth initialization...');
-        
-        // Set a timeout to ensure loading doesn't hang forever
-        const authTimeout = setTimeout(() => {
-          console.warn('Auth initialization taking too long, setting loading to false');
-          setLoading(false);
-        }, 8000); // 8 second max for auth
-        
-        // Get current session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('Session check:', !!session, error);
-        
-        // Clear the timeout since we got a response
-        clearTimeout(authTimeout);
-        
-        if (error) {
-          console.error('Session error:', error);
-          setLoading(false);
-          return;
-        }
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchUserRole(session.user.id);
-        } else {
-          setUserRole(null);
-        }
-        
-        setLoading(false);
-        console.log('Auth initialization complete');
-      } catch (error) {
-        console.error('Auth init error:', error);
-        setLoading(false);
-      }
-    };
-
-    // Initialize auth
-    initAuth();
-
-    // Set up auth state listener
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state changed:', event, !!session);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch the actual user role from database
-          await fetchUserRole(session.user.id);
+          // Use setTimeout to prevent potential deadlock
+          setTimeout(() => {
+            fetchUserRole(session.user.id).finally(() => setLoading(false));
+          }, 0);
         } else {
           setUserRole(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('Initial session check:', !!session, error);
+      
+      if (error) {
+        console.error('Session error:', error);
+        setLoading(false);
+        return;
+      }
+      
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserRole(session.user.id).finally(() => setLoading(false));
+      } else {
+        setUserRole(null);
+        setLoading(false);
+      }
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -200,71 +180,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         .eq('id', refCode.id);
 
-      // Add wallet credit for both users immediately
-      await addWalletCredit(user.id, refCode.reward_amount_cents, 'Referral signup bonus');
-      await addWalletCredit(refCode.user_id, refCode.reward_amount_cents, 'Referral reward for inviting friend');
-
       console.log('Referral code processed successfully');
     } catch (error) {
       console.error('Error processing referral code:', error);
     }
   };
 
-  const addWalletCredit = async (userId: string, amountCents: number, description: string) => {
-    try {
-      // Check if user has a wallet, create if not
-      const { data: wallet } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (!wallet) {
-        // Create wallet
-        await supabase.from('wallets').insert({
-          user_id: userId,
-          balance_cents: amountCents
-        });
-      } else {
-        // Update existing wallet balance
-        await supabase
-          .from('wallets')
-          .update({ 
-            balance_cents: wallet.balance_cents + amountCents,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', userId);
-      }
-
-      // Record the transaction
-      await supabase.from('wallet_transactions').insert({
-        wallet_id: wallet?.id || null,
-        amount_cents: amountCents,
-        transaction_type: 'credit',
-        description: description,
-        status: 'completed'
-      });
-    } catch (error) {
-      console.error('Error adding wallet credit:', error);
-    }
-  };
-
-  const signIn = async (email: string, password: string, rememberMe = false) => {
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
-    
-    // Set session persistence based on rememberMe
-    if (!error && rememberMe) {
-      try {
-        await supabase.auth.getSession();
-      } catch (e) {
-        console.warn('Session persistence setting failed:', e);
-      }
-    }
-    
     return { error };
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    setUserRole(null);
   };
 
   const resetPassword = async (email: string) => {
@@ -273,28 +207,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
-    
     return { error };
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const value = {
+    user,
+    session,
+    userRole,
+    loading,
+    signUp,
+    signIn,
+    signOut,
+    resetPassword,
   };
 
-  return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      userRole,
-      loading,
-      signUp,
-      signIn,
-      signOut,
-      resetPassword
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
