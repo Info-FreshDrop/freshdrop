@@ -237,7 +237,43 @@ export function OperatorDashboard() {
         console.error('Error loading claimed orders:', claimedError);
       }
       const claimedOrders = (claimed as any) || [];
-      setMyOrders(claimedOrders);
+      
+      // Fix any orders that are stuck with current_step > 13
+      for (const order of claimedOrders) {
+        if (order.current_step > 13 && order.status !== 'completed') {
+          console.log(`Fixing stuck order ${order.id} with step ${order.current_step}`);
+          try {
+            await supabase
+              .from('orders')
+              .update({
+                status: 'completed',
+                completed_at: new Date().toISOString(),
+                current_step: 13
+              })
+              .eq('id', order.id);
+            
+            toast({
+              title: "Order Fixed",
+              description: `Order ${order.id.slice(0, 8)} was automatically marked as completed.`,
+            });
+          } catch (fixError) {
+            console.error('Error fixing stuck order:', fixError);
+          }
+        }
+      }
+      
+      // Reload orders after potential fixes
+      const { data: updatedClaimed } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone)
+        `)
+        .eq('washer_id', washer.id)
+        .in('status', ['claimed', 'in_progress', 'picked_up', 'washed', 'folded', 'completed'])
+        .order('claimed_at', { ascending: true });
+      
+      setMyOrders((updatedClaimed as any) || []);
 
       setLoading(false);
     } catch (error) {
@@ -326,7 +362,7 @@ export function OperatorDashboard() {
       const isLastStep = photoStep === 13; // Step 13 is the final step that requires a photo
       const updateData: any = {
         step_photos: updatedStepPhotos,
-        current_step: photoStep + 1
+        current_step: isLastStep ? 13 : photoStep + 1  // Don't go beyond step 13
       };
       
       // If this is the final step, mark order as completed
@@ -349,7 +385,7 @@ export function OperatorDashboard() {
       setSelectedOrder({
         ...selectedOrder,
         step_photos: updatedStepPhotos,
-        current_step: photoStep + 1,
+        current_step: isLastStep ? 13 : photoStep + 1,  // Keep consistency with database update
         status: isLastStep ? 'completed' : selectedOrder.status,
         completed_at: isLastStep ? new Date().toISOString() : selectedOrder.completed_at
       });
