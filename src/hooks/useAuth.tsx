@@ -37,8 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const { data, error } = await supabase
                 .from('user_roles')
                 .select('role')
-                .eq('user_id', session.user.id)
-                .maybeSingle();
+                .eq('user_id', session.user.id);
               
               if (error) {
                 console.error('Error fetching user role:', error);
@@ -46,7 +45,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return;
               }
               
-              setUserRole(data?.role || 'customer');
+              // Get the highest priority role (owner > marketing > operator > customer)
+              const roles = data?.map(r => r.role) || [];
+              let primaryRole: UserRole = 'customer';
+              
+              if (roles.includes('owner')) {
+                primaryRole = 'owner';
+              } else if (roles.includes('marketing')) {
+                primaryRole = 'marketing';
+              } else if (roles.includes('operator')) {
+                primaryRole = 'operator';
+              } else if (roles.includes('washer')) {
+                primaryRole = 'washer';
+              }
+              
+              setUserRole(primaryRole);
             } catch (error) {
               console.error('Error fetching user role:', error);
               setUserRole('customer');
@@ -70,14 +83,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const { data, error } = await supabase
             .from('user_roles')
             .select('role')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
+            .eq('user_id', session.user.id);
           
           if (error) {
             console.error('Error fetching user role:', error);
             setUserRole('customer');
           } else {
-            setUserRole(data?.role || 'customer');
+            // Get the highest priority role (owner > marketing > operator > customer)
+            const roles = data?.map(r => r.role) || [];
+            let primaryRole: UserRole = 'customer';
+            
+            if (roles.includes('owner')) {
+              primaryRole = 'owner';
+            } else if (roles.includes('marketing')) {
+              primaryRole = 'marketing';
+            } else if (roles.includes('operator')) {
+              primaryRole = 'operator';
+            } else if (roles.includes('washer')) {
+              primaryRole = 'washer';
+            }
+            
+            setUserRole(primaryRole);
           }
         } catch (error) {
           console.error('Error fetching user role:', error);
