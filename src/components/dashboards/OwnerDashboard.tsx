@@ -249,7 +249,7 @@ export function OwnerDashboard() {
             </p>
           </div>
 
-          <UserManagement />
+          <UserManagement onBack={() => setCurrentView('dashboard')} />
         </div>
       </div>
     );
