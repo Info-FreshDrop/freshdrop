@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HeroSection } from "./HeroSection";
 import { AuthForms } from "./AuthForms";
 import { OperatorLogin } from "./OperatorLogin";
@@ -26,6 +26,36 @@ export function Homepage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Add timeout fallback to prevent infinite loading
+  const [timeoutReached, setTimeoutReached] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('Loading timeout reached, forcing load');
+      setTimeoutReached(true);
+    }, 5000); // 5 second timeout
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // If loading is stuck for too long, show the content anyway
+  if (timeoutReached && loading) {
+    console.log('Forcing page load due to timeout');
+    return (
+      <div className="min-h-screen">
+        <HeroSection />
+        <section id="auth-section" className="py-16 bg-background">
+          <div className="max-w-md mx-auto px-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold mb-2">Welcome to FreshDrop</h2>
+              <p className="text-muted-foreground">Loading timeout - please refresh the page</p>
+            </div>
+          </div>
+        </section>
       </div>
     );
   }

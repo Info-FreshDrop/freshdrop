@@ -25,27 +25,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     console.log('Auth effect started');
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, !!session);
+    
+    const initAuth = async () => {
+      try {
+        // Get current session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Session check:', !!session, error);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user role after setting session
+          // Set default role first
+          setUserRole('customer');
+          
+          // Try to fetch actual role
           try {
-            const { data, error } = await supabase
+            const { data, error: roleError } = await supabase
               .from('user_roles')
               .select('role')
               .eq('user_id', session.user.id);
             
-            if (error) {
-              console.error('Error fetching user role:', error);
-              setUserRole('customer');
-            } else {
-              // Get the highest priority role (owner > marketing > operator > customer)
-              const roles = data?.map(r => r.role) || [];
+            if (!roleError && data && data.length > 0) {
+              const roles = data.map(r => r.role);
               let primaryRole: UserRole = 'customer';
               
               if (roles.includes('owner')) {
@@ -58,67 +60,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 primaryRole = 'washer';
               }
               
-              console.log('User role set to:', primaryRole);
               setUserRole(primaryRole);
+              console.log('User role:', primaryRole);
             }
-          } catch (error) {
-            console.error('Error fetching user role:', error);
-            setUserRole('customer');
+          } catch (roleError) {
+            console.error('Role fetch error:', roleError);
+            // Keep default customer role
           }
         } else {
           setUserRole(null);
         }
         
-        console.log('Setting loading to false');
+        setLoading(false);
+        console.log('Auth initialization complete');
+      } catch (error) {
+        console.error('Auth init error:', error);
+        setLoading(false);
+      }
+    };
+
+    // Initialize auth
+    initAuth();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, !!session);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          setUserRole('customer'); // Default first
+        } else {
+          setUserRole(null);
+        }
+        
         setLoading(false);
       }
     );
-
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Initial session check:', !!session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        try {
-          const { data, error } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id);
-          
-          if (error) {
-            console.error('Error fetching user role:', error);
-            setUserRole('customer');
-          } else {
-            // Get the highest priority role (owner > marketing > operator > customer)
-            const roles = data?.map(r => r.role) || [];
-            let primaryRole: UserRole = 'customer';
-            
-            if (roles.includes('owner')) {
-              primaryRole = 'owner';
-            } else if (roles.includes('marketing')) {
-              primaryRole = 'marketing';
-            } else if (roles.includes('operator')) {
-              primaryRole = 'operator';
-            } else if (roles.includes('washer')) {
-              primaryRole = 'washer';
-            }
-            
-            console.log('Initial user role set to:', primaryRole);
-            setUserRole(primaryRole);
-          }
-        } catch (error) {
-          console.error('Error fetching user role:', error);
-          setUserRole('customer');
-        }
-      } else {
-        setUserRole(null);
-      }
-      
-      console.log('Initial loading set to false');
-      setLoading(false);
-    });
 
     return () => subscription.unsubscribe();
   }, []);
