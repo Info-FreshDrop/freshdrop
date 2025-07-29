@@ -271,19 +271,19 @@ export function OperatorDashboard() {
   };
 
   const getWorkflowSteps = () => [
-    { title: "Prepare and What to Bring", description: "Review order details and gather necessary supplies", requiresPhoto: false, instructions: "Check order details, gather cleaning supplies, bags, and labels" },
-    { title: "Go to Address", description: "Navigate to customer's pickup location", requiresPhoto: false, instructions: "Drive to the pickup address and notify customer of arrival" },
-    { title: "Locate Bags", description: "Find and identify customer's laundry bags", requiresPhoto: false, instructions: "Locate all laundry bags at the pickup location" },
-    { title: "Take Photo", description: "Document pickup with photo", requiresPhoto: true, instructions: "Take a clear photo of all laundry items being collected" },
-    { title: "Label Bags", description: "Apply identification labels to bags", requiresPhoto: false, instructions: "Label each bag with customer and order information" },
-    { title: "Count", description: "Count and verify number of bags", requiresPhoto: false, instructions: "Count bags and verify against order details" },
-    { title: "Pickup", description: "Collect all laundry items", requiresPhoto: false, instructions: "Safely collect all labeled bags and transport to facility" },
-    { title: "Wash", description: "Wash laundry according to preferences", requiresPhoto: false, instructions: "Wash items using customer's preferred soap and temperature settings" },
-    { title: "Dry", description: "Dry laundry with appropriate settings", requiresPhoto: false, instructions: "Dry items using appropriate heat settings for fabric types" },
-    { title: "Fold", description: "Fold and organize clean laundry", requiresPhoto: false, instructions: "Carefully fold all items according to customer preferences" },
-    { title: "Bag and Relabel", description: "Package folded items and apply labels", requiresPhoto: false, instructions: "Package clean items in bags and apply delivery labels" },
-    { title: "Drive to Drop Off", description: "Transport to delivery location", requiresPhoto: false, instructions: "Drive to customer's delivery address" },
-    { title: "Drop Off Photo and Complete", description: "Deliver items and document completion", requiresPhoto: true, instructions: "Deliver items to customer and take confirmation photo" }
+    { title: "Prepare and What to Bring", description: "Review order details and gather necessary supplies", requiresPhoto: false, instructions: "Bring: laundry bags, waterproof labels, permanent marker, phone for photos, cleaning supplies per customer preferences" },
+    { title: "Go to Address", description: "Navigate to customer's pickup location", requiresPhoto: false, instructions: "Drive to pickup address, park safely, notify customer of arrival via app or call" },
+    { title: "Locate Bags", description: "Find and identify customer's laundry bags", requiresPhoto: false, instructions: "Look for laundry bags at specified pickup location (door, porch, designated area)" },
+    { title: "Take Photo", description: "Document pickup with photo", requiresPhoto: true, instructions: "Take clear photo showing all bags being collected, include house number or identifying features" },
+    { title: "Label Bags", description: "Apply identification labels to bags", requiresPhoto: false, instructions: "Label each bag with: Customer name, Order #, Bag count (1 of 3, 2 of 3, etc.), Pickup date/time" },
+    { title: "Count", description: "Count and verify number of bags", requiresPhoto: false, instructions: "Count total bags, verify matches order details, note any discrepancies in app" },
+    { title: "Pickup", description: "Collect all laundry items", requiresPhoto: false, instructions: "Load all labeled bags securely in vehicle, ensure nothing left behind" },
+    { title: "Wash", description: "Wash laundry according to preferences", requiresPhoto: false, instructions: "Sort by colors and fabric types, use customer's specified: soap type, water temperature, special care instructions" },
+    { title: "Dry", description: "Dry laundry with appropriate settings", requiresPhoto: false, instructions: "Use customer's preferred dry temperature, remove promptly to prevent wrinkles, air dry delicates if specified" },
+    { title: "Fold", description: "Fold and organize clean laundry", requiresPhoto: false, instructions: "Fold neatly using customer preferences: hanging vs folding, special folding requests, separate by family member if requested" },
+    { title: "Bag and Relabel", description: "Package folded items and apply labels", requiresPhoto: false, instructions: "Package in clean bags, label with: Customer name, Order #, 'CLEAN - Ready for Delivery', Completion date/time" },
+    { title: "Drive to Drop Off", description: "Transport to delivery location", requiresPhoto: false, instructions: "Drive to delivery address (may be different from pickup), park safely, prepare for handoff" },
+    { title: "Drop Off Photo and Complete", description: "Deliver items and document completion", requiresPhoto: true, instructions: "Deliver to specified location, take photo showing delivered bags with house number/door, mark order complete in app" }
   ];
 
   const handleTakePhoto = (stepNumber: number) => {
