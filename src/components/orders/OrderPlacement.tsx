@@ -146,7 +146,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     }
   };
 
-  // Address autocomplete function using free geocoding API
+  // Address autocomplete function using Mapbox geocoding
   const searchAddresses = async (query: string) => {
     if (query.length < 3) {
       setAddressSuggestions([]);
@@ -155,25 +155,20 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     }
 
     try {
-      // Use Nominatim with CORS proxy for development
-      const response = await fetch(
-        `https://api.allorigins.win/get?url=${encodeURIComponent(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=US&limit=5&addressdetails=1`
-        )}`
-      );
-      const data = await response.json();
-      const results = JSON.parse(data.contents);
-      
-      if (results && Array.isArray(results)) {
-        const suggestions = results.map((item: any) => ({
-          display_name: item.display_name,
-          formatted: item.display_name,
-          address: item.address
-        }));
-        
-        setAddressSuggestions(suggestions);
-        setShowSuggestions(suggestions.length > 0);
+      const response = await supabase.functions.invoke('geocoding', {
+        body: { query, type: 'search' }
+      });
+
+      if (response.error) {
+        console.error('Geocoding error:', response.error);
+        setAddressSuggestions([]);
+        setShowSuggestions(false);
+        return;
       }
+
+      const suggestions = response.data?.suggestions || [];
+      setAddressSuggestions(suggestions);
+      setShowSuggestions(suggestions.length > 0);
     } catch (error) {
       console.error('Address search failed:', error);
       // Silently fail - don't show error to user
