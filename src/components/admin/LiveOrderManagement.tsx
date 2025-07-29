@@ -182,6 +182,23 @@ export function LiveOrderManagement({ onBack }: LiveOrderManagementProps) {
 
       if (error) throw error;
 
+      // Send notification about operator assignment
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        try {
+          await supabase.functions.invoke('send-order-notifications', {
+            body: {
+              orderId: order.id,
+              customerId: order.customer_id,
+              status: 'claimed',
+              orderNumber: order.id.substring(0, 8).toUpperCase()
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to send notification:', notificationError);
+        }
+      }
+
       toast({
         title: "Operator Assigned",
         description: "Order has been assigned to the selected operator",
@@ -213,6 +230,23 @@ export function LiveOrderManagement({ onBack }: LiveOrderManagementProps) {
         .eq('id', orderId);
 
       if (error) throw error;
+
+      // Send notification about status change
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        try {
+          await supabase.functions.invoke('send-order-notifications', {
+            body: {
+              orderId: order.id,
+              customerId: order.customer_id,
+              status: newStatus,
+              orderNumber: order.id.substring(0, 8).toUpperCase()
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to send notification:', notificationError);
+        }
+      }
 
       toast({
         title: "Status Updated",

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { OrderHistory } from "@/components/orders/OrderHistory";
 import { OrderStatusProgress } from "@/components/customer/OrderStatusProgress";
+import { OrderCancellation } from "@/components/customer/OrderCancellation";
 import { 
   Package, 
   Clock, 
@@ -55,9 +56,10 @@ interface Order {
 
 interface OrderTrackingProps {
   onBack: () => void;
+  onOrderUpdate?: () => void;
 }
 
-export function OrderTracking({ onBack }: OrderTrackingProps) {
+export function OrderTracking({ onBack, onOrderUpdate }: OrderTrackingProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
@@ -364,6 +366,21 @@ export function OrderTracking({ onBack }: OrderTrackingProps) {
                       }
                     />
                   </div>
+
+                  {/* Order Cancellation */}
+                  {['placed', 'unclaimed', 'claimed'].includes(order.status) && (
+                    <div className="mt-4">
+                      <OrderCancellation
+                        orderId={order.id}
+                        orderStatus={order.status}
+                        totalAmount={order.total_amount_cents || 0}
+                        onCancelled={() => {
+                          loadOrders();
+                          onOrderUpdate?.();
+                        }}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
