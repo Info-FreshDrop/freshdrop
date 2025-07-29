@@ -67,7 +67,12 @@ export const EmbeddedPaymentForm: React.FC<EmbeddedPaymentFormProps> = ({
       <div className="p-4 border rounded-lg bg-background">
         <PaymentElement 
           options={{
-            layout: 'tabs'
+            layout: 'tabs',
+            paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
+            wallets: {
+              applePay: 'auto',
+              googlePay: 'auto'
+            }
           }}
         />
       </div>
