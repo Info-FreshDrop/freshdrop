@@ -2,10 +2,10 @@ import * as Sentry from '@sentry/react';
 
 export function initSentry() {
   // Only initialize in production or when explicitly enabled
-  if (process.env.NODE_ENV === 'production' || process.env.VITE_ENABLE_SENTRY) {
+  if (import.meta.env.PROD || import.meta.env.VITE_ENABLE_SENTRY) {
     Sentry.init({
-      dsn: process.env.VITE_SENTRY_DSN,
-      environment: process.env.NODE_ENV,
+      dsn: import.meta.env.VITE_SENTRY_DSN,
+      environment: import.meta.env.MODE,
       integrations: [
         Sentry.browserTracingIntegration(),
         Sentry.replayIntegration({
@@ -13,7 +13,7 @@ export function initSentry() {
           blockAllMedia: true,
         }),
       ],
-      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+      tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
       replaysSessionSampleRate: 0.1,
       replaysOnErrorSampleRate: 1.0,
       beforeSend(event) {
