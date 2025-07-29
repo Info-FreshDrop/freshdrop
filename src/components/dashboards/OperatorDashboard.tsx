@@ -361,6 +361,8 @@ export function OperatorDashboard() {
   const completeStep = async (stepNumber: number) => {
     if (!selectedOrder) return;
 
+    console.log(`Completing step ${stepNumber} for order ${selectedOrder.id}`);
+    
     try {
       const isLastStep = stepNumber === 13; // Step 13 is the final step
       const updateData: any = {
@@ -371,6 +373,7 @@ export function OperatorDashboard() {
       if (isLastStep) {
         updateData.status = 'completed';
         updateData.completed_at = new Date().toISOString();
+        console.log('This is the last step - marking order as completed:', updateData);
       }
 
       const { error } = await supabase
@@ -379,6 +382,8 @@ export function OperatorDashboard() {
         .eq('id', selectedOrder.id);
 
       if (error) throw error;
+
+      console.log('Database update successful');
 
       // Update local state
       setSelectedOrder({
@@ -397,7 +402,13 @@ export function OperatorDashboard() {
 
       // If order is completed, close the detailed view and refresh
       if (isLastStep) {
+        console.log('Order completed - closing view and refreshing data');
         setSelectedOrder(null);
+        
+        // Force a data refresh
+        setTimeout(() => {
+          loadDashboardData();
+        }, 1000);
       }
 
       loadDashboardData(); // Refresh data
