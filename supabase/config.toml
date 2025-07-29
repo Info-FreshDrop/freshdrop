@@ -55,5 +55,8 @@ enabled = true
 port = 54328
 ip_version = "ipv4"
 
+[functions.create-payment-intent]
+verify_jwt = true
+
 [functions.stripe-webhook]
 verify_jwt = false

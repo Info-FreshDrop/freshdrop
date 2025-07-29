@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useCapacitor } from "@/hooks/useCapacitor";
 import { supabase } from "@/integrations/supabase/client";
+import { Elements } from '@stripe/react-stripe-js';
+import { stripePromise } from '@/lib/stripe';
+import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
 import { ClothesShop } from "@/components/customer/ClothesShop";
 import { 
   ArrowLeft,
@@ -46,6 +49,8 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
   const [serviceAreas, setServiceAreas] = useState<any[]>([]);
   const [laundryPreferences, setLaundryPreferences] = useState<any[]>([]);
   const [selectedShopItems, setSelectedShopItems] = useState<any[]>([]);
+  const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     pickupAddress: '',
     deliveryAddress: '',
@@ -290,38 +295,31 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         pickup_window_start: pickupStart.toISOString(),
         pickup_window_end: pickupEnd.toISOString(),
         delivery_window_start: isExpress ? pickupEnd.toISOString() : deliveryStart.toISOString(),
-        delivery_window_end: isExpress ? new Date(pickupEnd.getTime() + 2 * 60 * 60 * 1000).toISOString() : deliveryEnd.toISOString()
+        delivery_window_end: isExpress ? new Date(pickupEnd.getTime() + 2 * 60 * 60 * 1000).toISOString() : deliveryEnd.toISOString(),
+        promoCode: formData.promoCode || null
       };
 
-      // Create payment session
-      console.log('Creating payment session with order data:', orderData);
-      const { data, error } = await supabase.functions.invoke('create-payment', {
+      // Create payment intent
+      console.log('Creating payment intent with order data:', orderData);
+      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
         body: { orderData }
       });
 
-      console.log('Payment response:', { data, error });
+      console.log('Payment intent response:', { data, error });
 
       if (error) {
-        console.error('Payment error:', error);
+        console.error('Payment intent error:', error);
         throw error;
       }
 
-      if (data?.url) {
-        console.log('Opening Stripe checkout:', data.url);
-        // Open Stripe checkout in a new tab
-        window.open(data.url, '_blank');
-        
-        // Reset loading state immediately since we're opening in new tab
+      if (data?.clientSecret && data?.orderId) {
+        console.log('Payment intent created successfully');
+        setPaymentClientSecret(data.clientSecret);
+        setOrderId(data.orderId);
         setIsLoading(false);
-        
-        // Show success message
-        toast({
-          title: "Payment Opened",
-          description: "Stripe checkout opened in a new tab. Complete your payment there.",
-        });
       } else {
-        console.error('No payment URL received:', data);
-        throw new Error("Failed to create payment session - no URL received");
+        console.error('No client secret received:', data);
+        throw new Error("Failed to create payment intent");
       }
 
     } catch (error) {
@@ -333,6 +331,24 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
       });
       setIsLoading(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    toast({
+      title: "Payment Successful!",
+      description: "Your order has been placed successfully.",
+    });
+    // Redirect to order confirmation or dashboard
+    onBack();
+  };
+
+  const handlePaymentError = (error: string) => {
+    console.error('Payment error:', error);
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive",
+    });
   };
 
   const renderStepContent = () => {
@@ -612,80 +628,114 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     </div>
   );
 
-  const renderOrderSummary = () => (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex justify-between">
-          <span>Service Type:</span>
-          <span className="capitalize">{orderType.replace('_', ' ')}</span>
+  const renderOrderSummary = () => {
+    if (paymentClientSecret && orderId) {
+      // Show embedded payment form
+      return (
+        <div className="space-y-6">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold mb-2">Complete Your Payment</h3>
+            <p className="text-muted-foreground mb-4">
+              Total: ${(calculateTotal() / 100).toFixed(2)}
+            </p>
+          </div>
+          
+          <Elements 
+            stripe={stripePromise} 
+            options={{
+              clientSecret: paymentClientSecret,
+              appearance: {
+                theme: 'stripe',
+              },
+            }}
+          >
+            <EmbeddedPaymentForm
+              clientSecret={paymentClientSecret}
+              orderId={orderId}
+              onPaymentSuccess={handlePaymentSuccess}
+              onPaymentError={handlePaymentError}
+            />
+          </Elements>
         </div>
-        <div className="flex justify-between">
-          <span>Wash Type:</span>
-          <span className="capitalize">{serviceType.replace('_', ' ')}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Number of Bags:</span>
-          <span>{formData.bagCount} × $35.00 = ${(formData.bagCount * 35).toFixed(2)}</span>
-        </div>
-        {isExpress && (
+      );
+    }
+
+    // Show order summary before payment
+    return (
+      <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex justify-between">
-            <span>Express Service:</span>
-            <span>$20.00</span>
+            <span>Service Type:</span>
+            <span className="capitalize">{orderType.replace('_', ' ')}</span>
           </div>
-        )}
-        {selectedShopItems.map((item, index) => (
-          <div key={index} className="flex justify-between text-sm">
-            <span>{item.name} x{item.quantity}:</span>
-            <span>${((item.price_cents * item.quantity) / 100).toFixed(2)}</span>
+          <div className="flex justify-between">
+            <span>Wash Type:</span>
+            <span className="capitalize">{serviceType.replace('_', ' ')}</span>
           </div>
-        ))}
-        <div className="flex justify-between">
-          <span>Pickup Date:</span>
-          <span>{new Date(formData.pickupDate).toLocaleDateString()}</span>
+          <div className="flex justify-between">
+            <span>Number of Bags:</span>
+            <span>{formData.bagCount} × $35.00 = ${(formData.bagCount * 35).toFixed(2)}</span>
+          </div>
+          {isExpress && (
+            <div className="flex justify-between">
+              <span>Express Service:</span>
+              <span>$20.00</span>
+            </div>
+          )}
+          {selectedShopItems.map((item, index) => (
+            <div key={index} className="flex justify-between text-sm">
+              <span>{item.name} x{item.quantity}:</span>
+              <span>${((item.price_cents * item.quantity) / 100).toFixed(2)}</span>
+            </div>
+          ))}
+          <div className="flex justify-between">
+            <span>Pickup Date:</span>
+            <span>{new Date(formData.pickupDate).toLocaleDateString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Time Window:</span>
+            <span className="capitalize">
+              {formData.timeWindow === 'morning' && 'Morning (6AM - 8AM)'}
+              {formData.timeWindow === 'lunch' && 'Lunch (12PM - 2PM)'}
+              {formData.timeWindow === 'evening' && 'Evening (5PM - 7PM)'}
+            </span>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span>Time Window:</span>
-          <span className="capitalize">
-            {formData.timeWindow === 'morning' && 'Morning (6AM - 8AM)'}
-            {formData.timeWindow === 'lunch' && 'Lunch (12PM - 2PM)'}
-            {formData.timeWindow === 'evening' && 'Evening (5PM - 7PM)'}
-          </span>
+
+        {/* Promo Code */}
+        <div className="space-y-2">
+          <Label htmlFor="promo-code">Promo Code (Optional)</Label>
+          <Input
+            id="promo-code"
+            placeholder="Enter promo code"
+            value={formData.promoCode}
+            onChange={(e) => handleInputChange('promoCode', e.target.value.toUpperCase())}
+          />
+          {formData.promoCode === 'TEST' && (
+            <p className="text-xs text-green-600">Test promo code applied - this order is free!</p>
+          )}
+        </div>
+
+        {/* Special Instructions */}
+        <div className="space-y-2">
+          <Label htmlFor="instructions">Special Instructions (Optional)</Label>
+          <Textarea
+            id="instructions"
+            placeholder="Any special instructions for your laundry..."
+            value={formData.specialInstructions}
+            onChange={(e) => handleInputChange('specialInstructions', e.target.value)}
+            rows={3}
+          />
+        </div>
+
+        <hr className="my-4" />
+        <div className="flex justify-between font-bold text-lg">
+          <span>Total:</span>
+          <span>${(calculateTotal() / 100).toFixed(2)}</span>
         </div>
       </div>
-
-      {/* Promo Code */}
-      <div className="space-y-2">
-        <Label htmlFor="promo-code">Promo Code (Optional)</Label>
-        <Input
-          id="promo-code"
-          placeholder="Enter promo code"
-          value={formData.promoCode}
-          onChange={(e) => handleInputChange('promoCode', e.target.value.toUpperCase())}
-        />
-        {formData.promoCode === 'TEST' && (
-          <p className="text-xs text-green-600">Test promo code applied - this order is free!</p>
-        )}
-      </div>
-
-      {/* Special Instructions */}
-      <div className="space-y-2">
-        <Label htmlFor="instructions">Special Instructions (Optional)</Label>
-        <Textarea
-          id="instructions"
-          placeholder="Any special instructions for your laundry..."
-          value={formData.specialInstructions}
-          onChange={(e) => handleInputChange('specialInstructions', e.target.value)}
-          rows={3}
-        />
-      </div>
-
-      <hr className="my-4" />
-      <div className="flex justify-between font-bold text-lg">
-        <span>Total:</span>
-        <span>${(calculateTotal() / 100).toFixed(2)}</span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-wave">
