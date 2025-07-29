@@ -171,12 +171,15 @@ export function OperatorDashboard() {
   const loadDashboardData = async () => {
     try {
       // Load operator profile
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('first_name, last_name, phone')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
+      if (profileError) {
+        console.error('Error loading profile:', profileError);
+      }
       setOperatorProfile(profile);
 
       // Load washer data
@@ -184,15 +187,22 @@ export function OperatorDashboard() {
         .from('washers')
         .select('*')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
-      if (washerError || !washer) {
+      if (washerError) {
         console.error('Error loading washer data:', washerError);
         setLoading(false);
         return;
       }
 
+      if (!washer) {
+        console.error('No washer data found for user');
+        setLoading(false);
+        return;
+      }
+
       setWasherData(washer);
+      console.log('Loaded washer data:', washer);
 
       // Load available orders - include both 'placed' and 'unclaimed' orders
       const { data: available, error: availableError } = await supabase
@@ -661,7 +671,10 @@ export function OperatorDashboard() {
 
   // Add the missing claim order function
   async function handleClaimOrder() {
-    if (!confirmOrder || !washerData) return;
+    if (!confirmOrder || !washerData) {
+      console.error('Missing confirmOrder or washerData:', { confirmOrder, washerData });
+      return;
+    }
 
     // Check if operator already has 5 active orders
     const activeOrdersCount = myOrders.filter(order => 
@@ -678,17 +691,26 @@ export function OperatorDashboard() {
       return;
     }
 
+    console.log('Claiming order:', confirmOrder.id, 'for washer:', washerData.id);
+
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .update({ 
           washer_id: washerData.id,
           status: 'claimed',
           claimed_at: new Date().toISOString()
         })
-        .eq('id', confirmOrder.id);
+        .eq('id', confirmOrder.id)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error claiming order:', error);
+        throw error;
+      }
+
+      console.log('Order claimed successfully:', data);
 
       // Send notification about order being claimed
       try {
