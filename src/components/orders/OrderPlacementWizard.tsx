@@ -187,6 +187,12 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     return area?.allows_express || false;
   };
 
+  const getMinPickupDate = () => {
+    const now = new Date();
+    const minDate = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
+    return minDate.toISOString().split('T')[0];
+  };
+
   const calculateTotal = () => {
     let total = formData.bagCount * 3500; // $35 per bag
     
@@ -207,10 +213,26 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     
     // Apply promo code discount
     if (formData.promoCode === 'TEST') {
-      total = 0; // 100% off for testing
+      total = Math.max(0, total - 5000); // $50 off for testing
     }
     
     return total;
+  };
+
+  const getAvailableReferralMoney = async () => {
+    if (!user) return 0;
+    
+    try {
+      const { data: wallet } = await supabase
+        .from('wallets')
+        .select('balance_cents')
+        .eq('user_id', user.id)
+        .single();
+      
+      return wallet?.balance_cents || 0;
+    } catch (error) {
+      return 0;
+    }
   };
 
   const canGoToNextStep = () => {
@@ -433,11 +455,16 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         </div>
         <Input
           id="service-address"
-          placeholder="Enter your address"
+          placeholder="Enter your full address (street, city, state)"
           value={formData.pickupAddress}
           onChange={(e) => {
             handleInputChange('pickupAddress', e.target.value);
             handleInputChange('deliveryAddress', e.target.value);
+            // Auto-extract zip code from address
+            const zipMatch = e.target.value.match(/\b\d{5}\b/);
+            if (zipMatch) {
+              handleInputChange('zipCode', zipMatch[0]);
+            }
           }}
           required={orderType === 'pickup_delivery'}
         />
@@ -482,7 +509,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
           type="date"
           value={formData.pickupDate}
           onChange={(e) => handleInputChange('pickupDate', e.target.value)}
-          min={new Date(Date.now() + 60 * 60 * 1000).toISOString().split('T')[0]}
+          min={getMinPickupDate()}
           required
         />
       </div>

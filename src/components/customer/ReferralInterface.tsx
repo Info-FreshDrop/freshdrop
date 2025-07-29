@@ -14,7 +14,8 @@ import {
   DollarSign,
   Trophy,
   Mail,
-  MessageCircle
+  MessageCircle,
+  ArrowLeft
 } from "lucide-react";
 
 interface ReferralData {
@@ -96,7 +97,11 @@ function ReferralHistoryModal({ isOpen, onClose, referralUses }: ReferralHistory
   );
 }
 
-export function ReferralInterface() {
+interface ReferralInterfaceProps {
+  onBack?: () => void;
+}
+
+export function ReferralInterface({ onBack }: ReferralInterfaceProps) {
   const { user } = useAuth();
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -203,10 +208,24 @@ export function ReferralInterface() {
 
   if (!referralData) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <Share2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Loading referral information...</p>
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8">
+          {onBack && (
+            <Button
+              variant="ghost"
+              onClick={onBack}
+              className="mb-6"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          )}
+          <div className="flex items-center justify-center p-8">
+            <div className="text-center">
+              <Share2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Loading referral information...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -218,112 +237,125 @@ export function ReferralInterface() {
   );
 
   return (
-    <>
-      <div className="space-y-6">
-        {/* Referral Overview */}
-        <Card className="border-0 shadow-soft bg-gradient-primary text-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gift className="h-5 w-5" />
-              Your Referral Program
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold mb-2">{referralData.code}</div>
-              <p className="text-white/80 text-sm">Your Referral Code</p>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={copyReferralCode}
-                className="mt-2 mr-2"
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                Copy Code
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowHistoryModal(true)}
-                className="mt-2"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                View History
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{referralData.usage_count}</div>
-                <p className="text-white/80 text-sm">Friends Referred</p>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">${(totalEarnings / 100).toFixed(2)}</div>
-                <p className="text-white/80 text-sm">Total Earned</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-gradient-wave">
+      <div className="container mx-auto px-4 py-8">
+        {onBack && (
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        )}
 
-        {/* How It Works */}
-        <Card className="border-0 shadow-soft">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              How Referrals Work
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Share2 className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold mb-2">1. Share Your Code</h3>
-                <p className="text-sm text-muted-foreground">
-                  Share your unique referral code with friends and family
-                </p>
+        <div className="space-y-6">
+          {/* Referral Overview */}
+          <Card className="border-0 shadow-soft bg-gradient-primary text-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="h-5 w-5" />
+                Your Referral Program
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center">
+                <div className="text-3xl font-bold mb-2">{referralData.code}</div>
+                <p className="text-white/80 text-sm">Your Referral Code</p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={copyReferralCode}
+                  className="mt-2 mr-2"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Code
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowHistoryModal(true)}
+                  className="mt-2"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  View History
+                </Button>
               </div>
-              <div className="text-center p-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Users className="h-6 w-6 text-primary" />
+              
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{referralData.usage_count}</div>
+                  <p className="text-white/80 text-sm">Friends Referred</p>
                 </div>
-                <h3 className="font-semibold mb-2">2. Friends Sign Up</h3>
-                <p className="text-sm text-muted-foreground">
-                  They use your code when placing their first order
-                </p>
-              </div>
-              <div className="text-center p-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <DollarSign className="h-6 w-6 text-primary" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold">${(totalEarnings / 100).toFixed(2)}</div>
+                  <p className="text-white/80 text-sm">Total Earned</p>
                 </div>
-                <h3 className="font-semibold mb-2">3. Both Get Rewards</h3>
-                <p className="text-sm text-muted-foreground">
-                  You both get ${(referralData.reward_amount_cents / 100).toFixed(2)} off your next order!
-                </p>
               </div>
-            </div>
-            
-            {/* Share Button */}
-            <div className="mt-6 text-center">
-              <Button
-                onClick={shareReferralLink}
-                className="bg-gradient-primary text-white"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Share with Friends
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* How It Works */}
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                How Referrals Work
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Share2 className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-2">1. Share Your Code</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Share your unique referral code with friends and family
+                  </p>
+                </div>
+                <div className="text-center p-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Users className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-2">2. Friends Sign Up</h3>
+                  <p className="text-sm text-muted-foreground">
+                    They use your code when placing their first order
+                  </p>
+                </div>
+                <div className="text-center p-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <DollarSign className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-2">3. Both Get Rewards</h3>
+                  <p className="text-sm text-muted-foreground">
+                    You both get ${(referralData.reward_amount_cents / 100).toFixed(2)} off your next order!
+                  </p>
+                </div>
+              </div>
+              
+              {/* Share Button */}
+              <div className="mt-6 text-center">
+                <Button
+                  onClick={shareReferralLink}
+                  className="bg-gradient-primary text-white"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Share with Friends
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Referral History Modal */}
+        <ReferralHistoryModal
+          isOpen={showHistoryModal}
+          onClose={() => setShowHistoryModal(false)}
+          referralUses={referralData.referralUses}
+        />
       </div>
-
-      {/* Referral History Modal */}
-      <ReferralHistoryModal
-        isOpen={showHistoryModal}
-        onClose={() => setShowHistoryModal(false)}
-        referralUses={referralData.referralUses}
-      />
-    </>
+    </div>
   );
 }

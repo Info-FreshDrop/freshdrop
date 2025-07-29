@@ -4,28 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { LaundryPreferencesManagement } from "./LaundryPreferencesManagement";
 import { 
-  Package, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  DollarSign,
-  Image,
   ArrowLeft,
-  Save,
-  Eye,
-  EyeOff,
-  Percent,
-  Calculator,
-  Settings,
-  Upload,
-  X
+  Package,
+  Plus,
+  Edit,
+  Trash2,
+  ShoppingBag,
+  Palette,
+  Ruler
 } from "lucide-react";
 
 interface ClothesShopManagementProps {
@@ -40,33 +32,53 @@ interface ClothesItem {
   description?: string;
   image_url?: string;
   is_active: boolean;
+  product_options?: {
+    colors?: string[];
+    sizes?: string[];
+    custom_options?: Array<{
+      name: string;
+      values: string[];
+      required: boolean;
+    }>;
+  };
   created_at: string;
   updated_at: string;
 }
 
 export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
+  const { toast } = useToast();
   const [items, setItems] = useState<ClothesItem[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showBulkPricing, setShowBulkPricing] = useState(false);
-  const [showPreferencesManagement, setShowPreferencesManagement] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<ClothesItem | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [bulkPricingData, setBulkPricingData] = useState({
-    category: '',
-    priceAdjustment: '',
-    adjustmentType: 'percentage' // 'percentage' or 'fixed'
-  });
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     category: '',
-    price: '',
+    price_cents: 0,
     description: '',
-    imageUrl: '',
-    isActive: true
+    image_url: '',
+    is_active: true,
+    colors: [''],
+    sizes: [''],
+    custom_options: [] as Array<{
+      name: string;
+      values: string[];
+      required: boolean;
+    }>
   });
 
-  const { toast } = useToast();
+  const categories = [
+    'Clothing',
+    'Bedding',
+    'Towels',
+    'Accessories',
+    'Laundry Supplies',
+    'Home Goods'
+  ];
+
+  const defaultSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  const defaultColors = ['Black', 'White', 'Gray', 'Navy', 'Red', 'Blue', 'Green', 'Pink', 'Purple', 'Yellow', 'Orange'];
 
   useEffect(() => {
     loadItems();
@@ -77,8 +89,7 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
       const { data, error } = await supabase
         .from('clothes_items')
         .select('*')
-        .order('category', { ascending: true })
-        .order('name', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setItems(data || []);
@@ -86,9 +97,11 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
       console.error('Error loading items:', error);
       toast({
         title: "Error",
-        description: "Failed to load clothes items.",
+        description: "Failed to load shop items.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,12 +109,16 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
     setFormData({
       name: '',
       category: '',
-      price: '',
+      price_cents: 0,
       description: '',
-      imageUrl: '',
-      isActive: true
+      image_url: '',
+      is_active: true,
+      colors: [''],
+      sizes: [''],
+      custom_options: []
     });
     setEditingItem(null);
+    setShowForm(false);
   };
 
   const handleEdit = (item: ClothesItem) => {
@@ -109,74 +126,47 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
     setFormData({
       name: item.name,
       category: item.category,
-      price: (item.price_cents / 100).toString(),
+      price_cents: item.price_cents,
       description: item.description || '',
-      imageUrl: item.image_url || '',
-      isActive: item.is_active
+      image_url: item.image_url || '',
+      is_active: item.is_active,
+      colors: item.product_options?.colors || [''],
+      sizes: item.product_options?.sizes || [''],
+      custom_options: item.product_options?.custom_options || []
     });
-    setShowCreateForm(true);
+    setShowForm(true);
   };
 
-  const handlePhotoUpload = async (file: File, itemId?: string) => {
-    setIsUploadingPhoto(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${itemId || Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('shop-photos')
-        .upload(filePath, file, {
-          contentType: file.type,
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('shop-photos')
-        .getPublicUrl(filePath);
-
-      return data.publicUrl;
-    } catch (error) {
-      console.error('Error uploading photo:', error);
+  const handleSubmit = async () => {
+    if (!formData.name.trim() || !formData.category || formData.price_cents <= 0) {
       toast({
-        title: "Upload Failed",
-        description: "Failed to upload photo. Please try again.",
+        title: "Validation Error",
+        description: "Please fill in all required fields with valid values.",
         variant: "destructive",
       });
-      return null;
-    } finally {
-      setIsUploadingPhoto(false);
+      return;
     }
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+    setIsSubmitting(true);
     try {
-      // Handle photo upload if a new photo was selected
-      let imageUrl = formData.imageUrl;
-      const fileInput = document.querySelector('#photo-upload') as HTMLInputElement;
-      if (fileInput && fileInput.files && fileInput.files[0]) {
-        const uploadedUrl = await handlePhotoUpload(fileInput.files[0], editingItem?.id);
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl;
-        }
-      }
+      const productOptions = {
+        colors: formData.colors.filter(c => c.trim()),
+        sizes: formData.sizes.filter(s => s.trim()),
+        custom_options: formData.custom_options.filter(opt => opt.name.trim())
+      };
 
       const itemData = {
-        name: formData.name,
+        name: formData.name.trim(),
         category: formData.category,
-        price_cents: Math.round(parseFloat(formData.price) * 100),
-        description: formData.description || null,
-        image_url: imageUrl || null,
-        is_active: formData.isActive
+        price_cents: formData.price_cents,
+        description: formData.description.trim() || null,
+        image_url: formData.image_url.trim() || null,
+        is_active: formData.is_active,
+        product_options: productOptions,
+        updated_at: new Date().toISOString()
       };
 
       if (editingItem) {
-        // Update existing item
         const { error } = await supabase
           .from('clothes_items')
           .update(itemData)
@@ -186,10 +176,9 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
 
         toast({
           title: "Item Updated",
-          description: `${formData.name} has been updated successfully.`,
+          description: "Shop item has been updated successfully.",
         });
       } else {
-        // Create new item
         const { error } = await supabase
           .from('clothes_items')
           .insert([itemData]);
@@ -198,54 +187,26 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
 
         toast({
           title: "Item Created",
-          description: `${formData.name} has been added to the shop.`,
+          description: "New shop item has been added successfully.",
         });
       }
 
-      setShowCreateForm(false);
       resetForm();
       loadItems();
     } catch (error) {
       console.error('Error saving item:', error);
       toast({
-        title: "Save Failed",
+        title: "Error",
         description: "Failed to save item. Please try again.",
         variant: "destructive",
       });
-    }
-    
-    setIsLoading(false);
-  };
-
-  const toggleItemStatus = async (itemId: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('clothes_items')
-        .update({ is_active: !currentStatus })
-        .eq('id', itemId);
-
-      if (error) throw error;
-
-      toast({
-        title: currentStatus ? "Item Disabled" : "Item Enabled",
-        description: `Item has been ${currentStatus ? 'disabled' : 'enabled'} successfully.`,
-      });
-
-      loadItems();
-    } catch (error) {
-      console.error('Error updating item status:', error);
-      toast({
-        title: "Update Failed",
-        description: "Failed to update item status.",
-        variant: "destructive",
-      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const deleteItem = async (itemId: string, itemName: string) => {
-    if (!confirm(`Are you sure you want to delete "${itemName}"? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDelete = async (itemId: string) => {
+    if (!confirm('Are you sure you want to delete this item?')) return;
 
     try {
       const { error } = await supabase
@@ -257,579 +218,387 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
 
       toast({
         title: "Item Deleted",
-        description: `${itemName} has been deleted successfully.`,
+        description: "Shop item has been deleted successfully.",
       });
 
       loadItems();
     } catch (error) {
       console.error('Error deleting item:', error);
       toast({
-        title: "Delete Failed",
-        description: "Failed to delete item. Please try again.",
+        title: "Error",
+        description: "Failed to delete item.",
         variant: "destructive",
       });
     }
   };
 
-  const handleBulkPricing = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const adjustment = parseFloat(bulkPricingData.priceAdjustment);
-      if (isNaN(adjustment)) {
-        throw new Error('Invalid price adjustment value');
-      }
-
-      const itemsToUpdate = bulkPricingData.category === 'all' 
-        ? items 
-        : items.filter(item => item.category === bulkPricingData.category);
-
-      const updates = itemsToUpdate.map(item => {
-        let newPriceCents: number;
-        
-        if (bulkPricingData.adjustmentType === 'percentage') {
-          // Apply percentage change
-          newPriceCents = Math.round(item.price_cents * (1 + adjustment / 100));
-        } else {
-          // Apply fixed amount change
-          newPriceCents = Math.round(item.price_cents + (adjustment * 100));
-        }
-
-        // Ensure price is not negative
-        newPriceCents = Math.max(0, newPriceCents);
-
-        return {
-          id: item.id,
-          price_cents: newPriceCents
-        };
-      });
-
-      // Update all items in batch
-      for (const update of updates) {
-        const { error } = await supabase
-          .from('clothes_items')
-          .update({ price_cents: update.price_cents })
-          .eq('id', update.id);
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "Bulk Pricing Updated",
-        description: `Updated prices for ${updates.length} items successfully.`,
-      });
-
-      setShowBulkPricing(false);
-      setBulkPricingData({
-        category: '',
-        priceAdjustment: '',
-        adjustmentType: 'percentage'
-      });
-      loadItems();
-    } catch (error) {
-      console.error('Error updating bulk pricing:', error);
-      toast({
-        title: "Bulk Pricing Failed",
-        description: "Failed to update pricing. Please try again.",
-        variant: "destructive",
-      });
-    }
-    
-    setIsLoading(false);
+  const addColorField = () => {
+    setFormData(prev => ({
+      ...prev,
+      colors: [...prev.colors, '']
+    }));
   };
 
-  const categories = Array.from(new Set(items.map(item => item.category)));
+  const updateColor = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      colors: prev.colors.map((color, i) => i === index ? value : color)
+    }));
+  };
 
-  // Show preferences management if selected
-  if (showPreferencesManagement) {
+  const removeColor = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      colors: prev.colors.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addSizeField = () => {
+    setFormData(prev => ({
+      ...prev,
+      sizes: [...prev.sizes, '']
+    }));
+  };
+
+  const updateSize = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      sizes: prev.sizes.map((size, i) => i === index ? value : size)
+    }));
+  };
+
+  const removeSize = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      sizes: prev.sizes.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addCustomOption = () => {
+    setFormData(prev => ({
+      ...prev,
+      custom_options: [...prev.custom_options, {
+        name: '',
+        values: [''],
+        required: false
+      }]
+    }));
+  };
+
+  const updateCustomOption = (index: number, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      custom_options: prev.custom_options.map((opt, i) => 
+        i === index ? { ...opt, [field]: value } : opt
+      )
+    }));
+  };
+
+  const removeCustomOption = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      custom_options: prev.custom_options.filter((_, i) => i !== index)
+    }));
+  };
+
+  if (loading) {
     return (
-      <LaundryPreferencesManagement 
-        onBack={() => setShowPreferencesManagement(false)} 
-      />
+      <div className="min-h-screen bg-gradient-wave flex items-center justify-center">
+        <div className="text-center">
+          <Package className="h-8 w-8 animate-pulse mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading shop items...</p>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-wave">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <Button
-              variant="ghost"
-              onClick={onBack}
-              className="mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Clothes Shop Management
-            </h1>
-            <p className="text-muted-foreground">
-              Manage items, pricing, and availability in real-time
-            </p>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
           
-          <div className="flex gap-2">
-            <Button
-              variant="hero"
-              onClick={() => {
-                resetForm();
-                setShowCreateForm(true);
-              }}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Clothes Shop Management
+              </h1>
+              <p className="text-muted-foreground">
+                Manage your clothing inventory, pricing, and product options
+              </p>
+            </div>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
               Add New Item
             </Button>
-            
-            <Button
-              variant="outline"
-              onClick={() => setShowBulkPricing(true)}
-              className="flex items-center gap-2"
-            >
-              <Calculator className="h-4 w-4" />
-              Bulk Pricing
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => setShowPreferencesManagement(true)}
-              className="flex items-center gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              Laundry Preferences
-            </Button>
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Items</p>
-                  <p className="text-2xl font-bold">{items.length}</p>
-                </div>
-                <Package className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Items</p>
-                  <p className="text-2xl font-bold">{items.filter(item => item.is_active).length}</p>
-                </div>
-                <Eye className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Categories</p>
-                  <p className="text-2xl font-bold">{categories.length}</p>
-                </div>
-                <Package className="h-8 w-8 text-accent" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Avg Price</p>
-                  <p className="text-2xl font-bold">
-                    ${items.length > 0 ? (items.reduce((sum, item) => sum + item.price_cents, 0) / items.length / 100).toFixed(2) : '0.00'}
-                  </p>
-                </div>
-                <DollarSign className="h-8 w-8 text-secondary" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {showCreateForm && (
-          <Card className="border-0 shadow-soft mb-6">
+        {/* Form */}
+        {showForm && (
+          <Card className="mb-6 border-0 shadow-soft">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {editingItem ? <Edit className="h-5 w-5 text-primary" /> : <Plus className="h-5 w-5 text-primary" />}
-                {editingItem ? 'Edit Item' : 'Add New Item'}
-              </CardTitle>
+              <CardTitle>{editingItem ? 'Edit Item' : 'Add New Item'}</CardTitle>
               <CardDescription>
-                {editingItem ? 'Update item details and pricing' : 'Add a new service item to the shop'}
+                Configure product details, pricing, and available options
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Item Name</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="e.g., Standard Wash & Fold"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Input
-                      id="category"
-                      value={formData.category}
-                      onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                      placeholder="e.g., Regular, Delicate, Special"
-                      required
-                    />
-                  </div>
+            <CardContent className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Product Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter product name"
+                    required
+                  />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Price ($)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.price}
-                      onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                      placeholder="15.00"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="photo-upload">Photo Upload</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="photo-upload"
-                        type="file"
-                        accept="image/*"
-                        className="flex-1"
-                      />
-                      {isUploadingPhoto && (
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                          Uploading...
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Upload a new photo or keep existing one
-                    </p>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <Select 
+                    value={formData.category} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
 
-                {/* Current Image Preview */}
-                {(formData.imageUrl || editingItem?.image_url) && (
-                  <div className="space-y-2">
-                    <Label>Current Image</Label>
-                    <div className="relative inline-block">
-                      <img
-                        src={formData.imageUrl || editingItem?.image_url}
-                        alt="Current item"
-                        className="w-32 h-32 object-cover rounded-lg border"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="absolute -top-2 -right-2"
-                        onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+              <div className="space-y-2">
+                <Label htmlFor="price">Price *</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="price"
+                    type="number"
+                    value={formData.price_cents / 100}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      price_cents: Math.round(parseFloat(e.target.value || '0') * 100)
+                    }))}
+                    placeholder="0.00"
+                    className="pl-8"
+                    step="0.01"
+                    min="0"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Product description..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="image_url">Image URL</Label>
+                <Input
+                  id="image_url"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              {/* Product Options */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Product Options
+                </h3>
+
+                {/* Colors */}
+                <div className="space-y-2">
+                  <Label>Available Colors</Label>
+                  {formData.colors.map((color, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Select 
+                        value={color} 
+                        onValueChange={(value) => updateColor(index, value)}
                       >
-                        <X className="h-3 w-3" />
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Select color" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {defaultColors.map(c => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => removeColor(index)}
+                        disabled={formData.colors.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                )}
+                  ))}
+                  <Button variant="outline" size="sm" onClick={addColorField}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Color
+                  </Button>
+                </div>
 
+                {/* Sizes */}
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Describe the service..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="isActive"
-                    checked={formData.isActive}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
-                  />
-                  <Label htmlFor="isActive">Active (visible to customers)</Label>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button
-                    type="submit"
-                    variant="hero"
-                    disabled={isLoading || isUploadingPhoto}
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {isLoading || isUploadingPhoto ? "Saving..." : editingItem ? "Update Item" : "Add Item"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowCreateForm(false);
-                      resetForm();
-                    }}
-                  >
-                    Cancel
+                  <Label>Available Sizes</Label>
+                  {formData.sizes.map((size, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Select 
+                        value={size} 
+                        onValueChange={(value) => updateSize(index, value)}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Select size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {defaultSizes.map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => removeSize(index)}
+                        disabled={formData.sizes.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" onClick={addSizeField}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Size
                   </Button>
                 </div>
-              </form>
+              </div>
+
+              {/* Status */}
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is_active"
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                />
+                <Label htmlFor="is_active">Active (visible in shop)</Label>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex gap-2">
+                <Button onClick={handleSubmit} disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : editingItem ? 'Update Item' : 'Create Item'}
+                </Button>
+                <Button variant="outline" onClick={resetForm}>
+                  Cancel
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
 
-        {showBulkPricing && (
-          <Card className="border-0 shadow-soft mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calculator className="h-5 w-5 text-primary" />
-                Bulk Pricing Update
-              </CardTitle>
-              <CardDescription>
-                Apply price changes to multiple items at once
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleBulkPricing} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bulk-category">Category</Label>
-                    <Select 
-                      value={bulkPricingData.category} 
-                      onValueChange={(value) => setBulkPricingData(prev => ({ ...prev, category: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+        {/* Items List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {items.map((item) => (
+            <Card key={item.id} className="border-0 shadow-soft">
+              <CardContent className="p-4">
+                {item.image_url && (
+                  <img
+                    src={item.image_url}
+                    alt={item.name}
+                    className="w-full h-32 object-cover rounded-lg mb-3"
+                  />
+                )}
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">{item.name}</h3>
+                    <Badge variant={item.is_active ? "default" : "secondary"}>
+                      {item.is_active ? "Active" : "Inactive"}
+                    </Badge>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="adjustment-type">Adjustment Type</Label>
-                    <Select 
-                      value={bulkPricingData.adjustmentType} 
-                      onValueChange={(value) => setBulkPricingData(prev => ({ ...prev, adjustmentType: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="percentage">
-                          <div className="flex items-center gap-2">
-                            <Percent className="h-4 w-4" />
-                            Percentage
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="fixed">
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4" />
-                            Fixed Amount
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <p className="text-sm text-muted-foreground">{item.category}</p>
+                  <p className="text-lg font-bold text-primary">
+                    ${(item.price_cents / 100).toFixed(2)}
+                  </p>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="adjustment-value">
-                      {bulkPricingData.adjustmentType === 'percentage' ? 'Percentage Change' : 'Amount Change ($)'}
-                    </Label>
-                    <Input
-                      id="adjustment-value"
-                      type="number"
-                      step={bulkPricingData.adjustmentType === 'percentage' ? '1' : '0.01'}
-                      value={bulkPricingData.priceAdjustment}
-                      onChange={(e) => setBulkPricingData(prev => ({ ...prev, priceAdjustment: e.target.value }))}
-                      placeholder={bulkPricingData.adjustmentType === 'percentage' ? '10 (for +10%)' : '5.00 (for +$5.00)'}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {bulkPricingData.adjustmentType === 'percentage' 
-                        ? 'Use negative values to decrease prices (e.g., -10 for -10%)'
-                        : 'Use negative values to decrease prices (e.g., -2.50 for -$2.50)'
-                      }
+                  {item.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {item.description}
                     </p>
+                  )}
+
+                  {/* Product Options Summary */}
+                  {item.product_options && (
+                    <div className="text-xs space-y-1">
+                      {item.product_options.colors && item.product_options.colors.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Palette className="h-3 w-3" />
+                          <span>{item.product_options.colors.length} colors</span>
+                        </div>
+                      )}
+                      {item.product_options.sizes && item.product_options.sizes.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Ruler className="h-3 w-3" />
+                          <span>{item.product_options.sizes.length} sizes</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button
-                    type="submit"
-                    variant="hero"
-                    disabled={isLoading || !bulkPricingData.category || !bulkPricingData.priceAdjustment}
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {isLoading ? "Updating..." : "Apply Bulk Changes"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowBulkPricing(false);
-                      setBulkPricingData({
-                        category: '',
-                        priceAdjustment: '',
-                        adjustmentType: 'percentage'
-                      });
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Items List by Category */}
-        {categories.map(category => (
-          <div key={category} className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 capitalize">{category}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {items
-                .filter(item => item.category === category)
-                .map((item) => (
-                  <Card key={item.id} className="border-0 shadow-soft">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{item.name}</h3>
-                          <p className="text-2xl font-bold text-primary">
-                            ${(item.price_cents / 100).toFixed(2)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={item.is_active ? "default" : "secondary"}>
-                            {item.is_active ? (
-                              <>
-                                <Eye className="h-3 w-3 mr-1" />
-                                Active
-                              </>
-                            ) : (
-                              <>
-                                <EyeOff className="h-3 w-3 mr-1" />
-                                Hidden
-                              </>
-                            )}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {item.description && (
-                        <p className="text-sm text-muted-foreground mb-4">
-                          {item.description}
-                        </p>
-                      )}
-
-                      {item.image_url ? (
-                        <div className="mb-4">
-                          <img
-                            src={item.image_url}
-                            alt={item.name}
-                            className="w-full h-48 object-cover rounded-lg border hover-scale"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="mb-4 w-full h-48 bg-muted rounded-lg border flex items-center justify-center">
-                          <div className="text-center text-muted-foreground">
-                            <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">No image</p>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleItemStatus(item.id, item.is_active)}
-                        >
-                          {item.is_active ? (
-                            <>
-                              <EyeOff className="h-3 w-3 mr-1" />
-                              Hide
-                            </>
-                          ) : (
-                            <>
-                              <Eye className="h-3 w-3 mr-1" />
-                              Show
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600"
-                          onClick={() => deleteItem(item.id, item.name)}
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-            </div>
-          </div>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
         {items.length === 0 && (
           <Card className="border-0 shadow-soft">
             <CardContent className="p-12 text-center">
-              <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
               <h3 className="text-xl font-semibold mb-2">No Items Yet</h3>
               <p className="text-muted-foreground mb-4">
-                Add your first service item to get started.
+                Start building your shop by adding your first product
               </p>
-              <Button 
-                variant="hero" 
-                onClick={() => {
-                  resetForm();
-                  setShowCreateForm(true);
-                }}
-              >
+              <Button onClick={() => setShowForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add First Item
               </Button>

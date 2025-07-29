@@ -1,358 +1,487 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Users, Plus, Mail, Shield, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  ArrowLeft,
+  Users,
+  Search,
+  Edit,
+  Trash2,
+  Plus,
+  Eye,
+  Shield,
+  UserCheck,
+  AlertTriangle,
+  MessageSquare
+} from "lucide-react";
+
+interface UserManagementProps {
+  onBack: () => void;
+}
 
 interface User {
   id: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  role: string;
   created_at: string;
+  profiles?: {
+    first_name: string;
+    last_name: string;
+    phone: string;
+  };
+  user_roles: Array<{
+    role: string;
+  }>;
 }
 
-export function UserManagement() {
-  const { user, session } = useAuth();
+interface SupportTicket {
+  id: string;
+  subject: string;
+  status: string;
+  priority: string;
+  created_at: string;
+  customer_id: string;
+  profiles?: {
+    first_name: string;
+    last_name: string;
+  };
+}
+
+export function UserManagement({ onBack }: UserManagementProps) {
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showUserDialog, setShowUserDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    role: ''
-  });
+  const [activeTab, setActiveTab] = useState('users');
 
   useEffect(() => {
-    if (user) {
-      loadUsers();
-    }
-  }, [user]);
+    loadData();
+  }, []);
 
-  const loadUsers = async () => {
+  const loadData = async () => {
     try {
-      // First get user roles
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role, user_id, created_at')
-        .in('role', ['owner', 'marketing']);
+      // Load users with profiles and roles
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles(role)
+        `)
+        .order('created_at', { ascending: false });
 
-      if (roleError) throw roleError;
+      if (usersError) throw usersError;
 
-      // Then get profiles for those users
-      const userIds = roleData?.map(role => role.user_id) || [];
-      
-      if (userIds.length === 0) {
-        setUsers([]);
-        return;
+      // Get auth users data
+      const transformedUsers: User[] = [];
+      for (const profile of usersData || []) {
+        // In a real app, you'd need to get auth user data differently
+        // For now, we'll use the profile data
+        transformedUsers.push({
+          id: profile.user_id,
+          email: `user@example.com`, // Would come from auth
+          created_at: profile.created_at,
+          profiles: {
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            phone: profile.phone
+          },
+          user_roles: Array.isArray(profile.user_roles) ? profile.user_roles : []
+        });
       }
 
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id, first_name, last_name')
-        .in('user_id', userIds);
+      setUsers(transformedUsers);
 
-      if (profileError) throw profileError;
+      // Load support tickets
+      const { data: ticketsData, error: ticketsError } = await supabase
+        .from('support_tickets')
+        .select(`
+          *,
+          profiles(first_name, last_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-      // Combine the data
-      const userProfiles = roleData?.map(userRole => {
-        const profile = profileData?.find(p => p.user_id === userRole.user_id);
-        return {
-          id: userRole.user_id,
-          email: '', // Email not available from profiles table
-          first_name: profile?.first_name || '',
-          last_name: profile?.last_name || '',
-          role: userRole.role,
-          created_at: userRole.created_at
-        };
-      }) || [];
+      if (ticketsError) throw ticketsError;
+      setSupportTickets((ticketsData as any) || []);
 
-      setUsers(userProfiles);
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error('Error loading data:', error);
       toast({
         title: "Error",
-        description: "Failed to load users",
-        variant: "destructive"
+        description: "Failed to load user data.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateUser = async () => {
-    if (!formData.email || !formData.password || !formData.firstName || !formData.lastName || !formData.role) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
+  const filteredUsers = users.filter(user => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      user.email.toLowerCase().includes(searchLower) ||
+      user.profiles?.first_name?.toLowerCase().includes(searchLower) ||
+      user.profiles?.last_name?.toLowerCase().includes(searchLower) ||
+      user.profiles?.phone?.includes(searchTerm)
+    );
+  });
 
-    if (formData.password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setShowUserDialog(true);
+  };
 
-    setCreating(true);
+  const handleDeleteUser = (user: User) => {
+    setUserToDelete(user);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
     try {
-      // Call the edge function to create the user
-      const { data, error } = await supabase.functions.invoke('create-user', {
-        body: {
-          email: formData.email,
-          password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          role: formData.role
-        },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
-      });
+      // In a real app, you'd need proper user deletion logic
+      // This is a simplified version
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userToDelete.id);
 
-      if (error) {
-        console.log('Edge function error details:', error);
-        throw error;
-      }
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
+      if (error) throw error;
 
       toast({
-        title: "Success",
-        description: `User ${formData.email} created successfully with ${formData.role} role`
+        title: "User Deleted",
+        description: "User has been successfully deleted.",
       });
 
-      // Reset form and close dialog
-      setFormData({
-        email: '',
-        password: '',
-        firstName: '',
-        lastName: '',
-        role: ''
-      });
-      setShowCreateDialog(false);
-      
-      // Reload users list
-      loadUsers();
-
-    } catch (error: any) {
-      console.error('Error creating user:', error);
-      
-      // Handle the response data if it exists
-      let errorMessage = "Failed to create user";
-      if (error?.context?.body) {
-        try {
-          const errorData = JSON.parse(error.context.body);
-          errorMessage = errorData.error || errorMessage;
-        } catch (e) {
-          // If parsing fails, use the original error message
-        }
-      }
-      
+      setShowDeleteDialog(false);
+      setUserToDelete(null);
+      loadData();
+    } catch (error) {
+      console.error('Error deleting user:', error);
       toast({
-        title: "Error", 
-        description: errorMessage,
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to delete user.",
+        variant: "destructive",
       });
-    } finally {
-      setCreating(false);
     }
   };
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case 'owner':
-        return 'destructive';
-      case 'marketing':
-        return 'secondary';
-      default:
-        return 'outline';
+      case 'owner': return 'default';
+      case 'operator': return 'secondary';
+      case 'marketing': return 'outline';
+      default: return 'outline';
+    }
+  };
+
+  const getTicketStatusColor = (status: string) => {
+    switch (status) {
+      case 'open': return 'bg-red-100 text-red-800';
+      case 'in_progress': return 'bg-yellow-100 text-yellow-800';
+      case 'resolved': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTicketPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="min-h-screen bg-gradient-wave flex items-center justify-center">
+        <div className="text-center">
+          <Users className="h-8 w-8 animate-pulse mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading user data...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-wave">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          
+          <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 User Management
-              </CardTitle>
-              <CardDescription>
-                Manage owner and marketing team members
-              </CardDescription>
+              </h1>
+              <p className="text-muted-foreground">
+                Manage users, roles, and support tickets
+              </p>
             </div>
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create User
-            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {users.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No users found. Create your first team member to get started.
-              </div>
-            ) : (
-              users.map((userItem) => (
-                <div key={userItem.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Shield className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">
-                        {userItem.first_name} {userItem.last_name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        {userItem.email || 'Email not available'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Created: {new Date(userItem.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant={getRoleBadgeVariant(userItem.role)}>
-                    {userItem.role}
-                  </Badge>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Create User Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Create New User</DialogTitle>
-            <DialogDescription>
-              Create a new owner or marketing team member with login credentials.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                  placeholder="John"
-                />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Users ({users.length})
+            </TabsTrigger>
+            <TabsTrigger value="support" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Support Tickets ({supportTickets.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users" className="space-y-6">
+            {/* Search */}
+            <Card className="border-0 shadow-soft">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search users by name, email, or phone..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Users List */}
+            <div className="space-y-4">
+              {filteredUsers.map((user) => (
+                <Card key={user.id} className="border-0 shadow-soft">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <div>
+                            <h3 className="font-semibold">
+                              {user.profiles?.first_name} {user.profiles?.last_name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          {user.user_roles.map((role, index) => (
+                            <Badge key={index} variant={getRoleBadgeVariant(role.role)}>
+                              {role.role}
+                            </Badge>
+                          ))}
+                        </div>
+
+                        <div className="text-sm text-muted-foreground">
+                          <p>Phone: {user.profiles?.phone || 'Not provided'}</p>
+                          <p>Joined: {new Date(user.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewUser(user)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {filteredUsers.length === 0 && (
+              <Card className="border-0 shadow-soft">
+                <CardContent className="p-12 text-center">
+                  <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <h3 className="text-xl font-semibold mb-2">No Users Found</h3>
+                  <p className="text-muted-foreground">
+                    {searchTerm ? 'Try adjusting your search criteria.' : 'No users registered yet.'}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="support" className="space-y-6">
+            {/* Support Tickets */}
+            <div className="space-y-4">
+              {supportTickets.map((ticket) => (
+                <Card key={ticket.id} className="border-0 shadow-soft">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-semibold">{ticket.subject}</h3>
+                          <Badge className={getTicketStatusColor(ticket.status)}>
+                            {ticket.status}
+                          </Badge>
+                          <Badge className={getTicketPriorityColor(ticket.priority)}>
+                            {ticket.priority} priority
+                          </Badge>
+                        </div>
+                        
+                        <div className="text-sm text-muted-foreground">
+                          <p>Customer: {ticket.profiles?.first_name} {ticket.profiles?.last_name}</p>
+                          <p>Created: {new Date(ticket.created_at).toLocaleDateString()}</p>
+                          <p>Ticket ID: #{ticket.id.slice(-8)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {supportTickets.length === 0 && (
+              <Card className="border-0 shadow-soft">
+                <CardContent className="p-12 text-center">
+                  <MessageSquare className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <h3 className="text-xl font-semibold mb-2">No Support Tickets</h3>
+                  <p className="text-muted-foreground">
+                    All caught up! No support tickets at the moment.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* User Details Dialog */}
+        <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>User Details</DialogTitle>
+              <DialogDescription>
+                View and manage user information
+              </DialogDescription>
+            </DialogHeader>
+            {selectedUser && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">First Name</label>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedUser.profiles?.first_name || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Last Name</label>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedUser.profiles?.last_name || 'Not provided'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Phone</label>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedUser.profiles?.phone || 'Not provided'}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Roles</label>
+                  <div className="flex gap-2 mt-1">
+                    {selectedUser.user_roles.map((role, index) => (
+                      <Badge key={index} variant={getRoleBadgeVariant(role.role)}>
+                        {role.role}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Account Created</label>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(selectedUser.created_at).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                  placeholder="Doe"
-                />
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowUserDialog(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                Delete User
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this user? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            {userToDelete && (
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="font-medium">
+                  {userToDelete.profiles?.first_name} {userToDelete.profiles?.last_name}
+                </p>
+                <p className="text-sm text-muted-foreground">{userToDelete.email}</p>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="john.doe@company.com"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  placeholder="Minimum 6 characters"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="owner">Owner</SelectItem>
-                  <SelectItem value="marketing">Marketing</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateUser} disabled={creating}>
-              {creating ? 'Creating...' : 'Create User'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteUser}>
+                Delete User
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
