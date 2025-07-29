@@ -17,21 +17,8 @@ import { Card } from "@/components/ui/card";
 
 export function Homepage() {
   const [showOperatorLogin, setShowOperatorLogin] = useState(false);
-  const { user, userRole, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-wave flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Add timeout fallback to prevent infinite loading
   const [timeoutReached, setTimeoutReached] = useState(false);
+  const { user, userRole, loading } = useAuth();
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -41,6 +28,17 @@ export function Homepage() {
     
     return () => clearTimeout(timer);
   }, []);
+
+  if (loading && !timeoutReached) {
+    return (
+      <div className="min-h-screen bg-gradient-wave flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // If loading is stuck for too long, show the content anyway
   if (timeoutReached && loading) {
