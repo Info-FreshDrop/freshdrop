@@ -653,6 +653,111 @@ export function OperatorDashboard() {
           </DialogContent>
         </Dialog>
 
+        {/* Order Workflow Dialog */}
+        <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Order Workflow</DialogTitle>
+              <DialogDescription>
+                Complete each step in order to process this order
+              </DialogDescription>
+            </DialogHeader>
+            {selectedOrder && (
+              <div className="space-y-6">
+                {/* Order Details */}
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">Order Information</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p><strong>Customer:</strong> {selectedOrder.profiles?.first_name} {selectedOrder.profiles?.last_name}</p>
+                      <p><strong>Phone:</strong> {selectedOrder.profiles?.phone}</p>
+                      <p><strong>Service:</strong> {selectedOrder.service_type.replace('_', ' ')}</p>
+                    </div>
+                    <div>
+                      <p><strong>Bags:</strong> {selectedOrder.bag_count}</p>
+                      <p><strong>Total:</strong> ${(selectedOrder.total_amount_cents / 100).toFixed(2)}</p>
+                      <p><strong>Type:</strong> {selectedOrder.is_express ? 'Express' : 'Standard'}</p>
+                    </div>
+                  </div>
+                  {selectedOrder.special_instructions && (
+                    <div className="mt-3">
+                      <p><strong>Special Instructions:</strong> {selectedOrder.special_instructions}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Workflow Steps */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Workflow Steps</h4>
+                  
+                  {/* Step 1: Pickup */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="font-medium">Step 1: Pickup</h5>
+                      <Badge variant={selectedOrder.status === 'pickup_completed' ? 'default' : 'secondary'}>
+                        {selectedOrder.status === 'pickup_completed' ? 'Completed' : 'Pending'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Pick up laundry from customer location
+                    </p>
+                    {selectedOrder.pickup_address && (
+                      <p className="text-sm"><strong>Address:</strong> {selectedOrder.pickup_address}</p>
+                    )}
+                  </div>
+
+                  {/* Step 2: Processing */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="font-medium">Step 2: Processing</h5>
+                      <Badge variant={['washing', 'drying', 'folding'].includes(selectedOrder.status) ? 'default' : 'secondary'}>
+                        {['washing', 'drying', 'folding'].includes(selectedOrder.status) ? 'In Progress' : 'Pending'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Wash, dry, and fold the laundry according to service type
+                    </p>
+                  </div>
+
+                  {/* Step 3: Delivery */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="font-medium">Step 3: Delivery</h5>
+                      <Badge variant={selectedOrder.status === 'delivered' ? 'default' : 'secondary'}>
+                        {selectedOrder.status === 'delivered' ? 'Completed' : 'Pending'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Deliver clean laundry to customer
+                    </p>
+                    {selectedOrder.delivery_address && (
+                      <p className="text-sm"><strong>Address:</strong> {selectedOrder.delivery_address}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Current Status */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h5 className="font-medium mb-2">Current Status</h5>
+                  <p className="text-sm">
+                    Status: <span className="font-medium capitalize">{selectedOrder.status.replace('_', ' ')}</span>
+                  </p>
+                  {selectedOrder.claimed_at && (
+                    <p className="text-sm text-muted-foreground">
+                      Claimed: {new Date(selectedOrder.claimed_at).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedOrder(null)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Live Order Map Modal */}
         {selectedMapOrder && (
           <LiveOrderMap
