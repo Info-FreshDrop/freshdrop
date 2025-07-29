@@ -58,11 +58,11 @@ export default function PaymentSuccess() {
 
   if (isVerifying) {
     return (
-      <div className="min-h-screen bg-gradient-wave flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center">
         <Card className="max-w-md w-full mx-4">
           <CardContent className="p-6 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Verifying your payment...</p>
+            <p className="text-muted-foreground">Verifying your payment...</p>
           </CardContent>
         </Card>
       </div>
@@ -70,7 +70,7 @@ export default function PaymentSuccess() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-wave">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Card className="border-0 shadow-soft">
           <CardHeader className="text-center pb-6">

@@ -54,3 +54,6 @@ enable_signup = true
 enabled = true
 port = 54328
 ip_version = "ipv4"
+
+[functions.stripe-webhook]
+verify_jwt = false
