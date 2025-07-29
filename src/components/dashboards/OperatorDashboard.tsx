@@ -271,19 +271,19 @@ export function OperatorDashboard() {
   };
 
   const getWorkflowSteps = () => [
-    { title: "Drive to Pickup Location", description: "Navigate to customer's pickup address", requiresPhoto: false, instructions: "Drive safely to the pickup location and notify customer of arrival" },
-    { title: "Confirm Pickup Location", description: "Take photo of pickup location and items", requiresPhoto: true, instructions: "Take a photo showing the pickup location and any laundry bags/items" },
-    { title: "Collect Laundry Items", description: "Gather all laundry items from customer", requiresPhoto: false, instructions: "Verify bag count matches order and collect all items. Check for any special instructions." },
-    { title: "Pre-Transport Photo", description: "Document items before transport", requiresPhoto: true, instructions: "Take a photo of all collected items in your vehicle before leaving pickup location" },
-    { title: "Transport to Facility", description: "Drive to washing facility", requiresPhoto: false, instructions: "Transport items safely to your washing facility" },
-    { title: "Arrival at Facility", description: "Document arrival at washing facility", requiresPhoto: true, instructions: "Take a photo showing arrival at your washing facility with the items" },
-    { title: "Pre-Wash Sorting", description: "Sort items by color and fabric type", requiresPhoto: true, instructions: "Sort all items by color, fabric type, and washing requirements. Take photo of sorted piles." },
-    { title: "Start Washing Process", description: "Begin washing cycle", requiresPhoto: false, instructions: "Start washing with appropriate settings for each sorted group" },
-    { title: "Wash Complete", description: "Washing cycle finished", requiresPhoto: true, instructions: "Take photo of clean items after washing is complete" },
-    { title: "Drying Process", description: "Dry items according to care instructions", requiresPhoto: false, instructions: "Dry items using appropriate heat settings per care labels" },
-    { title: "Folding & Preparation", description: "Fold and organize clean items", requiresPhoto: true, instructions: "Carefully fold all items and organize by type. Take photo of finished folding." },
-    { title: "Quality Check & Packaging", description: "Final quality check and packaging", requiresPhoto: true, instructions: "Inspect all items for quality, package neatly, and prepare for delivery" },
-    { title: "Delivery Complete", description: "Deliver items to customer", requiresPhoto: true, instructions: "Deliver to customer, take photo of handoff or secure delivery location" }
+    { title: "Navigate to Pickup", description: "Drive to customer's pickup address", requiresPhoto: false, instructions: "Drive to the pickup location and notify customer of arrival" },
+    { title: "Confirm Customer Info", description: "Verify customer details and special instructions", requiresPhoto: false, instructions: "Confirm customer name, address, and review any special instructions" },
+    { title: "Collect Laundry", description: "Gather all laundry items and take pickup photo", requiresPhoto: true, instructions: "Count bags, verify contents, and take a photo of collected items" },
+    { title: "Review Wash Preferences", description: "Check soap type, wash temperature, and care instructions", requiresPhoto: false, instructions: "Review customer's soap preference, wash temperature, dry temperature, and any special care needs" },
+    { title: "Transport to Facility", description: "Drive safely to washing facility", requiresPhoto: false, instructions: "Transport items to your washing facility" },
+    { title: "Sort & Prep", description: "Sort items by color, fabric, and wash settings", requiresPhoto: false, instructions: "Sort laundry according to care labels and customer preferences" },
+    { title: "Start Wash Cycle", description: "Begin washing with correct settings", requiresPhoto: false, instructions: "Start washing with customer's preferred soap and temperature settings" },
+    { title: "Wash Complete", description: "Move to drying process", requiresPhoto: false, instructions: "Transfer clean items to dryer with appropriate heat settings" },
+    { title: "Drying Complete", description: "Remove items and prepare for folding", requiresPhoto: false, instructions: "Remove dried items promptly to prevent wrinkles" },
+    { title: "Fold & Package", description: "Fold items neatly and package for delivery", requiresPhoto: true, instructions: "Fold items according to preferences and package securely" },
+    { title: "Quality Check", description: "Inspect items for quality and completeness", requiresPhoto: false, instructions: "Check all items are clean, properly folded, and accounted for" },
+    { title: "Ready for Delivery", description: "Prepare for delivery to customer", requiresPhoto: false, instructions: "Load items for delivery and confirm delivery address" },
+    { title: "Delivery Complete", description: "Deliver to customer and take delivery photo", requiresPhoto: true, instructions: "Deliver items to customer or secure location and take confirmation photo" }
   ];
 
   const handleTakePhoto = (stepNumber: number) => {
@@ -788,24 +788,101 @@ export function OperatorDashboard() {
               <div className="space-y-6">
                 {/* Order Details */}
                 <div className="bg-muted/50 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">Order Information</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p><strong>Customer:</strong> {selectedOrder.profiles?.first_name} {selectedOrder.profiles?.last_name}</p>
-                      <p><strong>Phone:</strong> {selectedOrder.profiles?.phone}</p>
-                      <p><strong>Service:</strong> {selectedOrder.service_type.replace('_', ' ')}</p>
+                  <h4 className="font-semibold mb-3">Order Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Customer</p>
+                        <p className="font-medium">{selectedOrder.profiles?.first_name} {selectedOrder.profiles?.last_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                        <p className="font-medium">{selectedOrder.profiles?.phone}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Service Type</p>
+                        <p className="font-medium">{selectedOrder.service_type.replace('_', ' ')}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Bags</p>
+                        <p className="font-medium">{selectedOrder.bag_count} bag{selectedOrder.bag_count > 1 ? 's' : ''}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p><strong>Bags:</strong> {selectedOrder.bag_count}</p>
-                      <p><strong>Total:</strong> ${(selectedOrder.total_amount_cents / 100).toFixed(2)}</p>
-                      <p><strong>Type:</strong> {selectedOrder.is_express ? 'Express' : 'Standard'}</p>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Total Amount</p>
+                        <p className="font-medium text-green-600">${(selectedOrder.total_amount_cents / 100).toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Service Level</p>
+                        <Badge variant={selectedOrder.is_express ? "destructive" : "secondary"}>
+                          {selectedOrder.is_express ? "Express" : "Standard"}
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Pickup Window</p>
+                        <p className="font-medium">
+                          {selectedOrder.pickup_window_start && selectedOrder.pickup_window_end ? 
+                            `${new Date(selectedOrder.pickup_window_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(selectedOrder.pickup_window_end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
+                            : 'Not specified'}
+                        </p>
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Addresses */}
+                  <div className="mt-4 pt-3 border-t space-y-3">
+                    <h5 className="font-medium">Addresses</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedOrder.pickup_address && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                            <MapPin className="h-3 w-3" />
+                            Pickup Address
+                          </p>
+                          <p className="font-medium">{selectedOrder.pickup_address}</p>
+                        </div>
+                      )}
+                      {selectedOrder.delivery_address && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                            <MapPin className="h-3 w-3" />
+                            Delivery Address
+                          </p>
+                          <p className="font-medium">{selectedOrder.delivery_address}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Special Instructions */}
                   {selectedOrder.special_instructions && (
-                    <div className="mt-3">
-                      <p><strong>Special Instructions:</strong> {selectedOrder.special_instructions}</p>
+                    <div className="mt-4 pt-3 border-t">
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Special Instructions</p>
+                      <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                        <p className="text-sm font-medium text-yellow-800">{selectedOrder.special_instructions}</p>
+                      </div>
                     </div>
                   )}
+
+                  {/* Wash Preferences - Show placeholder for now, will need to load from database */}
+                  <div className="mt-4 pt-3 border-t">
+                    <h5 className="font-medium mb-3">Wash Preferences</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Soap Type</p>
+                        <p className="font-medium">Standard Detergent</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Wash Temperature</p>
+                        <p className="font-medium">Warm</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Dry Temperature</p>
+                        <p className="font-medium">Medium Heat</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Workflow Steps */}
