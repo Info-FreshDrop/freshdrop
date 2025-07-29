@@ -328,7 +328,7 @@ export function OperatorDashboard() {
             </TabsTrigger>
             <TabsTrigger value="my-orders" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              My Orders ({myOrders.length})
+              My Orders ({myOrders.filter(order => !['completed', 'delivered'].includes(order.status)).length})
             </TabsTrigger>
             <TabsTrigger value="account" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -663,6 +663,21 @@ export function OperatorDashboard() {
   async function handleClaimOrder() {
     if (!confirmOrder || !washerData) return;
 
+    // Check if operator already has 5 active orders
+    const activeOrdersCount = myOrders.filter(order => 
+      !['completed', 'delivered'].includes(order.status)
+    ).length;
+
+    if (activeOrdersCount >= 5) {
+      toast({
+        title: "Order Limit Reached",
+        description: "You can only have 5 active orders at a time. Please complete some orders first.",
+        variant: "destructive",
+      });
+      setConfirmOrder(null);
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('orders')
@@ -691,7 +706,7 @@ export function OperatorDashboard() {
 
       toast({
         title: "Order Claimed",
-        description: "You have successfully claimed this order!",
+        description: `Order claimed successfully! You now have ${activeOrdersCount + 1}/5 active orders.`,
       });
 
       setConfirmOrder(null);
