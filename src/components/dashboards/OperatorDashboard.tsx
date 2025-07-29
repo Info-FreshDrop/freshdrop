@@ -124,47 +124,63 @@ export function OperatorDashboard() {
   }, [user]);
 
   const getCurrentOperatorLocation = async () => {
+    console.log('Attempting to get operator location...');
+    
     try {
+      // Try Capacitor first (if available on mobile)
       const position = await getCurrentLocation();
       const newLocation = {
         latitude: position.latitude,
         longitude: position.longitude
       };
       setOperatorLocation(newLocation);
-      
-      // Store location in washer profile for persistence
-      if (washerData?.id) {
-        try {
-          await supabase
-            .from('washers')
-            .update({
-              // Note: current_location might need to be added to the database schema
-              // For now, we'll just store it in state
-            })
-            .eq('id', washerData.id);
-        } catch (error) {
-          console.warn('Could not update location in database:', error);
-        }
-      }
-      
-      console.log('Operator location updated:', newLocation);
-    } catch (error) {
-      console.warn('Could not get operator location:', error);
-      // Try to get location from stored data if available
-      if (washerData?.current_location) {
-        try {
-          const coords = washerData.current_location.coordinates;
-          if (coords && coords.length === 2) {
-            setOperatorLocation({
-              latitude: coords[1],
-              longitude: coords[0]
-            });
-            console.log('Using stored operator location:', coords);
+      console.log('✅ Operator location updated via Capacitor:', newLocation);
+      return;
+    } catch (capacitorError) {
+      console.log('Capacitor location failed, trying browser geolocation:', capacitorError);
+    }
+
+    // Fallback to browser geolocation
+    try {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const newLocation = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            };
+            setOperatorLocation(newLocation);
+            console.log('✅ Operator location updated via browser:', newLocation);
+          },
+          (geoError) => {
+            console.warn('Browser geolocation failed:', geoError);
+            // Try to get location from stored data if available
+            if (washerData?.current_location) {
+              try {
+                const coords = washerData.current_location.coordinates;
+                if (coords && coords.length === 2) {
+                  setOperatorLocation({
+                    latitude: coords[1],
+                    longitude: coords[0]
+                  });
+                  console.log('Using stored operator location:', coords);
+                }
+              } catch (parseError) {
+                console.warn('Could not parse stored location:', parseError);
+              }
+            }
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000 // 5 minutes
           }
-        } catch (parseError) {
-          console.warn('Could not parse stored location:', parseError);
-        }
+        );
+      } else {
+        console.warn('Browser geolocation is not supported');
       }
+    } catch (error) {
+      console.warn('Could not get operator location at all:', error);
     }
   };
 
