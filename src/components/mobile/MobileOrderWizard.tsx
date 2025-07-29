@@ -453,8 +453,17 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         setOrderId(data.orderId);
         setShowPayment(true);
         setIsLoading(false);
+      } else if (data?.isFreeOrder && data?.orderId) {
+        // Handle $0 orders - no payment required
+        console.log('Free order created successfully');
+        toast({
+          title: "Order Placed Successfully!",
+          description: "Your order has been placed successfully - no payment required!",
+        });
+        onBack(); // Go back to dashboard
+        setIsLoading(false);
       } else {
-        console.error('No client secret received:', data);
+        console.error('Unexpected response format:', data);
         throw new Error("Failed to create payment intent");
       }
 
