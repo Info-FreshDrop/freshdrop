@@ -46,31 +46,41 @@ export function UserManagement() {
 
   const loadUsers = async () => {
     try {
-      // Load all users with owner or marketing roles
-      const { data, error } = await supabase
+      // First get user roles
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
-        .select(`
-          role,
-          user_id,
-          created_at,
-          profiles!inner (
-            first_name,
-            last_name
-          )
-        `)
+        .select('role, user_id, created_at')
         .in('role', ['owner', 'marketing']);
 
-      if (error) throw error;
+      if (roleError) throw roleError;
 
-      // Transform the data to include role information
-      const userProfiles = data?.map(userRole => ({
-        id: userRole.user_id,
-        email: '', // Email not available from profiles table
-        first_name: (userRole.profiles as any)?.first_name || '',
-        last_name: (userRole.profiles as any)?.last_name || '',
-        role: userRole.role,
-        created_at: userRole.created_at
-      })) || [];
+      // Then get profiles for those users
+      const userIds = roleData?.map(role => role.user_id) || [];
+      
+      if (userIds.length === 0) {
+        setUsers([]);
+        return;
+      }
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .in('user_id', userIds);
+
+      if (profileError) throw profileError;
+
+      // Combine the data
+      const userProfiles = roleData?.map(userRole => {
+        const profile = profileData?.find(p => p.user_id === userRole.user_id);
+        return {
+          id: userRole.user_id,
+          email: '', // Email not available from profiles table
+          first_name: profile?.first_name || '',
+          last_name: profile?.last_name || '',
+          role: userRole.role,
+          created_at: userRole.created_at
+        };
+      }) || [];
 
       setUsers(userProfiles);
     } catch (error) {
@@ -120,7 +130,14 @@ export function UserManagement() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log('Edge function error details:', error);
+        throw error;
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       toast({
         title: "Success",
@@ -142,9 +159,21 @@ export function UserManagement() {
 
     } catch (error: any) {
       console.error('Error creating user:', error);
+      
+      // Handle the response data if it exists
+      let errorMessage = "Failed to create user";
+      if (error?.context?.body) {
+        try {
+          const errorData = JSON.parse(error.context.body);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // If parsing fails, use the original error message
+        }
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to create user",
+        title: "Error", 
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
