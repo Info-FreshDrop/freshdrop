@@ -4,11 +4,7 @@ const config: CapacitorConfig = {
   appId: 'app.lovable.freshdrop',
   appName: 'FreshDrop',
   webDir: 'dist',
-  server: {
-    androidScheme: 'https',
-    url: 'https://15cd9fd2-7824-49dc-9081-d06b548dff20.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
+  // Production config - no server URL for native builds
   plugins: {
     Camera: {
       permissions: ['camera', 'photos']
