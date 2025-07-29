@@ -194,14 +194,14 @@ export function OperatorDashboard() {
 
       setWasherData(washer);
 
-      // Load available orders
+      // Load available orders - include both 'placed' and 'unclaimed' orders
       const { data: available, error: availableError } = await supabase
         .from('orders')
         .select(`
           *,
           profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone)
         `)
-        .eq('status', 'unclaimed')
+        .in('status', ['placed', 'unclaimed'])
         .in('zip_code', washer.zip_codes)
         .order('created_at', { ascending: true });
 
@@ -209,6 +209,7 @@ export function OperatorDashboard() {
         console.error('Error loading available orders:', availableError);
       }
       setAvailableOrders((available as any) || []);
+      console.log('Loaded available orders:', (available as any) || []);
 
       // Load operator's claimed orders
       const { data: claimed, error: claimedError } = await supabase
@@ -612,6 +613,36 @@ export function OperatorDashboard() {
           </TabsContent>
         </Tabs>
 
+        {/* Claim Order Confirmation Dialog */}
+        <Dialog open={!!confirmOrder} onOpenChange={() => setConfirmOrder(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Claim Order</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to claim this order? You'll be responsible for completing all steps.
+              </DialogDescription>
+            </DialogHeader>
+            {confirmOrder && (
+              <div className="py-4">
+                <h4 className="font-semibold mb-2">Order Details:</h4>
+                <p><strong>Customer:</strong> {confirmOrder.profiles?.first_name} {confirmOrder.profiles?.last_name}</p>
+                <p><strong>Service:</strong> {confirmOrder.service_type.replace('_', ' ')}</p>
+                <p><strong>Bags:</strong> {confirmOrder.bag_count}</p>
+                <p><strong>Total:</strong> ${(confirmOrder.total_amount_cents / 100).toFixed(2)}</p>
+                <p><strong>Type:</strong> {confirmOrder.is_express ? 'Express' : 'Standard'}</p>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setConfirmOrder(null)}>
+                Cancel
+              </Button>
+              <Button onClick={handleClaimOrder}>
+                Claim Order
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Live Order Map Modal */}
         {selectedMapOrder && (
           <LiveOrderMap
@@ -627,4 +658,51 @@ export function OperatorDashboard() {
       </div>
     </div>
   );
+
+  // Add the missing claim order function
+  async function handleClaimOrder() {
+    if (!confirmOrder || !washerData) return;
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          washer_id: washerData.id,
+          status: 'claimed',
+          claimed_at: new Date().toISOString()
+        })
+        .eq('id', confirmOrder.id);
+
+      if (error) throw error;
+
+      // Send notification about order being claimed
+      try {
+        await supabase.functions.invoke('send-order-notifications', {
+          body: {
+            orderId: confirmOrder.id,
+            customerId: confirmOrder.customer_id,
+            status: 'claimed',
+            orderNumber: confirmOrder.id.substring(0, 8).toUpperCase()
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to send notification:', notificationError);
+      }
+
+      toast({
+        title: "Order Claimed",
+        description: "You have successfully claimed this order!",
+      });
+
+      setConfirmOrder(null);
+      loadDashboardData(); // Refresh the data
+    } catch (error) {
+      console.error('Error claiming order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to claim order. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }
 }
