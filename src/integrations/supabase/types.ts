@@ -332,6 +332,7 @@ export type Database = {
           status: Database["public"]["Enums"]["order_status"] | null
           step_completed_at: Json | null
           step_photos: Json | null
+          stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           total_amount_cents: number
           updated_at: string
@@ -370,6 +371,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"] | null
           step_completed_at?: Json | null
           step_photos?: Json | null
+          stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           total_amount_cents: number
           updated_at?: string
@@ -408,6 +410,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"] | null
           step_completed_at?: Json | null
           step_photos?: Json | null
+          stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           total_amount_cents?: number
           updated_at?: string
