@@ -412,7 +412,35 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
       const deliveryEnd = new Date(pickupEnd);
       deliveryEnd.setDate(deliveryEnd.getDate() + 1);
 
-      // Prepare order data
+      // Calculate total and discount amounts
+      let baseTotal = formData.bagCount * 3500; // Base amount before discount
+      
+      if (isExpress) {
+        baseTotal += 2000; // $20 express fee
+      }
+      
+      // Add laundry preference costs
+      const soapPref = laundryPreferences.find(p => p.id === formData.soapPreference);
+      if (soapPref) {
+        baseTotal += soapPref.price_cents;
+      }
+      
+      // Add shop items
+      selectedShopItems.forEach(item => {
+        baseTotal += item.price_cents * item.quantity;
+      });
+
+      let discountAmountCents = 0;
+      if (validatedPromoCode) {
+        if (validatedPromoCode.discount_type === 'percentage') {
+          discountAmountCents = baseTotal * (validatedPromoCode.discount_value / 100);
+        } else if (validatedPromoCode.discount_type === 'fixed') {
+          discountAmountCents = validatedPromoCode.discount_value * 100; // Convert dollars to cents
+        }
+      }
+
+      const totalAmountCents = Math.max(0, baseTotal - discountAmountCents);
+
       const orderData = {
         pickup_type: orderType,
         service_type: serviceType as any,
@@ -423,7 +451,8 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         special_instructions: formData.specialInstructions,
         bag_count: formData.bagCount,
         items: [{ time_window: formData.timeWindow, shop_items: selectedShopItems }],
-        total_amount_cents: calculateTotal(),
+        total_amount_cents: totalAmountCents,
+        discount_amount_cents: discountAmountCents,
         soap_preference_id: formData.soapPreference,
         wash_temp_preference_id: formData.washTempPreference,
         dry_temp_preference_id: formData.dryTempPreference,
