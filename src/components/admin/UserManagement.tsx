@@ -48,29 +48,28 @@ export function UserManagement() {
     try {
       // Load all users with owner or marketing roles
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_roles')
         .select(`
-          id,
+          role,
           user_id,
-          first_name,
-          last_name,
           created_at,
-          user_roles!inner (
-            role
+          profiles!inner (
+            first_name,
+            last_name
           )
         `)
-        .in('user_roles.role', ['owner', 'marketing']);
+        .in('role', ['owner', 'marketing']);
 
       if (error) throw error;
 
       // Transform the data to include role information
-      const userProfiles = data?.map(profile => ({
-        id: profile.user_id,
-        email: '', // We'll need to get this from the auth system or store it separately
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        role: (profile.user_roles as any)?.[0]?.role || '',
-        created_at: profile.created_at
+      const userProfiles = data?.map(userRole => ({
+        id: userRole.user_id,
+        email: '', // Email not available from profiles table
+        first_name: (userRole.profiles as any)?.first_name || '',
+        last_name: (userRole.profiles as any)?.last_name || '',
+        role: userRole.role,
+        created_at: userRole.created_at
       })) || [];
 
       setUsers(userProfiles);
