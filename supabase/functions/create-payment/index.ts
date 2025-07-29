@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Create payment function started");
+    console.log("=== CREATE PAYMENT FUNCTION START ===");
 
     // Create Supabase client using the anon key for user authentication
     const supabaseClient = createClient(
@@ -141,18 +141,22 @@ serve(async (req) => {
       console.log("User has existing orders, no referral discount applied");
     }
 
+    console.log("=== INITIALIZING STRIPE ===");
     // Check if Stripe secret key is configured
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeSecretKey || stripeSecretKey.trim() === "") {
       console.error("STRIPE_SECRET_KEY is not configured");
       throw new Error("Payment system not configured. Please contact support.");
     }
+    console.log("Stripe secret key found, length:", stripeSecretKey.length);
 
     // Initialize Stripe
     const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2023-10-16",
     });
+    console.log("Stripe initialized successfully");
 
+    console.log("=== CHECKING STRIPE CUSTOMER ===");
     // Check if a Stripe customer already exists for this user
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
@@ -168,7 +172,9 @@ serve(async (req) => {
       });
       customerId = customer.id;
     }
+    console.log("Customer ID:", customerId);
 
+    console.log("=== CREATING ORDER RECORD ===");
     // Create pending order first to get order ID for metadata
     const orderRecord = {
       customer_id: user.id,
@@ -197,6 +203,7 @@ serve(async (req) => {
       created_at: new Date().toISOString()
     };
 
+    console.log("About to insert order with data:", JSON.stringify(orderRecord, null, 2));
     const { data: order, error: orderError } = await supabaseService.from("orders").insert(orderRecord).select().single();
 
     if (orderError) {
