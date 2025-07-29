@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useCapacitor } from "@/hooks/useCapacitor";
 import { supabase } from "@/integrations/supabase/client";
+import { Elements } from '@stripe/react-stripe-js';
+import { stripePromise } from '@/lib/stripe';
+import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
 import { 
   ArrowLeft,
   ArrowRight,
@@ -56,6 +59,9 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
   const [laundryPreferences, setLaundryPreferences] = useState<any[]>([]);
   const [selectedShopItems, setSelectedShopItems] = useState<ShopItem[]>([]);
   const [showShopModal, setShowShopModal] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+  const [orderId, setOrderId] = useState('');
   const [formData, setFormData] = useState({
     pickupAddress: '',
     deliveryAddress: '',
@@ -428,9 +434,9 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         promoCode: formData.promoCode || null
       };
 
-      // Create payment session
-      console.log('Creating payment session with order data:', orderData);
-      const { data, error } = await supabase.functions.invoke('create-payment', {
+      // Create payment intent for embedded payment
+      console.log('Creating payment intent with order data:', orderData);
+      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
         body: { orderData }
       });
 
@@ -441,22 +447,15 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         throw error;
       }
 
-      if (data?.url) {
-        console.log('Opening Stripe checkout:', data.url);
-        // Open Stripe checkout in a new tab
-        window.open(data.url, '_blank');
-        
-        // Reset loading state immediately since we're opening in new tab
+      if (data?.clientSecret && data?.orderId) {
+        console.log('Payment intent created successfully');
+        setClientSecret(data.clientSecret);
+        setOrderId(data.orderId);
+        setShowPayment(true);
         setIsLoading(false);
-        
-        // Show success message
-        toast({
-          title: "Payment Opened",
-          description: "Stripe checkout opened in a new tab. Complete your payment there.",
-        });
       } else {
-        console.error('No payment URL received:', data);
-        throw new Error("Failed to create payment session - no URL received");
+        console.error('No client secret received:', data);
+        throw new Error("Failed to create payment intent");
       }
 
     } catch (error) {
@@ -469,6 +468,65 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
       setIsLoading(false);
     }
   };
+
+  const handlePaymentSuccess = () => {
+    toast({
+      title: "Payment Successful",
+      description: "Your order has been placed successfully!",
+    });
+    setShowPayment(false);
+    setClientSecret('');
+    setOrderId('');
+    onBack(); // Go back to dashboard
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive",
+    });
+  };
+
+  // Show payment form if we have a client secret
+  if (showPayment && clientSecret) {
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8 max-w-2xl">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setShowPayment(false)}
+              className="mb-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Order Review
+            </Button>
+            
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Complete Payment
+            </h1>
+            <p className="text-muted-foreground">
+              Total: ${(calculateTotal() / 100).toFixed(2)}
+            </p>
+          </div>
+
+          <Card className="border-0 shadow-soft">
+            <CardContent className="p-6">
+              <Elements stripe={stripePromise} options={{ clientSecret }}>
+                <EmbeddedPaymentForm
+                  clientSecret={clientSecret}
+                  orderId={orderId}
+                  onPaymentSuccess={handlePaymentSuccess}
+                  onPaymentError={handlePaymentError}
+                />
+              </Elements>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   const renderStepContent = () => {
     switch (currentStep) {
