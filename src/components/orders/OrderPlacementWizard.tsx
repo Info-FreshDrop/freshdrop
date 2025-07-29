@@ -294,17 +294,31 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
       };
 
       // Create payment session
+      console.log('Creating payment session with order data:', orderData);
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { orderData }
       });
 
-      if (error) throw error;
+      console.log('Payment response:', { data, error });
+
+      if (error) {
+        console.error('Payment error:', error);
+        throw error;
+      }
 
       if (data?.url) {
-        // Redirect to Stripe checkout
-        window.location.href = data.url;
+        console.log('Opening Stripe checkout:', data.url);
+        // Open Stripe checkout in a new tab
+        window.open(data.url, '_blank');
+        
+        // Show success message
+        toast({
+          title: "Redirecting to Payment",
+          description: "Opening Stripe checkout in a new tab...",
+        });
       } else {
-        throw new Error("Failed to create payment session");
+        console.error('No payment URL received:', data);
+        throw new Error("Failed to create payment session - no URL received");
       }
 
     } catch (error) {
