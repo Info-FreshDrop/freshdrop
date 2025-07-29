@@ -311,10 +311,13 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         // Open Stripe checkout in a new tab
         window.open(data.url, '_blank');
         
+        // Reset loading state immediately since we're opening in new tab
+        setIsLoading(false);
+        
         // Show success message
         toast({
-          title: "Redirecting to Payment",
-          description: "Opening Stripe checkout in a new tab...",
+          title: "Payment Opened",
+          description: "Stripe checkout opened in a new tab. Complete your payment there.",
         });
       } else {
         console.error('No payment URL received:', data);
