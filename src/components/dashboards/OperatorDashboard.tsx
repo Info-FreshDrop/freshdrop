@@ -362,11 +362,20 @@ export function OperatorDashboard() {
     if (!selectedOrder) return;
 
     try {
+      const isLastStep = stepNumber === 13; // Step 13 is the final step
+      const updateData: any = {
+        current_step: stepNumber + 1
+      };
+      
+      // If this is the final step, mark order as completed
+      if (isLastStep) {
+        updateData.status = 'completed';
+        updateData.completed_at = new Date().toISOString();
+      }
+
       const { error } = await supabase
         .from('orders')
-        .update({
-          current_step: stepNumber + 1
-        })
+        .update(updateData)
         .eq('id', selectedOrder.id);
 
       if (error) throw error;
@@ -374,13 +383,22 @@ export function OperatorDashboard() {
       // Update local state
       setSelectedOrder({
         ...selectedOrder,
-        current_step: stepNumber + 1
+        current_step: stepNumber + 1,
+        status: isLastStep ? 'completed' : selectedOrder.status,
+        completed_at: isLastStep ? new Date().toISOString() : selectedOrder.completed_at
       });
 
       toast({
-        title: "Step Completed",
-        description: `Step ${stepNumber} completed successfully!`
+        title: isLastStep ? "Order Completed!" : "Step Completed",
+        description: isLastStep 
+          ? "Order has been successfully completed and delivered!" 
+          : `Step ${stepNumber} completed successfully!`
       });
+
+      // If order is completed, close the detailed view and refresh
+      if (isLastStep) {
+        setSelectedOrder(null);
+      }
 
       loadDashboardData(); // Refresh data
     } catch (error) {
