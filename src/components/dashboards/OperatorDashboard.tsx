@@ -270,6 +270,128 @@ export function OperatorDashboard() {
     setShowLiveMap(true);
   };
 
+  const getWorkflowSteps = () => [
+    { title: "Drive to Pickup Location", description: "Navigate to customer's pickup address", requiresPhoto: false, instructions: "Drive safely to the pickup location and notify customer of arrival" },
+    { title: "Confirm Pickup Location", description: "Take photo of pickup location and items", requiresPhoto: true, instructions: "Take a photo showing the pickup location and any laundry bags/items" },
+    { title: "Collect Laundry Items", description: "Gather all laundry items from customer", requiresPhoto: false, instructions: "Verify bag count matches order and collect all items. Check for any special instructions." },
+    { title: "Pre-Transport Photo", description: "Document items before transport", requiresPhoto: true, instructions: "Take a photo of all collected items in your vehicle before leaving pickup location" },
+    { title: "Transport to Facility", description: "Drive to washing facility", requiresPhoto: false, instructions: "Transport items safely to your washing facility" },
+    { title: "Arrival at Facility", description: "Document arrival at washing facility", requiresPhoto: true, instructions: "Take a photo showing arrival at your washing facility with the items" },
+    { title: "Pre-Wash Sorting", description: "Sort items by color and fabric type", requiresPhoto: true, instructions: "Sort all items by color, fabric type, and washing requirements. Take photo of sorted piles." },
+    { title: "Start Washing Process", description: "Begin washing cycle", requiresPhoto: false, instructions: "Start washing with appropriate settings for each sorted group" },
+    { title: "Wash Complete", description: "Washing cycle finished", requiresPhoto: true, instructions: "Take photo of clean items after washing is complete" },
+    { title: "Drying Process", description: "Dry items according to care instructions", requiresPhoto: false, instructions: "Dry items using appropriate heat settings per care labels" },
+    { title: "Folding & Preparation", description: "Fold and organize clean items", requiresPhoto: true, instructions: "Carefully fold all items and organize by type. Take photo of finished folding." },
+    { title: "Quality Check & Packaging", description: "Final quality check and packaging", requiresPhoto: true, instructions: "Inspect all items for quality, package neatly, and prepare for delivery" },
+    { title: "Delivery Complete", description: "Deliver items to customer", requiresPhoto: true, instructions: "Deliver to customer, take photo of handoff or secure delivery location" }
+  ];
+
+  const handleTakePhoto = (stepNumber: number) => {
+    setPhotoStep(stepNumber);
+    setShowPhotoUpload(true);
+  };
+
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !selectedOrder || !photoStep) return;
+
+    setUploading(true);
+    try {
+      // Create unique filename
+      const timestamp = Date.now();
+      const fileName = `order_${selectedOrder.id}_step_${photoStep}_${timestamp}.jpg`;
+
+      // Upload to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from('order-photos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('order-photos')
+        .getPublicUrl(fileName);
+
+      // Update order with photo and step progress
+      const currentStepPhotos = selectedOrder.step_photos || {};
+      const updatedStepPhotos = {
+        ...currentStepPhotos,
+        [`step_${photoStep}`]: publicUrl
+      };
+
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({
+          step_photos: updatedStepPhotos,
+          current_step: photoStep + 1
+        })
+        .eq('id', selectedOrder.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setSelectedOrder({
+        ...selectedOrder,
+        step_photos: updatedStepPhotos,
+        current_step: photoStep + 1
+      });
+
+      toast({
+        title: "Photo Uploaded",
+        description: `Step ${photoStep} completed successfully!`
+      });
+
+      setShowPhotoUpload(false);
+      setPhotoStep(null);
+      loadDashboardData(); // Refresh data
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload photo. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const completeStep = async (stepNumber: number) => {
+    if (!selectedOrder) return;
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          current_step: stepNumber + 1
+        })
+        .eq('id', selectedOrder.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setSelectedOrder({
+        ...selectedOrder,
+        current_step: stepNumber + 1
+      });
+
+      toast({
+        title: "Step Completed",
+        description: `Step ${stepNumber} completed successfully!`
+      });
+
+      loadDashboardData(); // Refresh data
+    } catch (error) {
+      console.error('Error completing step:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete step. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -653,13 +775,13 @@ export function OperatorDashboard() {
           </DialogContent>
         </Dialog>
 
-        {/* Order Workflow Dialog */}
+        {/* Order Workflow Dialog - 13 Steps */}
         <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Order Workflow</DialogTitle>
+              <DialogTitle>13-Step Order Workflow</DialogTitle>
               <DialogDescription>
-                Complete each step in order to process this order
+                Complete each step in order and take photos when required
               </DialogDescription>
             </DialogHeader>
             {selectedOrder && (
@@ -687,72 +809,149 @@ export function OperatorDashboard() {
                 </div>
 
                 {/* Workflow Steps */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold">Workflow Steps</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">13-Step Workflow Progress</h4>
+                    <Badge variant="outline">
+                      Step {selectedOrder.current_step || 1} of 13
+                    </Badge>
+                  </div>
                   
-                  {/* Step 1: Pickup */}
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium">Step 1: Pickup</h5>
-                      <Badge variant={selectedOrder.status === 'pickup_completed' ? 'default' : 'secondary'}>
-                        {selectedOrder.status === 'pickup_completed' ? 'Completed' : 'Pending'}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Pick up laundry from customer location
-                    </p>
-                    {selectedOrder.pickup_address && (
-                      <p className="text-sm"><strong>Address:</strong> {selectedOrder.pickup_address}</p>
-                    )}
+                  {/* Progress Bar */}
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all" 
+                      style={{ width: `${((selectedOrder.current_step || 1) / 13) * 100}%` }}
+                    />
                   </div>
 
-                  {/* Step 2: Processing */}
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium">Step 2: Processing</h5>
-                      <Badge variant={['washing', 'drying', 'folding'].includes(selectedOrder.status) ? 'default' : 'secondary'}>
-                        {['washing', 'drying', 'folding'].includes(selectedOrder.status) ? 'In Progress' : 'Pending'}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Wash, dry, and fold the laundry according to service type
-                    </p>
+                  {/* Individual Steps */}
+                  <div className="grid grid-cols-1 gap-3">
+                    {getWorkflowSteps().map((step, index) => {
+                      const stepNumber = index + 1;
+                      const currentStep = selectedOrder.current_step || 1;
+                      const isCompleted = stepNumber < currentStep;
+                      const isCurrent = stepNumber === currentStep;
+                      const stepPhoto = selectedOrder.step_photos?.[`step_${stepNumber}`];
+                      
+                      return (
+                        <div 
+                          key={stepNumber}
+                          className={`border rounded-lg p-4 ${
+                            isCompleted ? 'bg-green-50 border-green-200' : 
+                            isCurrent ? 'bg-blue-50 border-blue-200' : 
+                            'bg-muted/30'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                                isCompleted ? 'bg-green-500 text-white' :
+                                isCurrent ? 'bg-blue-500 text-white' :
+                                'bg-muted text-muted-foreground'
+                              }`}>
+                                {isCompleted ? <Check className="h-4 w-4" /> : stepNumber}
+                              </div>
+                              <div>
+                                <h5 className="font-medium">{step.title}</h5>
+                                <p className="text-sm text-muted-foreground">{step.description}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {step.requiresPhoto && (
+                                <>
+                                  {stepPhoto ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-10 h-10 rounded overflow-hidden border">
+                                        <img 
+                                          src={stepPhoto} 
+                                          alt={`Step ${stepNumber} photo`}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                      <CheckCircle className="h-4 w-4 text-green-500" />
+                                    </div>
+                                  ) : isCurrent ? (
+                                    <Button 
+                                      size="sm" 
+                                      onClick={() => handleTakePhoto(stepNumber)}
+                                      disabled={uploading}
+                                    >
+                                      <Camera className="h-4 w-4 mr-1" />
+                                      {uploading ? 'Uploading...' : 'Take Photo'}
+                                    </Button>
+                                  ) : (
+                                    <div className="flex items-center gap-1 text-muted-foreground">
+                                      <Camera className="h-4 w-4" />
+                                      <span className="text-xs">Photo Required</span>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {!step.requiresPhoto && isCurrent && (
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => completeStep(stepNumber)}
+                                >
+                                  Complete Step
+                                </Button>
+                              )}
+                              {isCompleted && (
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                              )}
+                            </div>
+                          </div>
+                          
+                          {step.instructions && isCurrent && (
+                            <div className="mt-3 p-3 bg-blue-100 rounded text-sm">
+                              <p><strong>Instructions:</strong> {step.instructions}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-
-                  {/* Step 3: Delivery */}
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium">Step 3: Delivery</h5>
-                      <Badge variant={selectedOrder.status === 'delivered' ? 'default' : 'secondary'}>
-                        {selectedOrder.status === 'delivered' ? 'Completed' : 'Pending'}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Deliver clean laundry to customer
-                    </p>
-                    {selectedOrder.delivery_address && (
-                      <p className="text-sm"><strong>Address:</strong> {selectedOrder.delivery_address}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Current Status */}
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h5 className="font-medium mb-2">Current Status</h5>
-                  <p className="text-sm">
-                    Status: <span className="font-medium capitalize">{selectedOrder.status.replace('_', ' ')}</span>
-                  </p>
-                  {selectedOrder.claimed_at && (
-                    <p className="text-sm text-muted-foreground">
-                      Claimed: {new Date(selectedOrder.claimed_at).toLocaleString()}
-                    </p>
-                  )}
                 </div>
               </div>
             )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setSelectedOrder(null)}>
                 Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Photo Upload Dialog */}
+        <Dialog open={showPhotoUpload} onOpenChange={setShowPhotoUpload}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Take Step Photo</DialogTitle>
+              <DialogDescription>
+                Take a photo for step {photoStep}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handlePhotoUpload}
+              />
+              <Button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full"
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                {uploading ? 'Uploading Photo...' : 'Take Photo'}
+              </Button>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowPhotoUpload(false)}>
+                Cancel
               </Button>
             </DialogFooter>
           </DialogContent>
