@@ -259,7 +259,7 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
 
   const taskSteps = [
     "Go to pickup location",
-    "Locate laundry bags",
+    "Locate laundry bags", 
     "Take photo of bags",
     "Begin wash & fold",
     "Complete washing",
@@ -334,11 +334,29 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
                     }`}>
                       {index < taskStep ? '✓' : index + 1}
                     </div>
-                    <span className={`${
-                      index === taskStep ? 'font-semibold' : ''
-                    }`}>
-                      {step}
-                    </span>
+                    <div className="flex items-center justify-between w-full">
+                      <span className={`${
+                        index === taskStep ? 'font-semibold' : ''
+                      }`}>
+                        {step}
+                      </span>
+                      {index === 1 && taskStep === 1 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const address = selectedOrder?.pickup_type === 'locker' 
+                              ? selectedOrder?.lockers?.address 
+                              : selectedOrder?.pickup_address;
+                            if (address) {
+                              window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank');
+                            }
+                          }}
+                        >
+                          Navigate
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -393,6 +411,9 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
                         }
                         if (taskStep === 5) {
                           updateOrderStatus(selectedOrder.id, 'returned');
+                        }
+                        if (taskStep === 6) {
+                          updateOrderStatus(selectedOrder.id, 'completed');
                         }
                       }
                     }}

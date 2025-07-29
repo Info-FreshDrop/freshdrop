@@ -52,6 +52,7 @@ export function CustomerDashboard() {
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [showClothesShop, setShowClothesShop] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  
   const [activeTab, setActiveTab] = useState('orders');
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);

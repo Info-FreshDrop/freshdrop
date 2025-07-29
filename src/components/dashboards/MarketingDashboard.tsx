@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { NotificationSystem } from "@/components/admin/NotificationSystem";
+import { PromoCodeManagement } from "@/components/admin/PromoCodeManagement";
+import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { 
   Megaphone, 
   Mail, 
@@ -17,10 +19,18 @@ import {
 
 export function MarketingDashboard() {
   const { signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'analytics'>('dashboard');
 
   if (currentView === 'notifications') {
     return <NotificationSystem onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'promos') {
+    return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'analytics') {
+    return <AnalyticsDashboard onBack={() => setCurrentView('dashboard')} />;
   }
 
   return (
@@ -137,14 +147,26 @@ export function MarketingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="hero" className="w-full">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('promos')}
+                >
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Create Promo Code
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('promos')}
+                >
                   Active Promotions
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('promos')}
+                >
                   Redemption Reports
                 </Button>
               </div>
@@ -192,13 +214,25 @@ export function MarketingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('analytics')}
+                >
                   Campaign Performance
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('analytics')}
+                >
                   Customer Engagement
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('analytics')}
+                >
                   Revenue Attribution
                 </Button>
               </div>
