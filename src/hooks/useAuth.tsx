@@ -26,6 +26,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log('Auth effect started');
     
+    const fetchUserRole = async (userId: string) => {
+      try {
+        const { data, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId);
+        
+        if (!roleError && data && data.length > 0) {
+          const roles = data.map(r => r.role);
+          let primaryRole: UserRole = 'customer';
+          
+          if (roles.includes('owner')) {
+            primaryRole = 'owner';
+          } else if (roles.includes('marketing')) {
+            primaryRole = 'marketing';
+          } else if (roles.includes('operator')) {
+            primaryRole = 'operator';
+          } else if (roles.includes('washer')) {
+            primaryRole = 'washer';
+          }
+          
+          setUserRole(primaryRole);
+          console.log('User role set to:', primaryRole);
+          return primaryRole;
+        }
+      } catch (roleError) {
+        console.error('Role fetch error:', roleError);
+      }
+      
+      // Fallback to customer role
+      setUserRole('customer');
+      return 'customer';
+    };
+    
     const initAuth = async () => {
       try {
         // Get current session
@@ -36,37 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Set default role first
-          setUserRole('customer');
-          
-          // Try to fetch actual role
-          try {
-            const { data, error: roleError } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', session.user.id);
-            
-            if (!roleError && data && data.length > 0) {
-              const roles = data.map(r => r.role);
-              let primaryRole: UserRole = 'customer';
-              
-              if (roles.includes('owner')) {
-                primaryRole = 'owner';
-              } else if (roles.includes('marketing')) {
-                primaryRole = 'marketing';
-              } else if (roles.includes('operator')) {
-                primaryRole = 'operator';
-              } else if (roles.includes('washer')) {
-                primaryRole = 'washer';
-              }
-              
-              setUserRole(primaryRole);
-              console.log('User role:', primaryRole);
-            }
-          } catch (roleError) {
-            console.error('Role fetch error:', roleError);
-            // Keep default customer role
-          }
+          await fetchUserRole(session.user.id);
         } else {
           setUserRole(null);
         }
@@ -90,7 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          setUserRole('customer'); // Default first
+          // Fetch the actual user role from database
+          await fetchUserRole(session.user.id);
         } else {
           setUserRole(null);
         }
