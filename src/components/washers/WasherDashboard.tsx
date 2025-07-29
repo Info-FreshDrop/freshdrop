@@ -400,6 +400,7 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
                     className="w-full"
                     onClick={() => {
                       if (taskStep === taskSteps.length - 1) {
+                        // This is the final step (step 13) - mark as completed
                         updateOrderStatus(selectedOrder.id, 'completed');
                       } else {
                         setTaskStep(prev => prev + 1);
@@ -412,9 +413,7 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
                         if (taskStep === 5) {
                           updateOrderStatus(selectedOrder.id, 'returned');
                         }
-                        if (taskStep === 6) {
-                          updateOrderStatus(selectedOrder.id, 'completed');
-                        }
+                        // Don't mark as completed until final step
                       }
                     }}
                   >

@@ -35,6 +35,7 @@ import {
 import { ServiceAreaModal } from './ServiceAreaModal';
 import { LiveOrderMap } from '../orders/LiveOrderMap';
 import { OrdersOverviewMap } from '../orders/OrdersOverviewMap';
+import { OperatorProfile } from '../customer/OperatorProfile';
 
 interface Order {
   id: string;
@@ -690,58 +691,8 @@ export function OperatorDashboard() {
             )}
           </TabsContent>
 
-          {/* Account Tab */}
           <TabsContent value="account" className="space-y-4">
-            <div className="text-center mb-4">
-              <h2 className="text-lg font-semibold">Account Settings</h2>
-              <p className="text-sm text-muted-foreground">Manage your profile and preferences</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <p className="font-medium">Name</p>
-                    <p className="text-muted-foreground">
-                      {operatorProfile?.first_name} {operatorProfile?.last_name}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Phone</p>
-                    <p className="text-muted-foreground">{operatorProfile?.phone}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Service Areas</p>
-                    <p className="text-muted-foreground">
-                      {washerData?.zip_codes?.join(', ') || 'None assigned'}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Status Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Online Status</p>
-                      <p className="text-sm text-muted-foreground">
-                        Control your availability for new orders
-                      </p>
-                    </div>
-                    <Switch
-                      checked={washerData.is_online}
-                      disabled={true}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <OperatorProfile onBack={() => setActiveTab('my-orders')} />
           </TabsContent>
         </Tabs>
 
