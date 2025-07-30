@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { OrderHistory } from "@/components/orders/OrderHistory";
@@ -46,6 +48,7 @@ interface Order {
   delivery_photo_url?: string;
   step_photos?: any;
   current_step?: number;
+  customer_acknowledged?: boolean;
   lockers?: {
     name: string;
     address: string;
@@ -74,6 +77,7 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showLiveMap, setShowLiveMap] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   console.log('OrderTracking component mounted, user:', user?.id, 'selectedOrderId:', selectedOrderId);
   console.log('selectedOrder state:', selectedOrder);
@@ -624,34 +628,125 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
                     />
                   </div>
 
-                  {/* Order Actions */}
-                  <div className="mt-4 flex gap-2">
-                    {/* Messaging */}
-                    {order.washer_id && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedOrderForMessaging(order)}
-                        className="flex items-center gap-2"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                        Message Operator
-                      </Button>
-                    )}
-                    
-                    {/* Order Cancellation */}
-                    {['placed', 'unclaimed', 'claimed'].includes(order.status) && (
-                      <OrderCancellation
-                        orderId={order.id}
-                        orderStatus={order.status}
-                        totalAmount={order.total_amount_cents || 0}
-                        onCancelled={() => {
-                          loadOrders();
-                          onOrderUpdate?.();
-                        }}
-                      />
-                    )}
-                  </div>
+                   {/* Completed Order Section */}
+                   {order.status === 'completed' && (
+                     <div className="mt-4 pt-4 border-t space-y-4">
+                       <Alert className="border-green-200 bg-green-50">
+                         <CheckCircle className="h-4 w-4 text-green-600" />
+                         <AlertTitle className="text-green-800">Order Completed!</AlertTitle>
+                         <AlertDescription className="text-green-700">
+                           Your laundry has been delivered successfully. Thank you for choosing FreshDrop!
+                         </AlertDescription>
+                       </Alert>
+                       
+                       {/* Delivery Photo Display */}
+                       {(order.delivery_photo_url || order.step_photos?.step_12) && (
+                         <div className="bg-white rounded-lg p-4 border shadow-sm">
+                           <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                             <ImageIcon className="h-4 w-4" />
+                             Delivery Confirmation Photo
+                           </h4>
+                           <div className="space-y-3">
+                             {order.delivery_photo_url && (
+                               <div className="relative">
+                                 <img 
+                                   src={order.delivery_photo_url} 
+                                   alt="Delivery confirmation"
+                                   className="w-full h-48 sm:h-64 object-cover rounded-lg border"
+                                 />
+                               </div>
+                             )}
+                             {order.step_photos?.step_12 && !order.delivery_photo_url && (
+                               <div className="relative">
+                                 <img 
+                                   src={order.step_photos.step_12} 
+                                   alt="Drop-off confirmation"
+                                   className="w-full h-48 sm:h-64 object-cover rounded-lg border"
+                                 />
+                               </div>
+                             )}
+                           </div>
+                         </div>
+                       )}
+                       
+                       {/* Clear Order Button */}
+                       {!order.customer_acknowledged && (order.delivery_photo_url || order.step_photos?.step_12) && (
+                         <div className="bg-white rounded-lg p-4 border shadow-sm">
+                           <p className="text-sm text-gray-600 mb-3">
+                             Once you've reviewed your delivered laundry and are satisfied with the service, you can clear this order to move it to your history.
+                           </p>
+                           <Button
+                             onClick={async () => {
+                               try {
+                                 const { error } = await supabase
+                                   .from('orders')
+                                   .update({ customer_acknowledged: true })
+                                   .eq('id', order.id);
+                                 
+                                 if (error) throw error;
+                                 
+                                 toast({
+                                   title: "Order Cleared",
+                                   description: "Order has been moved to your history."
+                                 });
+                                 
+                                 if (onOrderUpdate) {
+                                   onOrderUpdate();
+                                 }
+                                 
+                                 // Go back to dashboard after clearing
+                                 if (onBack) {
+                                   onBack();
+                                 }
+                               } catch (error) {
+                                 console.error('Error acknowledging order:', error);
+                                 toast({
+                                   title: "Error",
+                                   description: "Failed to clear order. Please try again.",
+                                   variant: "destructive"
+                                 });
+                               }
+                             }}
+                             className="w-full bg-green-600 hover:bg-green-700"
+                           >
+                             <CheckCircle className="h-4 w-4 mr-2" />
+                             Clear Order & Move to History
+                           </Button>
+                         </div>
+                       )}
+                     </div>
+                   )}
+
+                   {/* Order Actions */}
+                   {order.status !== 'completed' && (
+                     <div className="mt-4 flex gap-2">
+                       {/* Messaging */}
+                       {order.washer_id && (
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => setSelectedOrderForMessaging(order)}
+                           className="flex items-center gap-2"
+                         >
+                           <MessageCircle className="h-4 w-4" />
+                           Message Operator
+                         </Button>
+                       )}
+                       
+                       {/* Order Cancellation */}
+                       {['placed', 'unclaimed', 'claimed'].includes(order.status) && (
+                         <OrderCancellation
+                           orderId={order.id}
+                           orderStatus={order.status}
+                           totalAmount={order.total_amount_cents || 0}
+                           onCancelled={() => {
+                             loadOrders();
+                             onOrderUpdate?.();
+                           }}
+                         />
+                       )}
+                     </div>
+                   )}
                 </CardContent>
               </Card>
             ))}

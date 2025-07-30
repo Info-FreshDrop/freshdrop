@@ -102,12 +102,13 @@ export function CustomerDashboard() {
       if (error) throw error;
       
       const allOrders = data || [];
-      // Separate active orders from completed/canceled ones
+      // Separate active orders from acknowledged completed ones
       const activeOrders = allOrders.filter(order => 
-        !['completed', 'cancelled'].includes(order.status)
+        !['completed', 'cancelled'].includes(order.status) || 
+        (order.status === 'completed' && !order.customer_acknowledged)
       );
       const completedOrders = allOrders.filter(order => 
-        ['completed', 'cancelled'].includes(order.status)
+        (['completed', 'cancelled'].includes(order.status)) && order.customer_acknowledged
       );
       
       setOrders(activeOrders);
@@ -306,7 +307,7 @@ export function CustomerDashboard() {
                               <Package className="h-3 w-3 mr-1" />
                               Track Order
                             </Button>
-                            {order.status === 'completed' && (
+                            {order.status === 'completed' && !order.customer_acknowledged && (
                               <>
                                 <Button
                                   variant="outline"
@@ -333,6 +334,30 @@ export function CustomerDashboard() {
                                   Rate
                                 </Button>
                               </>
+                            )}
+                            {order.status === 'completed' && !order.customer_acknowledged && order.delivery_photo_url && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="w-full text-xs mt-2"
+                                onClick={async () => {
+                                  try {
+                                    const { error } = await supabase
+                                      .from('orders')
+                                      .update({ customer_acknowledged: true })
+                                      .eq('id', order.id);
+                                    
+                                    if (error) throw error;
+                                    
+                                    loadOrders(); // Refresh the orders list
+                                  } catch (error) {
+                                    console.error('Error acknowledging order:', error);
+                                  }
+                                }}
+                              >
+                                <Package className="h-3 w-3 mr-1" />
+                                Clear Order
+                              </Button>
                             )}
                           </div>
                         </CardContent>

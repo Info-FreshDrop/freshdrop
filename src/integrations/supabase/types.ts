@@ -349,6 +349,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           current_step: number | null
+          customer_acknowledged: boolean | null
           customer_id: string
           delivery_address: string | null
           delivery_photo_url: string | null
@@ -388,6 +389,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           current_step?: number | null
+          customer_acknowledged?: boolean | null
           customer_id: string
           delivery_address?: string | null
           delivery_photo_url?: string | null
@@ -427,6 +429,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           current_step?: number | null
+          customer_acknowledged?: boolean | null
           customer_id?: string
           delivery_address?: string | null
           delivery_photo_url?: string | null
