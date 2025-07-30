@@ -279,13 +279,149 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
           <Card className="border-0 shadow-soft">
             <CardContent className="p-12 text-center">
               <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <h3 className="text-xl font-semibold mb-2">No Orders Yet</h3>
+              <h3 className="text-xl font-semibold mb-2">
+                {selectedOrderId ? "Order Not Found" : "No Orders Yet"}
+              </h3>
               <p className="text-muted-foreground mb-4">
-                You haven't placed any orders yet. Start your first order!
+                {selectedOrderId 
+                  ? "This order could not be found or may have been removed." 
+                  : "You haven't placed any orders yet. Start your first order!"
+                }
               </p>
               <Button variant="hero" onClick={onBack}>
-                Place Your First Order
+                {selectedOrderId ? "Back to Dashboard" : "Place Your First Order"}
               </Button>
+            </CardContent>
+          </Card>
+        ) : selectedOrderId && selectedOrder ? (
+          // Show detailed view for selected order
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    {selectedOrder.pickup_type === 'locker' ? (
+                      <MapPin className="h-5 w-5 text-primary" />
+                    ) : (
+                      <Truck className="h-5 w-5 text-primary" />
+                    )}
+                    Order #{selectedOrder.id.slice(-8)}
+                    {selectedOrder.is_express && (
+                      <Badge variant="secondary">Express</Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    Placed on {formatDate(selectedOrder.created_at)}
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={getStatusColor(selectedOrder.status)}>
+                    {getStatusIcon(selectedOrder.status)}
+                    <span className="ml-1 capitalize">
+                      {selectedOrder.status.replace('_', ' ')}
+                    </span>
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Service Details</h4>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>
+                      <strong>Type:</strong> {selectedOrder.pickup_type === 'locker' ? 'Locker Drop-off' : 'Pickup & Delivery'}
+                    </p>
+                    <p>
+                      <strong>Service:</strong> {selectedOrder.service_type.replace('_', ' ')}
+                    </p>
+                    <p>
+                      <strong>Bags:</strong> {selectedOrder.bag_count}
+                    </p>
+                    <p>
+                      <strong>Total:</strong> ${(selectedOrder.total_amount_cents / 100).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-medium">Location & Timeline</h4>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    {selectedOrder.pickup_type === 'locker' && selectedOrder.lockers ? (
+                      <p>
+                        <strong>Locker:</strong> {selectedOrder.lockers.name}
+                      </p>
+                    ) : (
+                      <p>
+                        <strong>Pickup:</strong> {selectedOrder.pickup_address}
+                      </p>
+                    )}
+                    
+                    {selectedOrder.pickup_window_start && (
+                      <p>
+                        <strong>Pickup Window:</strong> {formatDate(selectedOrder.pickup_window_start)}
+                        {selectedOrder.pickup_window_end && ` - ${formatDate(selectedOrder.pickup_window_end)}`}
+                      </p>
+                    )}
+                    
+                    {getDeliveryEstimate(selectedOrder) && (
+                      <p>
+                        <strong>Delivery:</strong> {getDeliveryEstimate(selectedOrder)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {selectedOrder.special_instructions && (
+                <div className="mt-4 p-3 bg-muted rounded-lg">
+                  <h5 className="font-medium text-sm mb-1">Special Instructions</h5>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedOrder.special_instructions}
+                  </p>
+                </div>
+              )}
+
+              {/* Order Progress */}
+              <div className="mt-4 pt-4 border-t">
+                <OrderStatusProgress 
+                  status={selectedOrder.status} 
+                  currentStep={selectedOrder.current_step}
+                  operatorName={selectedOrder.washers?.profiles ? 
+                    `${selectedOrder.washers.profiles.first_name || ''} ${selectedOrder.washers.profiles.last_name || ''}`.trim() :
+                    undefined
+                  }
+                />
+              </div>
+
+              {/* Order Actions */}
+              <div className="mt-4 flex gap-2">
+                {/* Messaging */}
+                {selectedOrder.washers && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedOrderForMessaging(selectedOrder)}
+                    className="flex items-center gap-2"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Message Operator
+                  </Button>
+                )}
+                
+                {/* Order Cancellation */}
+                {['placed', 'unclaimed', 'claimed'].includes(selectedOrder.status) && (
+                  <OrderCancellation
+                    orderId={selectedOrder.id}
+                    orderStatus={selectedOrder.status}
+                    totalAmount={selectedOrder.total_amount_cents || 0}
+                    onCancelled={() => {
+                      loadOrders();
+                      onOrderUpdate?.();
+                    }}
+                  />
+                )}
+              </div>
             </CardContent>
           </Card>
         ) : (
