@@ -15,9 +15,6 @@ import { WasherDashboard } from "./washers/WasherDashboard";
 import { FullScreenLoader } from "./LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Smartphone } from "lucide-react";
-import { Link } from "react-router-dom";
 
 export function Homepage() {
   const [showOperatorLogin, setShowOperatorLogin] = useState(false);
@@ -120,28 +117,6 @@ export function Homepage() {
       <FAQSection />
       <OperatorApplication />
       
-      {/* App Store Section */}
-      <section className="py-12 px-6 bg-primary/5">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="p-6 bg-background rounded-xl border shadow-lg">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Smartphone className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-bold text-primary">Ready for Mobile App Stores</h3>
-            </div>
-            <p className="text-muted-foreground mb-6">
-              FreshDrop is production-ready for iOS App Store and Google Play Store submission.
-              Complete with native capabilities, professional design, and all required assets.
-            </p>
-            <Link to="/mobile-test">
-              <Button variant="outline" className="gap-2">
-                <Smartphone className="h-4 w-4" />
-                View App Store Checklist
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Support Section - Moved to bottom */}
       <section className="py-12 px-6 bg-muted/20">
         <div className="max-w-4xl mx-auto text-center">
