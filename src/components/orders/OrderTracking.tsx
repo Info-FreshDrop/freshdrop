@@ -9,6 +9,7 @@ import { OrderHistory } from "@/components/orders/OrderHistory";
 import { OrderStatusProgress } from "@/components/customer/OrderStatusProgress";
 import { OrderCancellation } from "@/components/customer/OrderCancellation";
 import { OrderMessaging } from "@/components/customer/OrderMessaging";
+import { LiveOrderMap } from "@/components/orders/LiveOrderMap";
 import { 
   Package, 
   Clock, 
@@ -70,6 +71,7 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<Order | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showLiveMap, setShowLiveMap] = useState(false);
   const { user } = useAuth();
 
   console.log('OrderTracking component mounted, user:', user?.id, 'selectedOrderId:', selectedOrderId);
@@ -238,6 +240,27 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
     return null;
   };
 
+  // Check if we should show live map for pickup/delivery phases
+  const shouldShowMap = (order: Order) => {
+    if (!order.current_step) return false;
+    
+    // Show map during pickup (steps 1-6) or delivery (steps 10-12)
+    return (order.current_step >= 1 && order.current_step <= 6) || 
+           (order.current_step >= 10 && order.current_step <= 12) ||
+           ['claimed', 'out_for_delivery'].includes(order.status);
+  };
+
+  const getMapTitle = (order: Order) => {
+    if (!order.current_step) return "Live Tracking";
+    
+    if (order.current_step >= 1 && order.current_step <= 6) {
+      return "Pickup in Progress";
+    } else if (order.current_step >= 10 && order.current_step <= 12) {
+      return "Out for Delivery";
+    }
+    return "Live Tracking";
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-wave flex items-center justify-center">
@@ -297,136 +320,188 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
             </CardContent>
           </Card>
         ) : selectedOrderId && selectedOrder ? (
-          // Show detailed view for selected order
-          <Card className="border-0 shadow-soft">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {selectedOrder.pickup_type === 'locker' ? (
-                      <MapPin className="h-5 w-5 text-primary" />
-                    ) : (
-                      <Truck className="h-5 w-5 text-primary" />
-                    )}
-                    Order #{selectedOrder.id.slice(-8)}
-                    {selectedOrder.is_express && (
-                      <Badge variant="secondary">Express</Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription>
-                    Placed on {formatDate(selectedOrder.created_at)}
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge className={getStatusColor(selectedOrder.status)}>
-                    {getStatusIcon(selectedOrder.status)}
-                    <span className="ml-1 capitalize">
-                      {selectedOrder.status.replace('_', ' ')}
-                    </span>
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Service Details</h4>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p>
-                      <strong>Type:</strong> {selectedOrder.pickup_type === 'locker' ? 'Locker Drop-off' : 'Pickup & Delivery'}
-                    </p>
-                    <p>
-                      <strong>Service:</strong> {selectedOrder.service_type.replace('_', ' ')}
-                    </p>
-                    <p>
-                      <strong>Bags:</strong> {selectedOrder.bag_count}
-                    </p>
-                    <p>
-                      <strong>Total:</strong> ${(selectedOrder.total_amount_cents / 100).toFixed(2)}
-                    </p>
+          // DoorDash-style full-screen tracking view for selected order
+          <div className="space-y-6">
+            {/* Live Map Section - Show only during pickup/delivery */}
+            {shouldShowMap(selectedOrder) && selectedOrder.pickup_type === 'pickup_delivery' && (
+              <Card className="border-0 shadow-soft overflow-hidden">
+                <div className="aspect-video bg-gradient-to-br from-primary/5 to-secondary/5 relative">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Button
+                      onClick={() => setShowLiveMap(true)}
+                      className="bg-primary/90 backdrop-blur-sm hover:bg-primary text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2"
+                    >
+                      <MapPin className="h-5 w-5" />
+                      View Live Map - {getMapTitle(selectedOrder)}
+                    </Button>
+                  </div>
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      Live Tracking Active
+                    </div>
                   </div>
                 </div>
+              </Card>
+            )}
 
-                <div className="space-y-2">
-                  <h4 className="font-medium">Location & Timeline</h4>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    {selectedOrder.pickup_type === 'locker' && selectedOrder.lockers ? (
-                      <p>
-                        <strong>Locker:</strong> {selectedOrder.lockers.name}
-                      </p>
-                    ) : (
-                      <p>
-                        <strong>Pickup:</strong> {selectedOrder.pickup_address}
-                      </p>
-                    )}
-                    
-                    {selectedOrder.pickup_window_start && (
-                      <p>
-                        <strong>Pickup Window:</strong> {formatDate(selectedOrder.pickup_window_start)}
-                        {selectedOrder.pickup_window_end && ` - ${formatDate(selectedOrder.pickup_window_end)}`}
-                      </p>
-                    )}
-                    
-                    {getDeliveryEstimate(selectedOrder) && (
-                      <p>
-                        <strong>Delivery:</strong> {getDeliveryEstimate(selectedOrder)}
-                      </p>
-                    )}
+            {/* Enhanced Status Card */}
+            <Card className="border-0 shadow-soft">
+              <CardHeader className="pb-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-2xl">
+                      {selectedOrder.pickup_type === 'locker' ? (
+                        <MapPin className="h-6 w-6 text-primary" />
+                      ) : (
+                        <Truck className="h-6 w-6 text-primary" />
+                      )}
+                      Order #{selectedOrder.id.slice(-8)}
+                      {selectedOrder.is_express && (
+                        <Badge variant="secondary" className="text-sm">Express</Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription className="text-base mt-1">
+                      Placed on {formatDate(selectedOrder.created_at)}
+                    </CardDescription>
+                  </div>
+                  <div className="text-right">
+                    <Badge className={`${getStatusColor(selectedOrder.status)} text-sm px-3 py-1`}>
+                      {getStatusIcon(selectedOrder.status)}
+                      <span className="ml-2 capitalize">
+                        {selectedOrder.status.replace('_', ' ')}
+                      </span>
+                    </Badge>
                   </div>
                 </div>
-              </div>
-
-              {selectedOrder.special_instructions && (
-                <div className="mt-4 p-3 bg-muted rounded-lg">
-                  <h5 className="font-medium text-sm mb-1">Special Instructions</h5>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedOrder.special_instructions}
-                  </p>
-                </div>
-              )}
-
-              {/* Order Progress */}
-              <div className="mt-4 pt-4 border-t">
-                <OrderStatusProgress 
-                  status={selectedOrder.status} 
-                  currentStep={selectedOrder.current_step}
-                  operatorName={selectedOrder.washers?.profiles ? 
-                    `${selectedOrder.washers.profiles.first_name || ''} ${selectedOrder.washers.profiles.last_name || ''}`.trim() :
-                    undefined
-                  }
-                />
-              </div>
-
-              {/* Order Actions */}
-              <div className="mt-4 flex gap-2">
-                {/* Messaging */}
-                {selectedOrder.washers && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedOrderForMessaging(selectedOrder)}
-                    className="flex items-center gap-2"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Message Operator
-                  </Button>
-                )}
-                
-                {/* Order Cancellation */}
-                {['placed', 'unclaimed', 'claimed'].includes(selectedOrder.status) && (
-                  <OrderCancellation
-                    orderId={selectedOrder.id}
-                    orderStatus={selectedOrder.status}
-                    totalAmount={selectedOrder.total_amount_cents || 0}
-                    onCancelled={() => {
-                      loadOrders();
-                      onOrderUpdate?.();
-                    }}
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                {/* Enhanced Progress Section */}
+                <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6">
+                  <OrderStatusProgress 
+                    status={selectedOrder.status} 
+                    currentStep={selectedOrder.current_step}
+                    operatorName={selectedOrder.washers?.profiles ? 
+                      `${selectedOrder.washers.profiles.first_name || ''} ${selectedOrder.washers.profiles.last_name || ''}`.trim() :
+                      undefined
+                    }
                   />
+                </div>
+
+                {/* Service & Location Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-lg">Service Details</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Type:</span>
+                        <span className="font-medium">
+                          {selectedOrder.pickup_type === 'locker' ? 'Locker Drop-off' : 'Pickup & Delivery'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Service:</span>
+                        <span className="font-medium">{selectedOrder.service_type.replace('_', ' ')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Bags:</span>
+                        <span className="font-medium">{selectedOrder.bag_count}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total:</span>
+                        <span className="font-semibold text-lg">
+                          ${(selectedOrder.total_amount_cents / 100).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-lg">Location & Timeline</h4>
+                    <div className="space-y-2 text-sm">
+                      {selectedOrder.pickup_type === 'locker' && selectedOrder.lockers ? (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Locker:</span>
+                          <span className="font-medium">{selectedOrder.lockers.name}</span>
+                        </div>
+                      ) : (
+                        <div>
+                          <span className="text-muted-foreground">Pickup:</span>
+                          <p className="font-medium mt-1">{selectedOrder.pickup_address}</p>
+                        </div>
+                      )}
+                      
+                      {selectedOrder.pickup_window_start && (
+                        <div>
+                          <span className="text-muted-foreground">Pickup Window:</span>
+                          <p className="font-medium mt-1">
+                            {formatDate(selectedOrder.pickup_window_start)}
+                            {selectedOrder.pickup_window_end && ` - ${formatDate(selectedOrder.pickup_window_end)}`}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {getDeliveryEstimate(selectedOrder) && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Delivery:</span>
+                          <span className="font-medium">{getDeliveryEstimate(selectedOrder)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {selectedOrder.special_instructions && (
+                  <div className="bg-muted rounded-xl p-4">
+                    <h5 className="font-medium mb-2">Special Instructions</h5>
+                    <p className="text-muted-foreground">
+                      {selectedOrder.special_instructions}
+                    </p>
+                  </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+
+                {/* Enhanced Action Buttons */}
+                <div className="flex flex-wrap gap-3 pt-4 border-t">
+                  {selectedOrder.washers && (
+                    <Button
+                      variant="default"
+                      size="lg"
+                      onClick={() => setSelectedOrderForMessaging(selectedOrder)}
+                      className="flex items-center gap-2 flex-1 min-w-[200px]"
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      Message Operator
+                    </Button>
+                  )}
+                  
+                  {shouldShowMap(selectedOrder) && selectedOrder.pickup_type === 'pickup_delivery' && (
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => setShowLiveMap(true)}
+                      className="flex items-center gap-2 flex-1 min-w-[200px]"
+                    >
+                      <MapPin className="h-5 w-5" />
+                      Live Map
+                    </Button>
+                  )}
+                  
+                  {['placed', 'unclaimed', 'claimed'].includes(selectedOrder.status) && (
+                    <OrderCancellation
+                      orderId={selectedOrder.id}
+                      orderStatus={selectedOrder.status}
+                      totalAmount={selectedOrder.total_amount_cents || 0}
+                      onCancelled={() => {
+                        loadOrders();
+                        onOrderUpdate?.();
+                      }}
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
@@ -575,6 +650,26 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
             }
             isOpen={!!selectedOrderForMessaging}
             onClose={() => setSelectedOrderForMessaging(null)}
+          />
+        )}
+
+        {/* Live Order Map Modal */}
+        {showLiveMap && selectedOrder && selectedOrder.pickup_type === 'pickup_delivery' && (
+          <LiveOrderMap
+            isOpen={showLiveMap}
+            onClose={() => setShowLiveMap(false)}
+            order={{
+              id: selectedOrder.id,
+              pickup_address: selectedOrder.pickup_address || '',
+              delivery_address: selectedOrder.delivery_address || '',
+              status: selectedOrder.status,
+              pickup_window_end: selectedOrder.pickup_window_end || '',
+              profiles: selectedOrder.washers?.profiles ? {
+                first_name: selectedOrder.washers.profiles.first_name || '',
+                last_name: selectedOrder.washers.profiles.last_name || '',
+                phone: ''
+              } : null
+            }}
           />
         )}
       </div>
