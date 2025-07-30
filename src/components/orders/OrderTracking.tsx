@@ -150,13 +150,6 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
           lockers:locker_id (
             name,
             address
-          ),
-          washers:washer_id (
-            user_id,
-            profiles:user_id (
-              first_name,
-              last_name
-            )
           )
         `)
         .eq('customer_id', user.id)
