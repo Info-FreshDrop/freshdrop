@@ -60,14 +60,16 @@ interface Order {
 interface OrderTrackingProps {
   onBack: () => void;
   onOrderUpdate?: () => void;
+  selectedOrderId?: string;
 }
 
-export function OrderTracking({ onBack, onOrderUpdate }: OrderTrackingProps) {
+export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderTrackingProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const { user } = useAuth();
 
   if (showHistory) {
@@ -129,7 +131,7 @@ export function OrderTracking({ onBack, onOrderUpdate }: OrderTrackingProps) {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('orders')
         .select(`
           *,
@@ -148,10 +150,24 @@ export function OrderTracking({ onBack, onOrderUpdate }: OrderTrackingProps) {
         .eq('customer_id', user.id)
         .order('created_at', { ascending: false });
 
+      // If we have a selectedOrderId, only fetch that order
+      if (selectedOrderId) {
+        query = query.eq('id', selectedOrderId);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
       console.log('Loaded orders for customer:', data?.length || 0, 'orders');
       console.log('Order statuses:', data?.map(o => ({ id: o.id.slice(-8), status: o.status, step: o.current_step })) || []);
-      setOrders(data as Order[] || []);
+      
+      const ordersData = data as Order[] || [];
+      setOrders(ordersData);
+      
+      // If we're showing a specific order, set it as selected
+      if (selectedOrderId && ordersData.length > 0) {
+        setSelectedOrder(ordersData[0]);
+      }
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
@@ -236,21 +252,23 @@ export function OrderTracking({ onBack, onOrderUpdate }: OrderTrackingProps) {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Active Orders
+              {selectedOrderId ? `Order #${selectedOrder?.id.slice(-8) || ''}` : 'Active Orders'}
             </h1>
             <p className="text-muted-foreground">
-              Track your current orders
+              {selectedOrderId ? 'Track your order progress and communicate with your operator' : 'Track your current orders'}
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={loadOrders}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh Orders
+              Refresh
             </Button>
-            <Button variant="outline" onClick={() => setShowHistory(true)}>
-              <History className="h-4 w-4 mr-2" />
-              View All History
-            </Button>
+            {!selectedOrderId && (
+              <Button variant="outline" onClick={() => setShowHistory(true)}>
+                <History className="h-4 w-4 mr-2" />
+                View All History
+              </Button>
+            )}
             <Button variant="outline" onClick={onBack}>
               Back to Dashboard
             </Button>

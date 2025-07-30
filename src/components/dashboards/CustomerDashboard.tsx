@@ -53,6 +53,7 @@ export function CustomerDashboard() {
   const [showClothesShop, setShowClothesShop] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showOrderTracking, setShowOrderTracking] = useState(false);
+  const [selectedOrderForTracking, setSelectedOrderForTracking] = useState<any>(null);
   
   const [activeTab, setActiveTab] = useState('orders');
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -151,8 +152,17 @@ export function CustomerDashboard() {
   }
 
   // Show OrderTracking component if requested
-  if (showOrderTracking) {
-    return <OrderTracking onBack={() => setShowOrderTracking(false)} onOrderUpdate={loadOrders} />;
+  if (showOrderTracking && selectedOrderForTracking) {
+    return (
+      <OrderTracking 
+        onBack={() => {
+          setShowOrderTracking(false);
+          setSelectedOrderForTracking(null);
+        }} 
+        onOrderUpdate={loadOrders}
+        selectedOrderId={selectedOrderForTracking.id}
+      />
+    );
   }
 
   return (
@@ -284,7 +294,10 @@ export function CustomerDashboard() {
                               variant="outline"
                               size="sm"
                               className="flex-1 text-xs"
-                              onClick={() => setShowOrderTracking(true)}
+                              onClick={() => {
+                                setSelectedOrderForTracking(order);
+                                setShowOrderTracking(true);
+                              }}
                             >
                               <Package className="h-3 w-3 mr-1" />
                               Track Order
