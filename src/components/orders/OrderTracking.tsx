@@ -670,7 +670,7 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
                        )}
                        
                        {/* Clear Order Button */}
-                       {!order.customer_acknowledged && (order.delivery_photo_url || order.step_photos?.step_12) && (
+                       {!order.customer_acknowledged && (
                          <div className="bg-white rounded-lg p-4 border shadow-sm">
                            <p className="text-sm text-gray-600 mb-3">
                              Once you've reviewed your delivered laundry and are satisfied with the service, you can clear this order to move it to your history.

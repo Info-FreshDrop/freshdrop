@@ -335,7 +335,7 @@ export function CustomerDashboard() {
                                 </Button>
                               </>
                             )}
-                            {order.status === 'completed' && !order.customer_acknowledged && order.delivery_photo_url && (
+                            {order.status === 'completed' && !order.customer_acknowledged && (
                               <Button
                                 variant="default"
                                 size="sm"
