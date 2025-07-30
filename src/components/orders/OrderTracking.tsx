@@ -672,7 +672,7 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
                        {/* Clear Order Button */}
                        {!order.customer_acknowledged && (
                          <div className="bg-white rounded-lg p-4 border shadow-sm">
-                           <p className="text-sm text-gray-600 mb-3">
+                           <p className="text-sm text-gray-600 mb-4">
                              Once you've reviewed your delivered laundry and are satisfied with the service, you can clear this order to move it to your history.
                            </p>
                            <Button
@@ -707,9 +707,10 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
                                  });
                                }
                              }}
-                             className="w-full bg-green-600 hover:bg-green-700"
+                             size="lg"
+                             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 text-base"
                            >
-                             <CheckCircle className="h-4 w-4 mr-2" />
+                             <CheckCircle className="h-5 w-5 mr-2" />
                              Clear Order & Move to History
                            </Button>
                          </div>

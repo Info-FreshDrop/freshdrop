@@ -338,8 +338,8 @@ export function CustomerDashboard() {
                             {order.status === 'completed' && !order.customer_acknowledged && (
                               <Button
                                 variant="default"
-                                size="sm"
-                                className="w-full text-xs mt-2"
+                                size="lg"
+                                className="w-full text-sm mt-3 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold"
                                 onClick={async () => {
                                   try {
                                     const { error } = await supabase
@@ -355,7 +355,7 @@ export function CustomerDashboard() {
                                   }
                                 }}
                               >
-                                <Package className="h-3 w-3 mr-1" />
+                                <Package className="h-4 w-4 mr-2" />
                                 Clear Order
                               </Button>
                             )}
