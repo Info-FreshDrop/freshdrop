@@ -36,6 +36,18 @@ export function useNotifications() {
         title: 'Laundry Picked Up',
         body: `Your laundry ${orderNumber ? '#' + orderNumber : ''} has been picked up!`
       },
+      'washing': {
+        title: 'Laundry Being Washed',
+        body: `Your laundry ${orderNumber ? '#' + orderNumber : ''} is currently being washed!`
+      },
+      'drying': {
+        title: 'Laundry Being Dried',
+        body: `Your laundry ${orderNumber ? '#' + orderNumber : ''} has been washed and is now being dried!`
+      },
+      'folded': {
+        title: 'Laundry Folded',
+        body: `Your laundry ${orderNumber ? '#' + orderNumber : ''} has been cleaned, dried, and folded!`
+      },
       'in_progress': {
         title: 'Laundry In Progress',
         body: `Your laundry ${orderNumber ? '#' + orderNumber : ''} is being cleaned!`

@@ -384,6 +384,42 @@ export function OperatorDashboard() {
 
       console.log('Database update successful');
 
+      // Send notifications for key milestones
+      const nextStep = isLastStep ? 13 : photoStep + 1;
+      if ([7, 8, 9, 10, 12, 13].includes(nextStep)) {
+        try {
+          let notificationStatus: string;
+          
+          if (nextStep === 7) {
+            notificationStatus = 'picked_up';
+          } else if (nextStep === 8) {
+            notificationStatus = 'washing';
+          } else if (nextStep === 9) {
+            notificationStatus = 'drying';
+          } else if (nextStep === 10) {
+            notificationStatus = 'folded';
+          } else if (nextStep === 12) {
+            notificationStatus = 'delivered';
+          } else if (nextStep === 13) {
+            notificationStatus = 'completed';
+          } else {
+            notificationStatus = 'in_progress';
+          }
+          
+          await supabase.functions.invoke('send-order-notifications', {
+            body: {
+              orderId: selectedOrder.id,
+              customerId: selectedOrder.customer_id,
+              status: notificationStatus,
+              orderNumber: selectedOrder.id.slice(-8),
+              currentStep: nextStep
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to send notification:', notificationError);
+        }
+      }
+
       // Update local state
       setSelectedOrder({
         ...selectedOrder,

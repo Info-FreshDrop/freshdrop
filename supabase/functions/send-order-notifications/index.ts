@@ -15,6 +15,7 @@ interface NotificationRequest {
   customerPhone?: string;
   customerName?: string;
   orderNumber?: string;
+  currentStep?: number;
 }
 
 const supabase = createClient(
@@ -68,11 +69,23 @@ const handler = async (req: Request): Promise<Response> => {
       },
       'picked_up': {
         subject: 'Laundry Picked Up',
-        message: 'Your laundry has been picked up and is on its way to be cleaned!'
+        message: 'Your laundry has been picked up and is on its way to our facility!'
+      },
+      'washing': {
+        subject: 'Laundry Being Washed',
+        message: 'Your laundry is currently being washed with care!'
+      },
+      'drying': {
+        subject: 'Laundry Being Dried',
+        message: 'Your laundry has been washed and is now being dried!'
+      },
+      'folded': {
+        subject: 'Laundry Folded & Ready',
+        message: 'Your laundry has been cleaned, dried, and neatly folded!'
       },
       'in_progress': {
         subject: 'Laundry In Progress',
-        message: 'Your laundry is currently being washed. We\'ll notify you when it\'s ready!'
+        message: 'Your laundry is currently being processed. We\'ll notify you when it\'s ready!'
       },
       'completed': {
         subject: 'Order Complete - Ready for Delivery',
