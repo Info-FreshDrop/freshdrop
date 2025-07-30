@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OrderHistory } from "@/components/orders/OrderHistory";
 import { OrderStatusProgress } from "@/components/customer/OrderStatusProgress";
 import { OrderCancellation } from "@/components/customer/OrderCancellation";
+import { OrderMessaging } from "@/components/customer/OrderMessaging";
 import { 
   Package, 
   Clock, 
@@ -18,7 +19,8 @@ import {
   RefreshCw,
   Camera,
   History,
-  Image as ImageIcon
+  Image as ImageIcon,
+  MessageCircle
 } from "lucide-react";
 
 interface Order {
@@ -47,6 +49,7 @@ interface Order {
     address: string;
   };
   washers?: {
+    user_id?: string;
     profiles?: {
       first_name?: string;
       last_name?: string;
@@ -64,6 +67,7 @@ export function OrderTracking({ onBack, onOrderUpdate }: OrderTrackingProps) {
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<Order | null>(null);
   const { user } = useAuth();
 
   if (showHistory) {
@@ -134,6 +138,7 @@ export function OrderTracking({ onBack, onOrderUpdate }: OrderTrackingProps) {
             address
           ),
           washers:washer_id (
+            user_id,
             profiles:user_id (
               first_name,
               last_name
@@ -367,9 +372,23 @@ export function OrderTracking({ onBack, onOrderUpdate }: OrderTrackingProps) {
                     />
                   </div>
 
-                  {/* Order Cancellation */}
-                  {['placed', 'unclaimed', 'claimed'].includes(order.status) && (
-                    <div className="mt-4">
+                  {/* Order Actions */}
+                  <div className="mt-4 flex gap-2">
+                    {/* Messaging */}
+                    {order.washers && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedOrderForMessaging(order)}
+                        className="flex items-center gap-2"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Message Operator
+                      </Button>
+                    )}
+                    
+                    {/* Order Cancellation */}
+                    {['placed', 'unclaimed', 'claimed'].includes(order.status) && (
                       <OrderCancellation
                         orderId={order.id}
                         orderStatus={order.status}
@@ -379,12 +398,27 @@ export function OrderTracking({ onBack, onOrderUpdate }: OrderTrackingProps) {
                           onOrderUpdate?.();
                         }}
                       />
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+        )}
+
+        {/* Order Messaging Modal */}
+        {selectedOrderForMessaging && (
+          <OrderMessaging
+            orderId={selectedOrderForMessaging.id}
+            operatorId={selectedOrderForMessaging.washers?.user_id}
+            operatorName={
+              selectedOrderForMessaging.washers?.profiles
+                ? `${selectedOrderForMessaging.washers.profiles.first_name || ''} ${selectedOrderForMessaging.washers.profiles.last_name || ''}`.trim()
+                : 'Operator'
+            }
+            isOpen={!!selectedOrderForMessaging}
+            onClose={() => setSelectedOrderForMessaging(null)}
+          />
         )}
       </div>
     </div>

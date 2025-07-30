@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,8 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   MessageCircle, 
   Send, 
-  User, 
-  Clock,
   X
 } from "lucide-react";
 
@@ -51,7 +48,34 @@ export function OrderMessaging({
   useEffect(() => {
     if (isOpen && orderId && operatorId) {
       loadMessages();
-      subscribeToMessages();
+      
+      // Set up real-time subscription
+      const channel = supabase
+        .channel('order-messages')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'order_messages',
+            filter: `order_id=eq.${orderId}`
+          },
+          (payload) => {
+            console.log('New message received:', payload);
+            const newMessage = payload.new as Message;
+            setMessages(prev => [...prev, newMessage]);
+            
+            // Mark as read if it's for the current user
+            if (newMessage.recipient_id === user?.id) {
+              markMessagesAsRead();
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [isOpen, orderId, operatorId]);
 
@@ -70,9 +94,7 @@ export function OrderMessaging({
     try {
       const { data, error } = await supabase
         .from('order_messages')
-        .select(`
-          *
-        `)
+        .select('*')
         .eq('order_id', orderId)
         .order('created_at', { ascending: true });
 
@@ -106,37 +128,6 @@ export function OrderMessaging({
     } catch (error) {
       console.error('Error marking messages as read:', error);
     }
-  };
-
-  const subscribeToMessages = () => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('order-messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'order_messages',
-          filter: `order_id=eq.${orderId}`
-        },
-        (payload) => {
-          console.log('New message received:', payload);
-          const newMessage = payload.new as Message;
-          setMessages(prev => [...prev, newMessage]);
-          
-          // Mark as read if it's for the current user
-          if (newMessage.recipient_id === user.id) {
-            markMessagesAsRead();
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   };
 
   const sendMessage = async () => {
@@ -190,7 +181,7 @@ export function OrderMessaging({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md h-[600px] flex flex-col">
+      <Card className="w-full max-w-md h-[600px] flex flex-col border-0 shadow-soft">
         <CardHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
