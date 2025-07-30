@@ -30,12 +30,14 @@ import {
   Navigation,
   ArrowLeft,
   Check,
-  Settings
+  Settings,
+  User
 } from "lucide-react";
 import { ServiceAreaModal } from './ServiceAreaModal';
 import { LiveOrderMap } from '../orders/LiveOrderMap';
 import { OrdersOverviewMap } from '../orders/OrdersOverviewMap';
 import { OperatorProfile } from '../customer/OperatorProfile';
+import { OperatorZipCodeEditModal } from '../admin/OperatorZipCodeEditModal';
 
 interface Order {
   id: string;
@@ -115,6 +117,7 @@ export function OperatorDashboard() {
   const [showLiveMap, setShowLiveMap] = useState(false);
   const [selectedMapOrder, setSelectedMapOrder] = useState<Order | null>(null);
   const [operatorLocation, setOperatorLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [showZipCodeEdit, setShowZipCodeEdit] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -488,6 +491,32 @@ export function OperatorDashboard() {
     }
   };
 
+  const handleOnlineStatusToggle = async (online: boolean) => {
+    if (!washerData) return;
+    
+    try {
+      const { error } = await supabase
+        .from('washers')
+        .update({ is_online: online })
+        .eq('id', washerData.id);
+
+      if (error) throw error;
+
+      setWasherData({ ...washerData, is_online: online });
+      toast({
+        title: online ? "You're now online" : "You're now offline",
+        description: online ? "You can now receive new orders" : "New orders will not be assigned to you"
+      });
+    } catch (error) {
+      console.error('Error updating online status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update online status",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -787,7 +816,104 @@ export function OperatorDashboard() {
           </TabsContent>
 
           <TabsContent value="account" className="space-y-4">
-            <OperatorProfile onBack={() => setActiveTab('my-orders')} />
+            <div className="space-y-6">
+              {/* Profile Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Profile Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Name</p>
+                      <p className="font-medium">
+                        {operatorProfile ? `${operatorProfile.first_name} ${operatorProfile.last_name}` : 'Not available'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                      <p className="font-medium">{operatorProfile?.phone || 'Not available'}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Status Toggle */}
+                  <div className="flex items-center justify-between py-2 border-t">
+                    <div>
+                      <p className="font-medium">Online Status</p>
+                      <p className="text-sm text-muted-foreground">
+                        Set yourself as {washerData?.is_online ? 'online' : 'offline'} for new orders
+                      </p>
+                    </div>
+                    <Switch
+                      checked={washerData?.is_online || false}
+                      onCheckedChange={handleOnlineStatusToggle}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Service Areas Management */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    My Service Areas
+                  </CardTitle>
+                  <CardDescription>
+                    Manage the zip codes where you provide laundry services
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      {washerData?.zip_codes.map((zipCode) => (
+                        <Badge key={zipCode} variant="secondary">
+                          {zipCode}
+                        </Badge>
+                      ))}
+                      {(!washerData?.zip_codes || washerData.zip_codes.length === 0) && (
+                        <p className="text-sm text-muted-foreground">No service areas assigned</p>
+                      )}
+                    </div>
+                    
+                    <Button 
+                      onClick={() => setShowZipCodeEdit(true)}
+                      size="sm"
+                      className="mt-2"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Service Areas
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Performance Stats */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Performance Stats</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <p className="text-2xl font-bold text-green-600">
+                        {myOrders.filter(o => o.status === 'completed').length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Orders Completed</p>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <p className="text-2xl font-bold text-blue-600">
+                        {myOrders.filter(o => !['completed', 'delivered'].includes(o.status)).length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Active Orders</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
 
