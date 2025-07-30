@@ -276,7 +276,10 @@ export function CustomerDashboard() {
                             </div>
                           </div>
 
-                          <OrderStatusProgress status={order.status} />
+                          <OrderStatusProgress 
+                            status={order.status} 
+                            currentStep={order.current_step}
+                          />
 
                           <div className="grid grid-cols-2 gap-3 mt-3 text-xs text-slate-600">
                             <div>

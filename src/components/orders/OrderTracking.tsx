@@ -285,29 +285,30 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
 
   return (
     <div className="min-h-screen bg-gradient-wave">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex justify-between items-center mb-6">
+      <div className="container mx-auto px-4 py-4 sm:py-8 max-w-4xl">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               {selectedOrderId ? `Order #${selectedOrder?.id.slice(-8) || ''}` : 'Active Orders'}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm sm:text-base">
               {selectedOrderId ? 'Track your order progress and communicate with your operator' : 'Track your current orders'}
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={loadOrders}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={loadOrders}>
+              <RefreshCw className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Refresh</span>
             </Button>
             {!selectedOrderId && (
-              <Button variant="outline" onClick={() => setShowHistory(true)}>
-                <History className="h-4 w-4 mr-2" />
-                View All History
+              <Button variant="outline" size="sm" onClick={() => setShowHistory(true)}>
+                <History className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">View All History</span>
               </Button>
             )}
-            <Button variant="outline" onClick={onBack}>
-              Back to Dashboard
+            <Button variant="outline" size="sm" onClick={onBack}>
+              <span className="sm:hidden">Back</span>
+              <span className="hidden sm:inline">Back to Dashboard</span>
             </Button>
           </div>
         </div>
@@ -403,51 +404,55 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
                 </div>
 
                 {/* Service & Location Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-3">
                     <h4 className="font-semibold text-lg">Service Details</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Type:</span>
-                        <span className="font-medium">
-                          {selectedOrder.pickup_type === 'locker' ? 'Locker Drop-off' : 'Pickup & Delivery'}
-                        </span>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-muted-foreground block">Type:</span>
+                          <span className="font-medium">
+                            {selectedOrder.pickup_type === 'locker' ? 'Locker Drop-off' : 'Pickup & Delivery'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block">Service:</span>
+                          <span className="font-medium">{selectedOrder.service_type.replace('_', ' ')}</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Service:</span>
-                        <span className="font-medium">{selectedOrder.service_type.replace('_', ' ')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Bags:</span>
-                        <span className="font-medium">{selectedOrder.bag_count}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total:</span>
-                        <span className="font-semibold text-lg">
-                          ${(selectedOrder.total_amount_cents / 100).toFixed(2)}
-                        </span>
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-muted-foreground block">Bags:</span>
+                          <span className="font-medium">{selectedOrder.bag_count}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block">Total:</span>
+                          <span className="font-semibold text-lg">
+                            ${(selectedOrder.total_amount_cents / 100).toFixed(2)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <h4 className="font-semibold text-lg">Location & Timeline</h4>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-3 text-sm">
                       {selectedOrder.pickup_type === 'locker' && selectedOrder.lockers ? (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Locker:</span>
+                        <div>
+                          <span className="text-muted-foreground block">Locker:</span>
                           <span className="font-medium">{selectedOrder.lockers.name}</span>
                         </div>
                       ) : (
                         <div>
-                          <span className="text-muted-foreground">Pickup:</span>
-                          <p className="font-medium mt-1">{selectedOrder.pickup_address}</p>
+                          <span className="text-muted-foreground block">Pickup:</span>
+                          <p className="font-medium mt-1 break-words">{selectedOrder.pickup_address}</p>
                         </div>
                       )}
                       
                       {selectedOrder.pickup_window_start && (
                         <div>
-                          <span className="text-muted-foreground">Pickup Window:</span>
+                          <span className="text-muted-foreground block">Pickup Window:</span>
                           <p className="font-medium mt-1">
                             {formatDate(selectedOrder.pickup_window_start)}
                             {selectedOrder.pickup_window_end && ` - ${formatDate(selectedOrder.pickup_window_end)}`}
@@ -475,15 +480,15 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
                 )}
 
                 {/* Enhanced Action Buttons */}
-                <div className="flex flex-wrap gap-3 pt-4 border-t">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                   {selectedOrder.washer_id && (
                     <Button
                       variant="default"
                       size="lg"
                       onClick={() => setSelectedOrderForMessaging(selectedOrder)}
-                      className="flex items-center gap-2 flex-1 min-w-[200px]"
+                      className="w-full sm:flex-1"
                     >
-                      <MessageCircle className="h-5 w-5" />
+                      <MessageCircle className="h-4 w-4 mr-2" />
                       Message Operator
                     </Button>
                   )}
@@ -493,23 +498,25 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
                       variant="outline"
                       size="lg"
                       onClick={() => setShowLiveMap(true)}
-                      className="flex items-center gap-2 flex-1 min-w-[200px]"
+                      className="w-full sm:flex-1"
                     >
-                      <MapPin className="h-5 w-5" />
+                      <MapPin className="h-4 w-4 mr-2" />
                       Live Map
                     </Button>
                   )}
                   
                   {['placed', 'unclaimed', 'claimed'].includes(selectedOrder.status) && (
-                    <OrderCancellation
-                      orderId={selectedOrder.id}
-                      orderStatus={selectedOrder.status}
-                      totalAmount={selectedOrder.total_amount_cents || 0}
-                      onCancelled={() => {
-                        loadOrders();
-                        onOrderUpdate?.();
-                      }}
-                    />
+                    <div className="w-full sm:w-auto">
+                      <OrderCancellation
+                        orderId={selectedOrder.id}
+                        orderStatus={selectedOrder.status}
+                        totalAmount={selectedOrder.total_amount_cents || 0}
+                        onCancelled={() => {
+                          loadOrders();
+                          onOrderUpdate?.();
+                        }}
+                      />
+                    </div>
                   )}
                 </div>
               </CardContent>
