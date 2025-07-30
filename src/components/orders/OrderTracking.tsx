@@ -33,6 +33,7 @@ interface Order {
   pickup_address?: string;
   delivery_address?: string;
   locker_id?: string;
+  washer_id?: string;
   bag_count: number;
   total_amount_cents: number;
   special_instructions?: string;
@@ -475,7 +476,7 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
 
                 {/* Enhanced Action Buttons */}
                 <div className="flex flex-wrap gap-3 pt-4 border-t">
-                  {selectedOrder.washers && (
+                  {selectedOrder.washer_id && (
                     <Button
                       variant="default"
                       size="lg"
