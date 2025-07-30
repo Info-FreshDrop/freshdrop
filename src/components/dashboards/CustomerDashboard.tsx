@@ -295,6 +295,7 @@ export function CustomerDashboard() {
                               size="sm"
                               className="flex-1 text-xs"
                               onClick={() => {
+                                console.log('Track Order clicked for order:', order.id);
                                 setSelectedOrderForTracking(order);
                                 setShowOrderTracking(true);
                               }}

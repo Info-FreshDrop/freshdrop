@@ -72,6 +72,8 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const { user } = useAuth();
 
+  console.log('OrderTracking component mounted, user:', user?.id, 'selectedOrderId:', selectedOrderId);
+  
   if (showHistory) {
     return <OrderHistory onBack={() => setShowHistory(false)} />;
   }
@@ -127,6 +129,7 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
   }, [user]);
 
   const loadOrders = async () => {
+    console.log('Loading orders, user:', user?.id, 'selectedOrderId:', selectedOrderId);
     if (!user) return;
     
     setLoading(true);

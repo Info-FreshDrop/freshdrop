@@ -1121,7 +1121,10 @@ export function OperatorDashboard() {
                       variant="outline"
                       size="sm"
                       className="flex items-center gap-2"
-                      onClick={() => setSelectedOrderForMessaging(selectedOrder)}
+                      onClick={() => {
+                        console.log('Message Customer clicked for order:', selectedOrder.id);
+                        setSelectedOrderForMessaging(selectedOrder);
+                      }}
                     >
                       <MessageSquare className="h-4 w-4" />
                       Message Customer
