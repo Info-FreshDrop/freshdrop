@@ -30,10 +30,6 @@ interface Message {
   recipient_id: string;
   is_read: boolean;
   created_at: string;
-  sender_profile?: {
-    first_name: string;
-    last_name: string;
-  };
 }
 
 export function OrderMessaging({ 
@@ -75,8 +71,7 @@ export function OrderMessaging({
       const { data, error } = await supabase
         .from('order_messages')
         .select(`
-          *,
-          sender_profile:profiles(first_name, last_name)
+          *
         `)
         .eq('order_id', orderId)
         .order('created_at', { ascending: true });
