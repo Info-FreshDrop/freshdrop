@@ -134,7 +134,11 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
 
   const loadOrders = async () => {
     console.log('Loading orders, user:', user?.id, 'selectedOrderId:', selectedOrderId);
-    if (!user) return;
+    console.log('User auth state:', user);
+    if (!user) {
+      console.log('No user found, cannot load orders');
+      return;
+    }
     
     setLoading(true);
     try {
@@ -159,12 +163,17 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
 
       // If we have a selectedOrderId, only fetch that order
       if (selectedOrderId) {
+        console.log('Adding filter for selectedOrderId:', selectedOrderId);
         query = query.eq('id', selectedOrderId);
       }
 
+      console.log('About to execute query with user.id:', user.id);
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw error;
+      }
       console.log('Loaded orders for customer:', data?.length || 0, 'orders');
       console.log('Order statuses:', data?.map(o => ({ id: o.id.slice(-8), status: o.status, step: o.current_step })) || []);
       console.log('selectedOrderId being searched for:', selectedOrderId);
