@@ -38,6 +38,7 @@ import { LiveOrderMap } from '../orders/LiveOrderMap';
 import { OrdersOverviewMap } from '../orders/OrdersOverviewMap';
 import { OperatorProfile } from '../customer/OperatorProfile';
 import { OperatorZipCodeEditModal } from '../admin/OperatorZipCodeEditModal';
+import { OrderMessaging } from '../customer/OrderMessaging';
 
 interface Order {
   id: string;
@@ -97,6 +98,7 @@ export function OperatorDashboard() {
   const { toast } = useToast();
   const { getCurrentLocation } = useCapacitor();
   const [activeTab, setActiveTab] = useState("live-orders");
+  const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<Order | null>(null);
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [operatorProfile, setOperatorProfile] = useState<OperatorProfile | null>(null);
@@ -1113,6 +1115,19 @@ export function OperatorDashboard() {
                     </div>
                   </div>
                   
+                  {/* Quick Actions */}
+                  <div className="mt-4 pt-3 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => setSelectedOrderForMessaging(selectedOrder)}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Message Customer
+                    </Button>
+                  </div>
+                  
                   {/* Addresses */}
                   <div className="mt-4 pt-3 border-t space-y-3">
                     <h5 className="font-medium">Addresses</h5>
@@ -1348,6 +1363,17 @@ export function OperatorDashboard() {
                 description: "Service areas updated successfully"
               });
             }}
+          />
+        )}
+
+        {/* Order Messaging Modal */}
+        {selectedOrderForMessaging && (
+          <OrderMessaging
+            orderId={selectedOrderForMessaging.id}
+            operatorId={selectedOrderForMessaging.customer_id}
+            operatorName={`${selectedOrderForMessaging.profiles?.first_name || ''} ${selectedOrderForMessaging.profiles?.last_name || ''}`.trim() || 'Customer'}
+            isOpen={!!selectedOrderForMessaging}
+            onClose={() => setSelectedOrderForMessaging(null)}
           />
         )}
       </div>
