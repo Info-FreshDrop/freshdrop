@@ -52,6 +52,7 @@ export function CustomerDashboard() {
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [showClothesShop, setShowClothesShop] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showOrderTracking, setShowOrderTracking] = useState(false);
   
   const [activeTab, setActiveTab] = useState('orders');
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -147,6 +148,11 @@ export function CustomerDashboard() {
   // Show ClothesShop component if requested
   if (showClothesShop) {
     return <ClothesShop onBack={() => setShowClothesShop(false)} />;
+  }
+
+  // Show OrderTracking component if requested
+  if (showOrderTracking) {
+    return <OrderTracking onBack={() => setShowOrderTracking(false)} onOrderUpdate={loadOrders} />;
   }
 
   return (
@@ -273,34 +279,45 @@ export function CustomerDashboard() {
                             </div>
                           </div>
 
-                          {order.status === 'completed' && (
-                            <div className="flex gap-2 mt-3">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 text-xs"
-                                onClick={() => {
-                                  setSelectedOrder(order);
-                                  setShowTipModal(true);
-                                }}
-                              >
-                                <Heart className="h-3 w-3 mr-1" />
-                                Tip
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 text-xs"
-                                onClick={() => {
-                                  setSelectedOrder(order);
-                                  setShowRatingModal(true);
-                                }}
-                              >
-                                <Star className="h-3 w-3 mr-1" />
-                                Rate
-                              </Button>
-                            </div>
-                          )}
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 text-xs"
+                              onClick={() => setShowOrderTracking(true)}
+                            >
+                              <Package className="h-3 w-3 mr-1" />
+                              Track Order
+                            </Button>
+                            {order.status === 'completed' && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1 text-xs"
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setShowTipModal(true);
+                                  }}
+                                >
+                                  <Heart className="h-3 w-3 mr-1" />
+                                  Tip
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1 text-xs"
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setShowRatingModal(true);
+                                  }}
+                                >
+                                  <Star className="h-3 w-3 mr-1" />
+                                  Rate
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </CardContent>
                       </Card>
                      ))}
