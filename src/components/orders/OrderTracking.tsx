@@ -708,7 +708,7 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
                                }
                              }}
                              size="lg"
-                             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 text-base"
+                             className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 text-base"
                            >
                              <CheckCircle className="h-5 w-5 mr-2" />
                              Clear Order & Move to History

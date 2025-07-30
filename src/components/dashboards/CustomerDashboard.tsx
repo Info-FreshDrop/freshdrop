@@ -335,31 +335,31 @@ export function CustomerDashboard() {
                                 </Button>
                               </>
                             )}
-                            {order.status === 'completed' && !order.customer_acknowledged && (
-                              <Button
-                                variant="default"
-                                size="lg"
-                                className="w-full text-sm mt-3 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold"
-                                onClick={async () => {
-                                  try {
-                                    const { error } = await supabase
-                                      .from('orders')
-                                      .update({ customer_acknowledged: true })
-                                      .eq('id', order.id);
-                                    
-                                    if (error) throw error;
-                                    
-                                    loadOrders(); // Refresh the orders list
-                                  } catch (error) {
-                                    console.error('Error acknowledging order:', error);
-                                  }
-                                }}
-                              >
-                                <Package className="h-4 w-4 mr-2" />
-                                Clear Order
-                              </Button>
-                            )}
                           </div>
+                          {order.status === 'completed' && !order.customer_acknowledged && (
+                            <Button
+                              variant="default"
+                              size="lg"
+                              className="w-full text-sm mt-3 py-3 bg-primary hover:bg-primary/90 text-white font-semibold"
+                              onClick={async () => {
+                                try {
+                                  const { error } = await supabase
+                                    .from('orders')
+                                    .update({ customer_acknowledged: true })
+                                    .eq('id', order.id);
+                                  
+                                  if (error) throw error;
+                                  
+                                  loadOrders(); // Refresh the orders list
+                                } catch (error) {
+                                  console.error('Error acknowledging order:', error);
+                                }
+                              }}
+                            >
+                              <Package className="h-4 w-4 mr-2" />
+                              Clear Order
+                            </Button>
+                          )}
                         </CardContent>
                       </Card>
                      ))}
