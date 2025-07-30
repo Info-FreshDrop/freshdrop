@@ -517,6 +517,81 @@ export function OperatorDashboard() {
     }
   };
 
+
+  // Add the missing claim order function
+  const handleClaimOrder = async () => {
+    if (!confirmOrder || !washerData) {
+      console.error('Missing confirmOrder or washerData:', { confirmOrder, washerData });
+      return;
+    }
+
+    // Check if operator already has 5 active orders
+    const activeOrdersCount = myOrders.filter(order => 
+      !['completed', 'delivered'].includes(order.status)
+    ).length;
+
+    if (activeOrdersCount >= 5) {
+      toast({
+        title: "Order Limit Reached",
+        description: "You can only have 5 active orders at a time. Please complete some orders first.",
+        variant: "destructive",
+      });
+      setConfirmOrder(null);
+      return;
+    }
+
+    console.log('Claiming order:', confirmOrder.id, 'for washer:', washerData.id);
+
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ 
+          washer_id: washerData.id,
+          status: 'claimed',
+          claimed_at: new Date().toISOString()
+        })
+        .eq('id', confirmOrder.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error claiming order:', error);
+        throw error;
+      }
+
+      console.log('Order claimed successfully:', data);
+
+      // Send notification about order being claimed
+      try {
+        await supabase.functions.invoke('send-order-notifications', {
+          body: {
+            orderId: confirmOrder.id,
+            customerId: confirmOrder.customer_id,
+            status: 'claimed',
+            orderNumber: confirmOrder.id.substring(0, 8).toUpperCase()
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to send notification:', notificationError);
+      }
+
+      toast({
+        title: "Order Claimed",
+        description: `Order claimed successfully! You now have ${activeOrdersCount + 1}/5 active orders.`,
+      });
+
+      setConfirmOrder(null);
+      loadDashboardData(); // Refresh the data
+    } catch (error) {
+      console.error('Error claiming order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to claim order. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -1218,81 +1293,28 @@ export function OperatorDashboard() {
             operatorLocation={operatorLocation}
           />
         )}
+
+        {/* Zip Code Edit Modal */}
+        {showZipCodeEdit && washerData && (
+          <OperatorZipCodeEditModal
+            isOpen={showZipCodeEdit}
+            onClose={() => setShowZipCodeEdit(false)}
+            operator={{
+              id: washerData.id,
+              user_id: washerData.user_id,
+              zip_codes: washerData.zip_codes,
+              profiles: operatorProfile
+            }}
+            onSuccess={() => {
+              loadDashboardData();
+              toast({
+                title: "Success",
+                description: "Service areas updated successfully"
+              });
+            }}
+          />
+        )}
       </div>
     </div>
   );
-
-  // Add the missing claim order function
-  async function handleClaimOrder() {
-    if (!confirmOrder || !washerData) {
-      console.error('Missing confirmOrder or washerData:', { confirmOrder, washerData });
-      return;
-    }
-
-    // Check if operator already has 5 active orders
-    const activeOrdersCount = myOrders.filter(order => 
-      !['completed', 'delivered'].includes(order.status)
-    ).length;
-
-    if (activeOrdersCount >= 5) {
-      toast({
-        title: "Order Limit Reached",
-        description: "You can only have 5 active orders at a time. Please complete some orders first.",
-        variant: "destructive",
-      });
-      setConfirmOrder(null);
-      return;
-    }
-
-    console.log('Claiming order:', confirmOrder.id, 'for washer:', washerData.id);
-
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .update({ 
-          washer_id: washerData.id,
-          status: 'claimed',
-          claimed_at: new Date().toISOString()
-        })
-        .eq('id', confirmOrder.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase error claiming order:', error);
-        throw error;
-      }
-
-      console.log('Order claimed successfully:', data);
-
-      // Send notification about order being claimed
-      try {
-        await supabase.functions.invoke('send-order-notifications', {
-          body: {
-            orderId: confirmOrder.id,
-            customerId: confirmOrder.customer_id,
-            status: 'claimed',
-            orderNumber: confirmOrder.id.substring(0, 8).toUpperCase()
-          }
-        });
-      } catch (notificationError) {
-        console.error('Failed to send notification:', notificationError);
-      }
-
-      toast({
-        title: "Order Claimed",
-        description: `Order claimed successfully! You now have ${activeOrdersCount + 1}/5 active orders.`,
-      });
-
-      setConfirmOrder(null);
-      loadDashboardData(); // Refresh the data
-    } catch (error) {
-      console.error('Error claiming order:', error);
-      toast({
-        title: "Error",
-        description: "Failed to claim order. Please try again.",
-        variant: "destructive",
-      });
-    }
-  }
 }
