@@ -75,6 +75,8 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
   const { user } = useAuth();
 
   console.log('OrderTracking component mounted, user:', user?.id, 'selectedOrderId:', selectedOrderId);
+  console.log('selectedOrder state:', selectedOrder);
+  
   
   if (showHistory) {
     return <OrderHistory onBack={() => setShowHistory(false)} />;
@@ -165,13 +167,19 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
       if (error) throw error;
       console.log('Loaded orders for customer:', data?.length || 0, 'orders');
       console.log('Order statuses:', data?.map(o => ({ id: o.id.slice(-8), status: o.status, step: o.current_step })) || []);
+      console.log('selectedOrderId being searched for:', selectedOrderId);
+      console.log('Raw data returned:', data);
+      
       
       const ordersData = data as Order[] || [];
       setOrders(ordersData);
       
       // If we're showing a specific order, set it as selected
       if (selectedOrderId && ordersData.length > 0) {
+        console.log('Setting selectedOrder to:', ordersData[0]);
         setSelectedOrder(ordersData[0]);
+      } else {
+        console.log('Not setting selectedOrder. selectedOrderId:', selectedOrderId, 'ordersData.length:', ordersData.length);
       }
     } catch (error) {
       console.error('Error loading orders:', error);
