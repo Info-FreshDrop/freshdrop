@@ -150,6 +150,13 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
           lockers:locker_id (
             name,
             address
+          ),
+          washers:washer_id (
+            user_id,
+            profiles:user_id (
+              first_name,
+              last_name
+            )
           )
         `)
         .eq('customer_id', user.id)
@@ -627,7 +634,7 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
                   {/* Order Actions */}
                   <div className="mt-4 flex gap-2">
                     {/* Messaging */}
-                    {order.washers && (
+                    {order.washer_id && (
                       <Button
                         variant="outline"
                         size="sm"
