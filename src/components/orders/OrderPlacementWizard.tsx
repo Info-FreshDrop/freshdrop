@@ -30,6 +30,7 @@ import {
   CreditCard,
   Settings
 } from "lucide-react";
+import { sanitizeInput, validateZipCode } from "@/utils/inputValidation";
 
 interface OrderPlacementWizardProps {
   onBack: () => void;
@@ -263,6 +264,16 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
   };
 
   const handleSubmit = async () => {
+    // Validate and sanitize inputs before submission
+    if (formData.zipCode && !validateZipCode(formData.zipCode)) {
+      toast({
+        title: "Invalid zip code",
+        description: "Please enter a valid zip code (e.g., 12345 or 12345-6789)",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Calculate pickup time based on selected date and time window
@@ -298,16 +309,16 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
       const deliveryEnd = new Date(pickupEnd);
       deliveryEnd.setDate(deliveryEnd.getDate() + 1);
 
-      // Prepare order data
+      // Prepare order data with sanitized inputs
       const orderData = {
         pickup_type: orderType,
         service_type: serviceType as any,
         zip_code: formData.zipCode,
         is_express: isExpress,
-        pickup_address: orderType === 'pickup_delivery' ? formData.pickupAddress : null,
-        delivery_address: orderType === 'pickup_delivery' ? formData.deliveryAddress : null,
+        pickup_address: orderType === 'pickup_delivery' ? sanitizeInput(formData.pickupAddress) : null,
+        delivery_address: orderType === 'pickup_delivery' ? sanitizeInput(formData.deliveryAddress) : null,
         locker_id: orderType === 'locker' ? formData.lockerId : null,
-        special_instructions: formData.specialInstructions,
+        special_instructions: sanitizeInput(formData.specialInstructions),
         bag_count: formData.bagCount,
         items: [{ time_window: formData.timeWindow, shop_items: selectedShopItems }],
         total_amount_cents: calculateTotal(),

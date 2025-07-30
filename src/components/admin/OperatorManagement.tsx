@@ -264,15 +264,17 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
           throw new Error('Failed to create user account');
         }
 
-        // Assign operator role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert([{
-            user_id: authData.user.id,
-            role: 'operator'
-          }]);
+        // Assign operator role using secure function
+        const { data: roleSuccess, error: roleError } = await supabase.rpc('change_user_role', {
+          target_user_id: authData.user.id,
+          new_role: 'operator',
+          reason: `Approved application ${applicationId} - auto-assigned operator role`
+        });
 
-        if (roleError) throw roleError;
+        if (roleError) {
+          console.error('Role assignment error:', roleError);
+          throw new Error(`Failed to assign operator role: ${roleError.message}`);
+        }
 
         // Create operator record in washers table
         const { error: washerError } = await supabase

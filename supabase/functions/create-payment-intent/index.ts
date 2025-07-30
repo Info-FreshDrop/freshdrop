@@ -225,12 +225,15 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Payment creation error:", errorMessage);
-    console.error("Error stack:", error instanceof Error ? error.stack : "No stack");
+    // Secure error logging - don't expose stack traces to client
+    const errorId = crypto.randomUUID();
+    console.error(`Payment intent creation error [${errorId}]:`, error);
     
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        error: "Payment processing failed",
+        errorId: errorId
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

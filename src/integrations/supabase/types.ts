@@ -703,6 +703,36 @@ export type Database = {
           },
         ]
       }
+      role_change_audit: {
+        Row: {
+          changed_by: string
+          created_at: string | null
+          id: string
+          new_role: Database["public"]["Enums"]["app_role"]
+          old_role: Database["public"]["Enums"]["app_role"] | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_by: string
+          created_at?: string | null
+          id?: string
+          new_role: Database["public"]["Enums"]["app_role"]
+          old_role?: Database["public"]["Enums"]["app_role"] | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_by?: string
+          created_at?: string | null
+          id?: string
+          new_role?: Database["public"]["Enums"]["app_role"]
+          old_role?: Database["public"]["Enums"]["app_role"] | null
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       service_areas: {
         Row: {
           allows_delivery: boolean | null
@@ -995,6 +1025,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      change_user_role: {
+        Args: {
+          target_user_id: string
+          new_role: Database["public"]["Enums"]["app_role"]
+          reason?: string
+        }
+        Returns: boolean
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1009,6 +1047,18 @@ export type Database = {
       is_admin_role: {
         Args: { user_uuid: string }
         Returns: boolean
+      }
+      validate_promo_code_usage: {
+        Args: {
+          code_to_check: string
+          user_id_to_check: string
+          order_total_cents: number
+        }
+        Returns: {
+          is_valid: boolean
+          discount_amount_cents: number
+          error_message: string
+        }[]
       }
     }
     Enums: {
