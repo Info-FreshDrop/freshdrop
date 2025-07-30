@@ -1,14 +1,12 @@
 import { Homepage } from "@/components/Homepage";
-import { AppStoreAssets } from "@/components/mobile/AppStoreAssets";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { OperatorDashboard } from "@/components/dashboards/OperatorDashboard";
 
 const Index = () => {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     // Auto-redirect operators to their dashboard
@@ -16,11 +14,6 @@ const Index = () => {
       // Don't navigate, just show the operator dashboard
     }
   }, [userRole, navigate]);
-
-  // Show app store assets page
-  if (location.pathname === '/mobile-test') {
-    return <AppStoreAssets />;
-  }
 
   // Show operator dashboard if user is an operator
   if (userRole === 'operator') {
