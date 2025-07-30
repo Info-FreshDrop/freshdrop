@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { AppStoreAssets } from "@/components/mobile/AppStoreAssets";
 import Index from "./pages/Index";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -28,7 +27,6 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/mobile-test" element={<AppStoreAssets />} />
               <Route path="/owner-dashboard" element={<OwnerDashboard />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/reset-password" element={<ResetPassword />} />
