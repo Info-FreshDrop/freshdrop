@@ -25,9 +25,10 @@ interface OrderStatusProgressProps {
   operatorName?: string;
   currentStep?: number;
   stepPhotos?: Record<string, string>;
+  showDetailedTimeline?: boolean;
 }
 
-export function OrderStatusProgress({ status, operatorName, currentStep, stepPhotos }: OrderStatusProgressProps) {
+export function OrderStatusProgress({ status, operatorName, currentStep, stepPhotos, showDetailedTimeline = false }: OrderStatusProgressProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
   const getDetailedStepInfo = (step: number) => {
@@ -163,7 +164,7 @@ export function OrderStatusProgress({ status, operatorName, currentStep, stepPho
       return Math.min((currentStep / 13) * 100, 100);
     }
     
-    // Fall back to status-based progress
+    // Fall back to status-based progress - treat unclaimed as order placed
     switch (status) {
       case 'placed':
       case 'unclaimed':
@@ -182,6 +183,14 @@ export function OrderStatusProgress({ status, operatorName, currentStep, stepPho
       default:
         return 0;
     }
+  };
+
+  const getDisplayStatus = () => {
+    // Convert unclaimed to more customer-friendly status
+    if (status === 'unclaimed') {
+      return 'placed';
+    }
+    return status;
   };
 
   const currentStepInfo = currentStep ? getDetailedStepInfo(currentStep) : null;
@@ -251,72 +260,100 @@ export function OrderStatusProgress({ status, operatorName, currentStep, stepPho
           <span className="text-sm text-muted-foreground">{Math.round(progress)}% Complete</span>
         </div>
         <Progress value={progress} className="h-3" />
+        {!showDetailedTimeline && (
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Order Placed</span>
+            <span>Delivered</span>
+          </div>
+        )}
       </div>
 
-      {/* Detailed Step Timeline */}
-      <div className="space-y-3">
-        <h4 className="text-sm font-semibold text-foreground">Timeline</h4>
-        <div className="space-y-2 max-h-60 overflow-y-auto">
-          {Array.from({ length: 13 }, (_, i) => i + 1).map((step) => {
-            const stepInfo = getDetailedStepInfo(step);
-            const isCompleted = currentStep ? step <= currentStep : false;
-            const isCurrent = step === currentStep;
-            const hasPhoto = stepInfo.hasPhoto && stepPhotos && stepPhotos[`step_${step}`];
+      {/* Simple Status Display for Orders List */}
+      {!showDetailedTimeline && (
+        <div className="flex items-center justify-between">
+          <Badge variant="secondary" className="text-sm">
+            {getDisplayStatus() === 'placed' && 'Order Placed'}
+            {getDisplayStatus() === 'claimed' && 'Operator Assigned'}
+            {getDisplayStatus() === 'picked_up' && 'Picked Up'}
+            {getDisplayStatus() === 'in_progress' && 'Processing'}
+            {getDisplayStatus() === 'washed' && 'Processing'}
+            {getDisplayStatus() === 'folded' && 'Ready for Delivery'}
+            {getDisplayStatus() === 'completed' && 'Delivered'}
+          </Badge>
+          {operatorName && (
+            <span className="text-sm text-muted-foreground">
+              Operator: <span className="font-medium text-foreground">{operatorName}</span>
+            </span>
+          )}
+        </div>
+      )}
 
-            return (
-              <div 
-                key={step}
-                className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-                  isCurrent 
-                    ? 'bg-primary/5 border border-primary/20' 
-                    : isCompleted 
-                      ? 'bg-green-50 border border-green-200' 
-                      : 'bg-muted/30'
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  isCurrent 
-                    ? 'bg-primary text-primary-foreground' 
-                    : isCompleted 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-muted text-muted-foreground'
-                }`}>
-                  {isCompleted && !isCurrent ? (
-                    <CheckCircle className="h-4 w-4" />
-                  ) : (
-                    <stepInfo.icon className={`h-4 w-4 ${stepInfo.animate && isCurrent ? 'animate-pulse' : ''}`} />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h5 className={`text-sm font-medium ${
-                      isCurrent ? 'text-foreground' : isCompleted ? 'text-green-700' : 'text-muted-foreground'
-                    }`}>
-                      {stepInfo.title}
-                    </h5>
-                    {hasPhoto && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 px-2 text-xs"
-                        onClick={() => setSelectedPhoto(stepPhotos[`step_${step}`])}
-                      >
-                        <Camera className="h-3 w-3 mr-1" />
-                        Photo
-                      </Button>
+      {/* Detailed Step Timeline - Only show when explicitly requested */}
+      {showDetailedTimeline && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-foreground">Timeline</h4>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {Array.from({ length: 13 }, (_, i) => i + 1).map((step) => {
+              const stepInfo = getDetailedStepInfo(step);
+              const isCompleted = currentStep ? step <= currentStep : false;
+              const isCurrent = step === currentStep;
+              const hasPhoto = stepInfo.hasPhoto && stepPhotos && stepPhotos[`step_${step}`];
+
+              return (
+                <div 
+                  key={step}
+                  className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
+                    isCurrent 
+                      ? 'bg-primary/5 border border-primary/20' 
+                      : isCompleted 
+                        ? 'bg-green-50 border border-green-200' 
+                        : 'bg-muted/30'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    isCurrent 
+                      ? 'bg-primary text-primary-foreground' 
+                      : isCompleted 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {isCompleted && !isCurrent ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <stepInfo.icon className={`h-4 w-4 ${stepInfo.animate && isCurrent ? 'animate-pulse' : ''}`} />
                     )}
                   </div>
-                  <p className={`text-xs ${
-                    isCurrent ? 'text-muted-foreground' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
-                  }`}>
-                    {stepInfo.description}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h5 className={`text-sm font-medium ${
+                        isCurrent ? 'text-foreground' : isCompleted ? 'text-green-700' : 'text-muted-foreground'
+                      }`}>
+                        {stepInfo.title}
+                      </h5>
+                      {hasPhoto && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-2 text-xs"
+                          onClick={() => setSelectedPhoto(stepPhotos[`step_${step}`])}
+                        >
+                          <Camera className="h-3 w-3 mr-1" />
+                          Photo
+                        </Button>
+                      )}
+                    </div>
+                    <p className={`text-xs ${
+                      isCurrent ? 'text-muted-foreground' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
+                    }`}>
+                      {stepInfo.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Photo Modal */}
       <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>

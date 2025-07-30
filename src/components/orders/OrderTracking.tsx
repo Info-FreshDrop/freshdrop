@@ -393,6 +393,7 @@ export function OrderTracking({ onBack, onOrderUpdate, selectedOrderId }: OrderT
                     status={selectedOrder.status} 
                     currentStep={selectedOrder.current_step}
                     stepPhotos={selectedOrder.step_photos}
+                    showDetailedTimeline={true}
                     operatorName={selectedOrder.washers?.profiles ? 
                       `${selectedOrder.washers.profiles.first_name || ''} ${selectedOrder.washers.profiles.last_name || ''}`.trim() :
                       undefined
