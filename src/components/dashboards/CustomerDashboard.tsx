@@ -95,13 +95,15 @@ export function CustomerDashboard() {
       setIsLoadingOrders(true);
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select('*, customer_acknowledged')
         .eq('customer_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
       const allOrders = data || [];
+      console.log('All orders with customer_acknowledged:', allOrders.map(o => ({id: o.id.slice(0,8), status: o.status, acknowledged: o.customer_acknowledged})));
+      
       // Separate active orders from acknowledged completed ones
       const activeOrders = allOrders.filter(order => 
         !['completed', 'cancelled'].includes(order.status) || 
@@ -110,6 +112,8 @@ export function CustomerDashboard() {
       const completedOrders = allOrders.filter(order => 
         (['completed', 'cancelled'].includes(order.status)) && order.customer_acknowledged
       );
+      
+      console.log('Active orders:', activeOrders.length, 'Completed orders:', completedOrders.length);
       
       setOrders(activeOrders);
       setOrderHistory(completedOrders);
@@ -342,14 +346,21 @@ export function CustomerDashboard() {
                               size="lg"
                               className="w-full text-sm mt-3 py-3 bg-primary hover:bg-primary/90 text-white font-semibold"
                               onClick={async () => {
+                                console.log('Clear button clicked for order:', order.id);
+                                console.log('Order current acknowledged status:', order.customer_acknowledged);
                                 try {
-                                  const { error } = await supabase
+                                  const { data, error } = await supabase
                                     .from('orders')
                                     .update({ customer_acknowledged: true })
-                                    .eq('id', order.id);
+                                    .eq('id', order.id)
+                                    .select();
                                   
-                                  if (error) throw error;
+                                  if (error) {
+                                    console.error('Supabase update error:', error);
+                                    throw error;
+                                  }
                                   
+                                  console.log('Order successfully updated:', data);
                                   loadOrders(); // Refresh the orders list
                                 } catch (error) {
                                   console.error('Error acknowledging order:', error);
