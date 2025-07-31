@@ -228,6 +228,8 @@ export function UserManagement({ onBack }: UserManagementProps) {
   };
 
   const handleCreateUser = async () => {
+    console.log('handleCreateUser called with data:', createUserData);
+    
     if (!createUserData.firstName || !createUserData.lastName || !createUserData.email || !createUserData.password) {
       toast({
         title: "Error",
@@ -240,32 +242,52 @@ export function UserManagement({ onBack }: UserManagementProps) {
     setCreating(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Current session:', session);
+      
       if (!session) {
         throw new Error('No active session');
       }
 
-      const response = await fetch(`https://sbilxpqluuvxhmgfpggx.supabase.co/functions/v1/create-user`, {
+      const functionUrl = `https://sbilxpqluuvxhmgfpggx.supabase.co/functions/v1/create-user`;
+      console.log('Calling edge function at:', functionUrl);
+      
+      const requestBody = {
+        email: createUserData.email,
+        password: createUserData.password,
+        firstName: createUserData.firstName,
+        lastName: createUserData.lastName,
+        role: createUserData.role,
+      };
+      console.log('Request body:', requestBody);
+
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({
-          email: createUserData.email,
-          password: createUserData.password,
-          firstName: createUserData.firstName,
-          lastName: createUserData.lastName,
-          role: createUserData.role,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create user');
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse response as JSON:', e);
+        throw new Error(`Invalid response: ${responseText}`);
       }
 
-      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP ${response.status}: ${responseText}`);
+      }
       
+      console.log('User created successfully:', result);
       toast({
         title: "User Created",
         description: `Successfully created user: ${result.user.email}`,
