@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -63,6 +65,15 @@ export function UserManagement({ onBack }: UserManagementProps) {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('users');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createUserData, setCreateUserData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    role: 'marketing' as 'owner' | 'marketing'
+  });
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -177,6 +188,71 @@ export function UserManagement({ onBack }: UserManagementProps) {
     }
   };
 
+  const handleCreateUser = async () => {
+    if (!createUserData.firstName || !createUserData.lastName || !createUserData.email || !createUserData.password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(`https://sbilxpqluuvxhmgfpggx.supabase.co/functions/v1/create-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          email: createUserData.email,
+          password: createUserData.password,
+          firstName: createUserData.firstName,
+          lastName: createUserData.lastName,
+          role: createUserData.role,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create user');
+      }
+
+      const result = await response.json();
+      
+      toast({
+        title: "User Created",
+        description: `Successfully created user: ${result.user.email}`,
+      });
+
+      setShowCreateDialog(false);
+      setCreateUserData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        role: 'marketing'
+      });
+      loadData();
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create user.",
+        variant: "destructive",
+      });
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case 'owner': return 'default';
@@ -237,6 +313,10 @@ export function UserManagement({ onBack }: UserManagementProps) {
                 Manage users, roles, and support tickets
               </p>
             </div>
+            <Button onClick={() => setShowCreateDialog(true)} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add User
+            </Button>
           </div>
         </div>
 
@@ -446,6 +526,88 @@ export function UserManagement({ onBack }: UserManagementProps) {
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowUserDialog(false)}>
                 Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create User Dialog */}
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create New User</DialogTitle>
+              <DialogDescription>
+                Add a new owner or marketing user to the system
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={createUserData.firstName}
+                    onChange={(e) => setCreateUserData(prev => ({ ...prev, firstName: e.target.value }))}
+                    placeholder="John"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={createUserData.lastName}
+                    onChange={(e) => setCreateUserData(prev => ({ ...prev, lastName: e.target.value }))}
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={createUserData.email}
+                  onChange={(e) => setCreateUserData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="john@example.com"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={createUserData.password}
+                  onChange={(e) => setCreateUserData(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="••••••••"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="role">Role</Label>
+                <Select
+                  value={createUserData.role}
+                  onValueChange={(value: 'owner' | 'marketing') => 
+                    setCreateUserData(prev => ({ ...prev, role: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="owner">Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateUser} disabled={creating}>
+                {creating ? "Creating..." : "Create User"}
               </Button>
             </DialogFooter>
           </DialogContent>
