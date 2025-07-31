@@ -83,17 +83,36 @@ export function UserManagement({ onBack }: UserManagementProps) {
     try {
       console.log('Loading user data...');
       
-      // First get all profiles with owner/marketing roles
+      // First get all user_roles with owner/marketing roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('role', ['owner', 'marketing']);
+
+      console.log('Roles data:', rolesData);
+      console.log('Roles error:', rolesError);
+
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError);
+        throw rolesError;
+      }
+
+      if (!rolesData || rolesData.length === 0) {
+        console.log('No owner/marketing users found');
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(rolesData.map(r => r.user_id))];
+      console.log('User IDs with admin roles:', userIds);
+
+      // Now get profiles for these users
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          user_id,
-          first_name,
-          last_name,
-          phone,
-          created_at
-        `)
-        .order('created_at', { ascending: false });
+        .select('user_id, first_name, last_name, phone, created_at')
+        .in('user_id', userIds);
 
       console.log('Profiles data:', profilesData);
       console.log('Profiles error:', profilesError);
@@ -103,38 +122,21 @@ export function UserManagement({ onBack }: UserManagementProps) {
         throw profilesError;
       }
 
-      // Now get user roles for each profile
-      const transformedUsers: User[] = [];
-      
-      for (const profile of profilesData || []) {
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', profile.user_id);
-
-        if (roleError) {
-          console.error('Error fetching role for user:', profile.user_id, roleError);
-          continue; // Skip this user if we can't get their role
-        }
-
-        // Only include users with owner or marketing roles
-        const userRoles = roleData || [];
-        const hasAdminRole = userRoles.some(r => r.role === 'owner' || r.role === 'marketing');
-        
-        if (hasAdminRole) {
-          transformedUsers.push({
-            id: profile.user_id,
-            email: 'user@example.com', // We can't access auth.users directly via client
-            created_at: profile.created_at,
-            profiles: {
-              first_name: profile.first_name || '',
-              last_name: profile.last_name || '',
-              phone: profile.phone || ''
-            },
-            user_roles: userRoles
-          });
-        }
-      }
+      // Combine the data
+      const transformedUsers: User[] = (profilesData || []).map(profile => {
+        const userRoles = rolesData.filter(r => r.user_id === profile.user_id);
+        return {
+          id: profile.user_id,
+          email: 'user@example.com', // We can't access auth.users email directly via client
+          created_at: profile.created_at,
+          profiles: {
+            first_name: profile.first_name || '',
+            last_name: profile.last_name || '',
+            phone: profile.phone || ''
+          },
+          user_roles: userRoles
+        };
+      });
 
       console.log('Transformed users:', transformedUsers);
       setUsers(transformedUsers);
