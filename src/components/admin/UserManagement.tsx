@@ -81,55 +81,94 @@ export function UserManagement({ onBack }: UserManagementProps) {
 
   const loadData = async () => {
     try {
-      // Load users with profiles and roles
-      const { data: usersData, error: usersError } = await supabase
+      console.log('Loading user data...');
+      
+      // First get all profiles with owner/marketing roles
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select(`
-          *,
-          user_roles(role)
+          user_id,
+          first_name,
+          last_name,
+          phone,
+          created_at
         `)
         .order('created_at', { ascending: false });
 
-      if (usersError) throw usersError;
+      console.log('Profiles data:', profilesData);
+      console.log('Profiles error:', profilesError);
 
-      // Get auth users data
-      const transformedUsers: User[] = [];
-      for (const profile of usersData || []) {
-        // In a real app, you'd need to get auth user data differently
-        // For now, we'll use the profile data
-        transformedUsers.push({
-          id: profile.user_id,
-          email: `user@example.com`, // Would come from auth
-          created_at: profile.created_at,
-          profiles: {
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            phone: profile.phone
-          },
-          user_roles: Array.isArray(profile.user_roles) ? profile.user_roles : []
-        });
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
       }
 
+      // Now get user roles for each profile
+      const transformedUsers: User[] = [];
+      
+      for (const profile of profilesData || []) {
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', profile.user_id);
+
+        if (roleError) {
+          console.error('Error fetching role for user:', profile.user_id, roleError);
+          continue; // Skip this user if we can't get their role
+        }
+
+        // Only include users with owner or marketing roles
+        const userRoles = roleData || [];
+        const hasAdminRole = userRoles.some(r => r.role === 'owner' || r.role === 'marketing');
+        
+        if (hasAdminRole) {
+          transformedUsers.push({
+            id: profile.user_id,
+            email: 'user@example.com', // We can't access auth.users directly via client
+            created_at: profile.created_at,
+            profiles: {
+              first_name: profile.first_name || '',
+              last_name: profile.last_name || '',
+              phone: profile.phone || ''
+            },
+            user_roles: userRoles
+          });
+        }
+      }
+
+      console.log('Transformed users:', transformedUsers);
       setUsers(transformedUsers);
 
       // Load support tickets
       const { data: ticketsData, error: ticketsError } = await supabase
         .from('support_tickets')
         .select(`
-          *,
+          id,
+          subject,
+          status,
+          priority,
+          created_at,
+          customer_id,
           profiles(first_name, last_name)
         `)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (ticketsError) throw ticketsError;
-      setSupportTickets((ticketsData as any) || []);
+      console.log('Tickets data:', ticketsData);
+      console.log('Tickets error:', ticketsError);
 
-    } catch (error) {
+      if (ticketsError) {
+        console.error('Error fetching tickets:', ticketsError);
+        // Don't throw here, just log the error as tickets are secondary
+      } else {
+        setSupportTickets((ticketsData as any) || []);
+      }
+
+    } catch (error: any) {
       console.error('Error loading data:', error);
       toast({
         title: "Error",
-        description: "Failed to load user data.",
+        description: `Failed to load user data: ${error.message}`,
         variant: "destructive",
       });
     } finally {
