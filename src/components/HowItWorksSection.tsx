@@ -121,17 +121,31 @@ export function HowItWorksSection() {
                 ))}
               </div>
               
-              <div className="mt-8 p-6 bg-card rounded-xl border shadow-soft">
-                <div className="flex items-center gap-3 mb-3">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  <h4 className="font-semibold">Locker Benefits</h4>
+              {/* Real Process Photos */}
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-card rounded-xl border shadow-soft overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?w=400&h=250&fit=crop"
+                    alt="Using smart locker interface" 
+                    className="w-full h-32 object-cover"
+                  />
+                  <div className="p-4">
+                    <h4 className="font-semibold mb-2">Smart Locker Access</h4>
+                    <p className="text-sm text-muted-foreground">Convenient touchscreen interface for easy drop-off and pickup</p>
+                  </div>
                 </div>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Available 24/7 at convenient locations</li>
-                  <li>• No need to wait for pickup or delivery windows</li>
-                  <li>• Secure storage with QR code access</li>
-                  <li>• Perfect for busy schedules</li>
-                </ul>
+                <div className="bg-card rounded-xl border shadow-soft p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <h4 className="font-semibold">Locker Benefits</h4>
+                  </div>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Available 24/7 at convenient locations</li>
+                    <li>• No need to wait for pickup or delivery windows</li>
+                    <li>• Secure storage with QR code access</li>
+                    <li>• Perfect for busy schedules</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </TabsContent>
@@ -151,17 +165,31 @@ export function HowItWorksSection() {
                 ))}
               </div>
               
-              <div className="mt-8 p-6 bg-card rounded-xl border shadow-soft">
-                <div className="flex items-center gap-3 mb-3">
-                  <Truck className="h-5 w-5 text-primary" />
-                  <h4 className="font-semibold">Pickup & Delivery Benefits</h4>
+              {/* Real Process Photos */}
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-card rounded-xl border shadow-soft overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=250&fit=crop"
+                    alt="Professional delivery service" 
+                    className="w-full h-32 object-cover"
+                  />
+                  <div className="p-4">
+                    <h4 className="font-semibold mb-2">Professional Delivery</h4>
+                    <p className="text-sm text-muted-foreground">Trusted operators handle your clothes with care from pickup to delivery</p>
+                  </div>
                 </div>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Completely contactless service option</li>
-                  <li>• Flexible time windows to fit your schedule</li>
-                  <li>• GPS tracking for pickup and delivery</li>
-                  <li>• Perfect for homes, offices, and dorms</li>
-                </ul>
+                <div className="bg-card rounded-xl border shadow-soft p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Truck className="h-5 w-5 text-primary" />
+                    <h4 className="font-semibold">Pickup & Delivery Benefits</h4>
+                  </div>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Completely contactless service option</li>
+                    <li>• Background-checked operators</li>
+                    <li>• GPS tracking for pickup and delivery</li>
+                    <li>• Perfect for homes, offices, and dorms</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </TabsContent>

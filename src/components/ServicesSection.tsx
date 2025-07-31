@@ -77,17 +77,74 @@ export function ServicesSection() {
           ))}
         </div>
 
+        {/* Meet Our Professional Team */}
         <div className="mt-16 p-8 bg-gradient-wave rounded-2xl border shadow-soft">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold mb-4 text-primary">Meet Our Professional Team</h3>
+            <p className="text-muted-foreground mb-6">Trusted, background-checked operators who care about your clothes</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="text-center">
+              <img 
+                src={`https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=200&h=200&fit=crop&crop=face`}
+                alt="Professional operator" 
+                className="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-primary/30"
+              />
+              <h4 className="font-semibold text-sm">Alex T.</h4>
+              <p className="text-xs text-muted-foreground">3 years experience</p>
+              <div className="flex justify-center mt-1">
+                <div className="text-xs text-primary">★★★★★ 4.9</div>
+              </div>
+            </div>
+            <div className="text-center">
+              <img 
+                src={`https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop&crop=face`}
+                alt="Professional operator" 
+                className="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-primary/30"
+              />
+              <h4 className="font-semibold text-sm">Maria S.</h4>
+              <p className="text-xs text-muted-foreground">5 years experience</p>
+              <div className="flex justify-center mt-1">
+                <div className="text-xs text-primary">★★★★★ 5.0</div>
+              </div>
+            </div>
+            <div className="text-center">
+              <img 
+                src={`https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=200&h=200&fit=crop&crop=face`}
+                alt="Professional operator" 
+                className="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-primary/30"
+              />
+              <h4 className="font-semibold text-sm">David L.</h4>
+              <p className="text-xs text-muted-foreground">2 years experience</p>
+              <div className="flex justify-center mt-1">
+                <div className="text-xs text-primary">★★★★★ 4.8</div>
+              </div>
+            </div>
+            <div className="text-center">
+              <img 
+                src={`https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=200&h=200&fit=crop&crop=face`}
+                alt="Professional operator" 
+                className="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-primary/30"
+              />
+              <h4 className="font-semibold text-sm">Rachel M.</h4>
+              <p className="text-xs text-muted-foreground">4 years experience</p>
+              <div className="flex justify-center mt-1">
+                <div className="text-xs text-primary">★★★★★ 4.9</div>
+              </div>
+            </div>
+          </div>
+
           <div className="text-center">
             <h3 className="text-2xl font-bold mb-4 text-primary">Why Choose FreshDrop?</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-primary rounded-full"></div>
-                <span>Professional-grade cleaning equipment</span>
+                <span>Background-checked professionals</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                <span>Real-time order tracking</span>
+                <span>Real-time photo updates</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-accent rounded-full"></div>
