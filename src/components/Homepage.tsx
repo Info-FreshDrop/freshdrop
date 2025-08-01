@@ -3,7 +3,6 @@ import { HeroSection } from "./HeroSection";
 import { AuthForms } from "./AuthForms";
 import { OperatorLogin } from "./OperatorLogin";
 import { ServicesSection } from "./ServicesSection";
-import { TrustSection } from "./TrustSection";
 import { ChatWidget } from "./customer/ChatWidget";
 import { HowItWorksSection } from "./HowItWorksSection";
 import { FAQSection } from "./FAQSection";
@@ -114,7 +113,6 @@ export function Homepage() {
 
       {/* Public sections */}
       <ServicesSection />
-      <TrustSection />
       <HowItWorksSection />
       <FAQSection />
       <OperatorApplication />
