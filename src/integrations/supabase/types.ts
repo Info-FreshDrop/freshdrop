@@ -50,6 +50,54 @@ export type Database = {
         }
         Relationships: []
       }
+      featured_operators: {
+        Row: {
+          completed_orders: number
+          created_at: string
+          display_order: number | null
+          experience: string
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          is_verified: boolean | null
+          name: string
+          rating: number
+          specialties: string[] | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          completed_orders?: number
+          created_at?: string
+          display_order?: number | null
+          experience: string
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          is_verified?: boolean | null
+          name: string
+          rating?: number
+          specialties?: string[] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          completed_orders?: number
+          created_at?: string
+          display_order?: number | null
+          experience?: string
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          is_verified?: boolean | null
+          name?: string
+          rating?: number
+          specialties?: string[] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       laundry_preferences: {
         Row: {
           category: string
@@ -922,6 +970,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      trust_metrics: {
+        Row: {
+          created_at: string
+          description: string
+          display_order: number | null
+          icon_name: string
+          id: string
+          is_active: boolean | null
+          title: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          display_order?: number | null
+          icon_name: string
+          id?: string
+          is_active?: boolean | null
+          title: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          display_order?: number | null
+          icon_name?: string
+          id?: string
+          is_active?: boolean | null
+          title?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

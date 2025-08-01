@@ -13,6 +13,7 @@ import { LiveOrderManagement } from "@/components/admin/LiveOrderManagement";
 import { OrderIssueTracking } from "@/components/admin/OrderIssueTracking";
 import { OperatorWorkloadBalance } from "@/components/admin/OperatorWorkloadBalance";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { TrustContentManagement } from "@/components/admin/TrustContentManagement";
 import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -30,7 +31,7 @@ import {
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'trust-content'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -223,6 +224,36 @@ export function OwnerDashboard() {
 
   if (currentView === 'workload-balance') {
     return <OperatorWorkloadBalance onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'trust-content') {
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentView('dashboard')}
+              className="p-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Trust Content Management
+            </h1>
+            <p className="text-muted-foreground">
+              Manage featured operators and trust metrics displayed on the homepage
+            </p>
+          </div>
+
+          <TrustContentManagement />
+        </div>
+      </div>
+    );
   }
 
   if (currentView === 'user-management') {
@@ -619,6 +650,33 @@ export function OwnerDashboard() {
                 </Button>
                 <Button variant="outline" className="w-full">
                   Usage Analytics
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-green-600" />
+                Trust Content
+              </CardTitle>
+              <CardDescription>
+                Manage homepage trust section and featured operators
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('trust-content')}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Manage Trust Content
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Featured Operators
                 </Button>
               </div>
             </CardContent>

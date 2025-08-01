@@ -1,127 +1,161 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, Shield, Award, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+// Icon mapping for dynamic icon rendering
+const iconMap = {
+  Shield,
+  Award,
+  CheckCircle,
+};
 
 export function TrustSection() {
-  const operators = [
-    {
-      id: 1,
-      name: "Alex Thompson",
-      image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=300&h=300&fit=crop&crop=face",
-      experience: "3 years",
-      rating: 4.9,
-      completedOrders: 1247,
-      specialties: ["Delicates", "Express"],
-      verified: true
-    },
-    {
-      id: 2,
-      name: "Maria Santos",
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=300&h=300&fit=crop&crop=face",
-      experience: "5 years",
-      rating: 5.0,
-      completedOrders: 2156,
-      specialties: ["Eco-Friendly", "Stain Removal"],
-      verified: true
-    },
-    {
-      id: 3,
-      name: "David Lee",
-      image: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=300&h=300&fit=crop&crop=face",
-      experience: "2 years",
-      rating: 4.8,
-      completedOrders: 892,
-      specialties: ["Quick Turnaround", "Pickup/Delivery"],
-      verified: true
-    },
-    {
-      id: 4,
-      name: "Rachel Martinez",
-      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=300&h=300&fit=crop&crop=face",
-      experience: "4 years",
-      rating: 4.9,
-      completedOrders: 1689,
-      specialties: ["Premium Care", "Business Attire"],
-      verified: true
-    }
-  ];
+  const [operators, setOperators] = useState([]);
+  const [trustMetrics, setTrustMetrics] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const trustMetrics = [
-    {
-      icon: Shield,
-      title: "Background Checked",
-      description: "All operators undergo thorough background verification",
-      value: "100%"
-    },
-    {
-      icon: Award,
-      title: "Customer Satisfaction",
-      description: "Average rating across all completed orders",
-      value: "4.9/5"
-    },
-    {
-      icon: CheckCircle,
-      title: "Orders Completed",
-      description: "Successfully processed orders this month",
-      value: "15,000+"
+  useEffect(() => {
+    fetchTrustData();
+  }, []);
+
+  const fetchTrustData = async () => {
+    try {
+      // Fetch featured operators
+      const { data: operatorsData, error: operatorsError } = await supabase
+        .from('featured_operators')
+        .select('*')
+        .eq('is_featured', true)
+        .order('display_order', { ascending: true });
+
+      if (operatorsError) {
+        console.error('Error fetching operators:', operatorsError);
+      } else {
+        setOperators(operatorsData || []);
+      }
+
+      // Fetch trust metrics
+      const { data: metricsData, error: metricsError } = await supabase
+        .from('trust_metrics')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (metricsError) {
+        console.error('Error fetching trust metrics:', metricsError);
+      } else {
+        setTrustMetrics(metricsData || []);
+      }
+    } catch (error) {
+      console.error('Error fetching trust data:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  if (loading) {
+    return (
+      <section className="py-20 px-6 bg-background">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="animate-pulse">Loading trust information...</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 px-6 bg-background">
       <div className="max-w-6xl mx-auto">
 
-        {/* Featured Operators */}
-        <div className="mb-16">
-          <h3 className="text-3xl font-bold text-center mb-12 text-primary">Meet Our Featured Operators</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {operators.map((operator) => (
-              <Card key={operator.id} className="border-0 shadow-soft hover:shadow-glow transition-all duration-300 overflow-hidden group">
-                <div className="relative">
-                  <img 
-                    src={operator.image}
-                    alt={`${operator.name} - Professional Operator`}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {operator.verified && (
-                    <Badge className="absolute top-3 right-3 bg-green-500 hover:bg-green-600">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Verified
-                    </Badge>
-                  )}
-                </div>
-                
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">{operator.name}</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                      <span className="text-sm font-semibold ml-1">{operator.rating}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">•</span>
-                    <span className="text-xs text-muted-foreground">{operator.experience} exp</span>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    <div className="text-xs text-muted-foreground">
-                      {operator.completedOrders.toLocaleString()} orders completed
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {operator.specialties.map((specialty, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {specialty}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Trust Metrics */}
+        {trustMetrics.length > 0 && (
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
+              Trusted by Thousands
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-12">
+              Our professional operators are the heart of our service. Each one is carefully vetted, 
+              trained, and committed to providing exceptional care for your clothes.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+              {trustMetrics.map((metric) => {
+                const IconComponent = iconMap[metric.icon_name] || CheckCircle;
+                return (
+                  <Card key={metric.id} className="border-0 shadow-soft hover:shadow-glow transition-all duration-300">
+                    <CardHeader className="text-center pb-2">
+                      <div className="flex justify-center mb-4">
+                        <div className="p-3 rounded-full bg-gradient-primary">
+                          <IconComponent className="h-8 w-8 text-primary-foreground" />
+                        </div>
+                      </div>
+                      <div className="text-3xl font-bold text-primary mb-2">{metric.value}</div>
+                      <CardTitle className="text-lg">{metric.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-0">
+                      <p className="text-sm text-muted-foreground">{metric.description}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Featured Operators */}
+        {operators.length > 0 && (
+          <div className="mb-16">
+            <h3 className="text-3xl font-bold text-center mb-12 text-primary">Meet Our Featured Operators</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {operators.map((operator) => (
+                <Card key={operator.id} className="border-0 shadow-soft hover:shadow-glow transition-all duration-300 overflow-hidden group">
+                  <div className="relative">
+                    <img 
+                      src={operator.image_url || "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=300&h=300&fit=crop&crop=face"}
+                      alt={`${operator.name} - Professional Operator`}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {operator.is_verified && (
+                      <Badge className="absolute top-3 right-3 bg-green-500 hover:bg-green-600">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">{operator.name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                        <span className="text-sm font-semibold ml-1">{operator.rating}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">•</span>
+                      <span className="text-xs text-muted-foreground">{operator.experience} exp</span>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="pt-0">
+                    <div className="space-y-2">
+                      <div className="text-xs text-muted-foreground">
+                        {operator.completed_orders?.toLocaleString() || '0'} orders completed
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {operator.specialties?.map((specialty, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {specialty}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Process Transparency */}
         <div className="bg-gradient-wave rounded-2xl p-8 border shadow-soft">
