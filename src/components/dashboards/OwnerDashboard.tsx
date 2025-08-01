@@ -14,6 +14,7 @@ import { OrderIssueTracking } from "@/components/admin/OrderIssueTracking";
 import { OperatorWorkloadBalance } from "@/components/admin/OperatorWorkloadBalance";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { TrustContentManagement } from "@/components/admin/TrustContentManagement";
+import { HomepageContentManagement } from "@/components/admin/HomepageContentManagement";
 import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
 import { 

@@ -50,6 +50,81 @@ export type Database = {
         }
         Relationships: []
       }
+      content_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          section: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          section: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          section?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customer_testimonials: {
+        Row: {
+          created_at: string
+          customer_initial: string
+          customer_name: string
+          display_order: number | null
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          testimonial_text: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_initial: string
+          customer_name: string
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          testimonial_text: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_initial?: string
+          customer_name?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          testimonial_text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       featured_operators: {
         Row: {
           completed_orders: number
@@ -95,6 +170,36 @@ export type Database = {
           specialties?: string[] | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      homepage_content: {
+        Row: {
+          content_text: string
+          content_type: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          section_key: string
+          updated_at: string
+        }
+        Insert: {
+          content_text: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          section_key: string
+          updated_at?: string
+        }
+        Update: {
+          content_text?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          section_key?: string
+          updated_at?: string
         }
         Relationships: []
       }

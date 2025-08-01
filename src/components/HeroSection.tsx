@@ -1,8 +1,59 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Droplets, Clock, Shield, Smartphone } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import freshDropLogo from "@/assets/freshdrop-logo.png";
 
 export function HeroSection() {
+  const [content, setContent] = useState({
+    hero_title: 'Laundry made easy',
+    hero_subtitle: 'Professional laundry service with 24-hour turnaround. Drop off at any locker or schedule pickup & delivery. Eco-friendly, secure, and contactless.',
+    trust_hero_title: 'Trusted by Real People'
+  });
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchContent();
+  }, []);
+
+  const fetchContent = async () => {
+    try {
+      // Fetch homepage content
+      const { data: contentData, error: contentError } = await supabase
+        .from('homepage_content')
+        .select('*')
+        .in('section_key', ['hero_title', 'hero_subtitle', 'trust_hero_title']);
+
+      if (contentError) {
+        console.error('Error fetching content:', contentError);
+      } else {
+        const contentMap = {};
+        contentData.forEach(item => {
+          contentMap[item.section_key] = item.content_text;
+        });
+        setContent(prev => ({ ...prev, ...contentMap }));
+      }
+
+      // Fetch testimonials
+      const { data: testimonialsData, error: testimonialsError } = await supabase
+        .from('customer_testimonials')
+        .select('*')
+        .eq('is_featured', true)
+        .order('display_order', { ascending: true });
+
+      if (testimonialsError) {
+        console.error('Error fetching testimonials:', testimonialsError);
+      } else {
+        setTestimonials(testimonialsData || []);
+      }
+    } catch (error) {
+      console.error('Error fetching hero content:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-hero overflow-hidden">
       {/* Animated wave background */}
@@ -37,13 +88,11 @@ export function HeroSection() {
         </div>
 
         <h2 className="text-2xl md:text-4xl font-semibold text-white/90 mb-6">
-          Laundry made easy
+          {content.hero_title}
         </h2>
         
         <p className="text-lg md:text-xl text-white/80 mb-12 max-w-2xl mx-auto leading-relaxed">
-          Professional laundry service with 24-hour turnaround. 
-          Drop off at any locker or schedule pickup & delivery. 
-          Eco-friendly, secure, and contactless.
+          {content.hero_subtitle}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
@@ -75,41 +124,27 @@ export function HeroSection() {
           </Button>
         </div>
 
-        {/* Trust Building Section - Real People */}
-        <div className="mb-16 bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-          <h3 className="text-2xl font-bold text-white mb-8 text-center">Trusted by Real People</h3>
-          
-          {/* Customer testimonials with real photos */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <img 
-                src={`https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=150&h=150&fit=crop&crop=face`}
-                alt="Happy customer" 
-                className="w-16 h-16 rounded-full mx-auto mb-3 border-2 border-white/30"
-              />
-              <p className="text-white/90 text-sm mb-2">"Amazing service! My clothes come back perfect every time."</p>
-              <p className="text-white/70 text-xs">- Sarah M.</p>
-            </div>
-            <div className="text-center">
-              <img 
-                src={`https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=150&h=150&fit=crop&crop=face`}
-                alt="Happy customer" 
-                className="w-16 h-16 rounded-full mx-auto mb-3 border-2 border-white/30"
-              />
-              <p className="text-white/90 text-sm mb-2">"So convenient! I use the lockers near my office."</p>
-              <p className="text-white/70 text-xs">- Jessica K.</p>
-            </div>
-            <div className="text-center">
-              <img 
-                src={`https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=150&h=150&fit=crop&crop=face`}
-                alt="Happy customer" 
-                className="w-16 h-16 rounded-full mx-auto mb-3 border-2 border-white/30"
-              />
-              <p className="text-white/90 text-sm mb-2">"Professional washers who really care about quality."</p>
-              <p className="text-white/70 text-xs">- Michael R.</p>
+        {/* Trust Building Section - Dynamic Testimonials */}
+        {testimonials.length > 0 && (
+          <div className="mb-16 bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+            <h3 className="text-2xl font-bold text-white mb-8 text-center">{content.trust_hero_title}</h3>
+            
+            {/* Customer testimonials with real photos */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {testimonials.slice(0, 3).map((testimonial) => (
+                <div key={testimonial.id} className="text-center">
+                  <img 
+                    src={testimonial.image_url || `https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=150&h=150&fit=crop&crop=face`}
+                    alt={`${testimonial.customer_name} testimonial`} 
+                    className="w-16 h-16 rounded-full mx-auto mb-3 border-2 border-white/30"
+                  />
+                  <p className="text-white/90 text-sm mb-2">"{testimonial.testimonial_text}"</p>
+                  <p className="text-white/70 text-xs">- {testimonial.customer_initial}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        )}
 
         {/* Features grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-white/90">
