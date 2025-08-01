@@ -1098,7 +1098,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
 
   return (
     <div className="min-h-screen bg-gradient-wave">
-      <div className="max-w-md mx-auto bg-white min-h-screen">
+      <div className="max-w-md mx-auto bg-white min-h-screen overflow-x-hidden">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
           <div className="flex items-center p-4">
@@ -1145,20 +1145,20 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         </div>
 
         {/* Content */}
-        <div className="pb-24">
+        <div className="pb-20 px-1">
           {renderStepContent()}
         </div>
 
         {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 safe-area-bottom">
           <div className="max-w-md mx-auto">
             {currentStep < 4 ? (
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 {currentStep > 1 && (
                   <Button
                     variant="outline"
                     onClick={handlePrevious}
-                    className="flex-1 h-12"
+                    className="flex-1 h-11 text-sm"
                   >
                     Previous
                   </Button>
@@ -1166,17 +1166,17 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                 <Button
                   onClick={handleNext}
                   disabled={!canGoToNextStep()}
-                  className="flex-1 h-12"
+                  className="flex-1 h-11 text-sm"
                 >
                   Next
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
             ) : (
               <Button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="w-full h-12 text-lg font-semibold"
+                className="w-full h-11 text-base font-semibold"
               >
                 {isLoading ? "Processing..." : `Pay $${(calculateTotal() / 100).toFixed(2)}`}
               </Button>

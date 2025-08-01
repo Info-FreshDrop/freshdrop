@@ -46,11 +46,11 @@ export function HeroSection() {
           Eco-friendly, secure, and contactless.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
+        <div className="flex flex-col gap-4 justify-center items-center mb-16 px-4">
           <Button 
             variant="hero" 
             size="xl" 
-            className="min-w-64"
+            className="w-full max-w-sm"
             onClick={() => {
               const authSection = document.querySelector('#auth-section');
               if (authSection) {
@@ -63,7 +63,7 @@ export function HeroSection() {
           <Button 
             variant="default" 
             size="xl" 
-            className="min-w-64 bg-primary text-primary-foreground hover:bg-primary/90"
+            className="w-full max-w-sm bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => {
               const authSection = document.querySelector('#auth-section');
               if (authSection) {
@@ -76,7 +76,7 @@ export function HeroSection() {
         </div>
 
         {/* Features grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-white/90">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-white/90 px-4">
           <div className="text-center">
             <Clock className="h-8 w-8 mx-auto mb-3 text-primary-lighter" />
             <div className="text-2xl font-bold">24hr</div>

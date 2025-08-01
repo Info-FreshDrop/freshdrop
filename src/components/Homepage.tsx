@@ -125,14 +125,14 @@ export function Homepage() {
             <p className="text-muted-foreground mb-4">
               Our support team is here to help you get the most out of FreshDrop's services.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center text-sm">
-              <div>
+            <div className="flex flex-col gap-2 justify-center text-sm">
+              <div className="text-center">
                 <strong>Email:</strong> support@freshdrop.com
               </div>
-              <div>
+              <div className="text-center">
                 <strong>Phone:</strong> (555) 123-WASH
               </div>
-              <div>
+              <div className="text-center">
                 <strong>Hours:</strong> 7 AM - 10 PM daily
               </div>
             </div>
@@ -143,8 +143,8 @@ export function Homepage() {
       {/* Footer */}
       <footer className="bg-primary text-primary-foreground py-12">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
+            <div className="col-span-1 md:col-span-2">
               <h3 className="text-2xl font-bold mb-4">FreshDrop</h3>
               <p className="text-primary-foreground/80 mb-4">
                 Professional laundry service made simple. 

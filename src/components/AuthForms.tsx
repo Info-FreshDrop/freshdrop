@@ -261,7 +261,7 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
                 <Button 
                   type="submit" 
                   variant="hero" 
-                  size="xl" 
+                  size="lg" 
                   className="w-full"
                   disabled={isLoading}
                 >
@@ -411,7 +411,7 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
                 <Button 
                   type="submit" 
                   variant="hero" 
-                  size="xl" 
+                  size="lg" 
                   className="w-full"
                   disabled={isLoading}
                 >
@@ -423,12 +423,12 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
         </TabsContent>
       </Tabs>
       
-      <div className="mt-6 text-center">
+      <div className="mt-6 text-center px-4">
         <Button 
           variant="operator" 
           size="lg" 
           onClick={onOperatorLogin}
-          className="w-full"
+          className="w-full max-w-sm mx-auto"
         >
           Operator Login
         </Button>
