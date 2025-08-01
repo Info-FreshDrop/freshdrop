@@ -148,75 +148,29 @@ serve(async (req) => {
     // Continue with regular Stripe payment for orders > $0
     console.log('Processing paid order through Stripe');
 
-    // Create Payment Intent
+    // Create Payment Intent with order data in metadata (don't create order yet)
     console.log("=== CREATING PAYMENT INTENT ===");
+    
+    // Store order data as JSON in metadata for later retrieval
+    const orderMetadata = {
+      user_id: user.id,
+      order_data: JSON.stringify(orderData)
+    };
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalAmount,
       currency: "usd",
       customer: customerId,
-      metadata: {
-        user_id: user.id,
-        order_type: orderData.service_type,
-        pickup_type: orderData.pickup_type,
-        bag_count: orderData.bag_count?.toString() || "1",
-      },
+      metadata: orderMetadata,
     });
 
     console.log("Payment Intent created:", paymentIntent.id);
-
-    // Store order in database with Payment Intent ID
-    console.log("=== CREATING ORDER RECORD ===");
-    const supabaseService = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    const orderRecord = {
-      customer_id: user.id,
-      pickup_type: orderData.pickup_type,
-      service_type: orderData.service_type,
-      pickup_address: orderData.pickup_address,
-      delivery_address: orderData.delivery_address,
-      zip_code: orderData.zip_code,
-      is_express: orderData.is_express || false,
-      pickup_window_start: orderData.pickup_window_start,
-      pickup_window_end: orderData.pickup_window_end,
-      delivery_window_start: orderData.delivery_window_start,
-      delivery_window_end: orderData.delivery_window_end,
-      bag_count: orderData.bag_count || 1,
-      soap_preference_id: orderData.soap_preference_id,
-      wash_temp_preference_id: orderData.wash_temp_preference_id,
-      dry_temp_preference_id: orderData.dry_temp_preference_id,
-      special_instructions: orderData.special_instructions || "",
-      items: orderData.items || [],
-      status: "placed",
-      stripe_payment_intent_id: paymentIntent.id,
-      promo_code: orderData.promoCode,
-      discount_amount_cents: 0,
-      total_amount_cents: orderData.total_amount_cents,
-      created_at: new Date().toISOString(),
-    };
-
-    console.log("About to insert order with data:", JSON.stringify(orderRecord, null, 2));
-
-    const { data: order, error: orderError } = await supabaseService
-      .from("orders")
-      .insert(orderRecord)
-      .select()
-      .single();
-
-    if (orderError) {
-      console.error("Error storing order:", orderError);
-      throw new Error(`Failed to store order data: ${orderError.message}`);
-    }
-
-    console.log("Order created successfully:", order.id);
+    console.log("Order data stored in payment intent metadata for processing after payment");
 
     return new Response(
       JSON.stringify({
         clientSecret: paymentIntent.client_secret,
-        orderId: order.id,
+        paymentIntentId: paymentIntent.id,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

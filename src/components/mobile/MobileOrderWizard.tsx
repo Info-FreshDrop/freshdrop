@@ -476,10 +476,10 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         throw error;
       }
 
-      if (data?.clientSecret && data?.orderId) {
+      if (data?.clientSecret && data?.paymentIntentId) {
         console.log('Payment intent created successfully');
         setClientSecret(data.clientSecret);
-        setOrderId(data.orderId);
+        setOrderId(data.paymentIntentId); // Store payment intent ID temporarily
         setShowPayment(true);
         setIsLoading(false);
       } else if (data?.isFreeOrder && data?.orderId) {
@@ -507,7 +507,8 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
     }
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = (confirmedOrderId: string) => {
+    console.log('Payment confirmed, order created:', confirmedOrderId);
     toast({
       title: "Payment Successful",
       description: "Your order has been placed successfully!",

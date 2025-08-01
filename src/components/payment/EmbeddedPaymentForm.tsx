@@ -6,11 +6,12 @@ import {
 } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmbeddedPaymentFormProps {
   clientSecret: string;
-  orderId: string;
-  onPaymentSuccess: () => void;
+  orderId: string; // This is now the payment intent ID
+  onPaymentSuccess: (confirmedOrderId: string) => void;
   onPaymentError: (error: string) => void;
 }
 
@@ -25,6 +26,45 @@ export const EmbeddedPaymentForm: React.FC<EmbeddedPaymentFormProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
+  const handlePaymentSuccess = async (paymentIntent: any) => {
+    try {
+      console.log('Payment succeeded, confirming order:', paymentIntent.id);
+      
+      // Call confirm-payment function to create the order
+      const { data, error } = await supabase.functions.invoke('confirm-payment', {
+        body: { paymentIntentId: paymentIntent.id }
+      });
+
+      if (error) {
+        console.error('Error confirming payment:', error);
+        toast({
+          title: "Payment Confirmation Error",
+          description: "Payment succeeded but order confirmation failed. Please contact support.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.success) {
+        console.log('Order confirmed successfully:', data.orderId);
+        toast({
+          title: "Order Placed Successfully!",
+          description: "Your payment has been processed and your order is confirmed.",
+        });
+        onPaymentSuccess(data.orderId);
+      } else {
+        throw new Error(data?.message || 'Order confirmation failed');
+      }
+    } catch (error) {
+      console.error('Error in payment success handler:', error);
+      toast({
+        title: "Payment Confirmation Error",
+        description: "Payment succeeded but order confirmation failed. Please contact support.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -34,7 +74,7 @@ export const EmbeddedPaymentForm: React.FC<EmbeddedPaymentFormProps> = ({
 
     setIsProcessing(true);
 
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/payment-success?order_id=${orderId}`,
@@ -50,13 +90,9 @@ export const EmbeddedPaymentForm: React.FC<EmbeddedPaymentFormProps> = ({
         description: error.message || "Please try again.",
         variant: "destructive",
       });
-    } else {
+    } else if (paymentIntent) {
       console.log('Payment succeeded');
-      onPaymentSuccess();
-      toast({
-        title: "Payment Successful",
-        description: "Your order has been placed successfully!",
-      });
+      await handlePaymentSuccess(paymentIntent);
     }
 
     setIsProcessing(false);
