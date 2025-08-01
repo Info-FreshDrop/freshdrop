@@ -241,11 +241,12 @@ export function OrderStatusProgress({ status, operatorName, currentStep, stepPho
                 <Button
                   size="sm"
                   variant="outline"
-                  className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm"
+                  className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-xs md:text-sm"
                   onClick={() => setSelectedPhoto(stepPhotos[`step_${currentStep}`])}
                 >
-                  <Camera className="h-4 w-4 mr-2" />
-                  View Full Size
+                  <Camera className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">View Full Size</span>
+                  <span className="sm:hidden">View</span>
                 </Button>
               </div>
             </div>
@@ -334,11 +335,11 @@ export function OrderStatusProgress({ status, operatorName, currentStep, stepPho
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 px-2 text-xs"
+                          className="h-7 md:h-8 px-1 md:px-2 text-xs"
                           onClick={() => setSelectedPhoto(stepPhotos[`step_${step}`])}
                         >
-                          <Camera className="h-3 w-3 mr-1" />
-                          Photo
+                          <Camera className="h-3 w-3 mr-0 md:mr-1" />
+                          <span className="hidden md:inline">Photo</span>
                         </Button>
                       )}
                     </div>

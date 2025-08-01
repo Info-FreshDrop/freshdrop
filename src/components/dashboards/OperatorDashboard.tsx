@@ -364,10 +364,10 @@ export function OperatorDashboard() {
         [`step_${photoStep}`]: publicUrl
       };
 
-      const isLastStep = photoStep === 13; // Step 13 is the final step that requires a photo
+      const isLastStep = photoStep >= 13; // Step 13 is the final step that requires a photo
       const updateData: any = {
         step_photos: updatedStepPhotos,
-        current_step: isLastStep ? 13 : photoStep + 1  // Don't go beyond step 13
+        current_step: Math.min(isLastStep ? 13 : photoStep + 1, 13)  // Never exceed step 13
       };
       
       // If this is the final step, mark order as completed
@@ -426,7 +426,7 @@ export function OperatorDashboard() {
       setSelectedOrder({
         ...selectedOrder,
         step_photos: updatedStepPhotos,
-        current_step: isLastStep ? 13 : photoStep + 1,  // Keep consistency with database update
+        current_step: Math.min(isLastStep ? 13 : photoStep + 1, 13),  // Never exceed step 13
         status: isLastStep ? 'completed' : selectedOrder.status,
         completed_at: isLastStep ? new Date().toISOString() : selectedOrder.completed_at
       });
@@ -471,9 +471,9 @@ export function OperatorDashboard() {
     console.log(`Completing step ${stepNumber} for order ${selectedOrder.id}`);
     
     try {
-      const isLastStep = stepNumber === 13; // Step 13 is the final step
+      const isLastStep = stepNumber >= 13; // Step 13 is the final step
       const updateData: any = {
-        current_step: stepNumber + 1
+        current_step: Math.min(stepNumber + 1, 13)  // Never exceed step 13
       };
       
       // If this is the final step, mark order as completed
@@ -495,7 +495,7 @@ export function OperatorDashboard() {
       // Update local state
       setSelectedOrder({
         ...selectedOrder,
-        current_step: stepNumber + 1,
+        current_step: Math.min(stepNumber + 1, 13),
         status: isLastStep ? 'completed' : selectedOrder.status,
         completed_at: isLastStep ? new Date().toISOString() : selectedOrder.completed_at
       });

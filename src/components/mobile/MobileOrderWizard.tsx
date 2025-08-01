@@ -1151,7 +1151,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         </div>
 
         {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 safe-area-bottom">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 pb-safe safe-area-bottom">
           <div className="max-w-md mx-auto">
             {currentStep < 4 ? (
               <div className="flex gap-2">
@@ -1159,7 +1159,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                   <Button
                     variant="outline"
                     onClick={handlePrevious}
-                    className="flex-1 h-11 text-sm"
+                    className="flex-1 h-10 md:h-11 text-sm"
                   >
                     Previous
                   </Button>
@@ -1167,7 +1167,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                 <Button
                   onClick={handleNext}
                   disabled={!canGoToNextStep()}
-                  className="flex-1 h-11 text-sm"
+                  className="flex-1 h-10 md:h-11 text-sm"
                 >
                   Next
                   <ArrowRight className="h-4 w-4 ml-1" />
@@ -1177,7 +1177,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
               <Button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="w-full h-11 text-base font-semibold"
+                className="w-full h-10 md:h-11 text-sm md:text-base font-semibold"
               >
                 {isLoading ? "Processing..." : `Pay $${(calculateTotal() / 100).toFixed(2)}`}
               </Button>
