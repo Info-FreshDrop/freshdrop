@@ -70,35 +70,6 @@ export function TrustSection() {
   return (
     <section className="py-20 px-6 bg-background">
       <div className="max-w-6xl mx-auto">
-        {/* Trust Metrics */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
-            Trusted by Thousands
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-12">
-            Our professional operators are the heart of our service. Each one is carefully vetted, 
-            trained, and committed to providing exceptional care for your clothes.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {trustMetrics.map((metric, index) => (
-              <Card key={index} className="border-0 shadow-soft hover:shadow-glow transition-all duration-300">
-                <CardHeader className="text-center pb-2">
-                  <div className="flex justify-center mb-4">
-                    <div className="p-3 rounded-full bg-gradient-primary">
-                      <metric.icon className="h-8 w-8 text-primary-foreground" />
-                    </div>
-                  </div>
-                  <div className="text-3xl font-bold text-primary mb-2">{metric.value}</div>
-                  <CardTitle className="text-lg">{metric.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center pt-0">
-                  <p className="text-sm text-muted-foreground">{metric.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
 
         {/* Featured Operators */}
         <div className="mb-16">
