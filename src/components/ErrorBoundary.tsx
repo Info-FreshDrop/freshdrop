@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -46,6 +46,10 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     window.location.reload();
   };
 
+  handleGoHome = () => {
+    window.location.href = '/';
+  };
+
   render() {
     if (this.state.hasError) {
       const FallbackComponent = this.props.fallback;
@@ -68,26 +72,28 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             </CardHeader>
             <CardContent className="space-y-3">
               {import.meta.env.DEV && this.state.error && (
-                <div className="bg-muted p-3 rounded-lg">
-                  <p className="text-xs font-mono text-destructive">
-                    {this.state.error.message}
-                  </p>
-                </div>
+                <details className="bg-muted p-3 rounded-lg text-sm">
+                  <summary className="cursor-pointer font-medium mb-2">Error Details (Development)</summary>
+                  <pre className="text-xs font-mono text-destructive whitespace-pre-wrap">
+                    {this.state.error.toString()}
+                  </pre>
+                </details>
               )}
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
                 <Button 
-                  variant="outline" 
                   onClick={this.handleRetry}
-                  className="flex-1"
+                  className="w-full"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Try Again
                 </Button>
                 <Button 
-                  onClick={this.handleReload}
-                  className="flex-1"
+                  variant="outline"
+                  onClick={this.handleGoHome}
+                  className="w-full"
                 >
-                  Reload Page
+                  <Home className="h-4 w-4 mr-2" />
+                  Go Home
                 </Button>
               </div>
             </CardContent>
@@ -112,4 +118,26 @@ export function withErrorBoundary<T extends object>(
       </ErrorBoundary>
     );
   };
+}
+
+// Hook for handling async errors in functional components
+export function useErrorHandler() {
+  const [error, setError] = React.useState<Error | null>(null);
+
+  const handleError = React.useCallback((error: Error | string) => {
+    const errorObj = typeof error === 'string' ? new Error(error) : error;
+    setError(errorObj);
+    console.error('Async error caught:', errorObj);
+  }, []);
+
+  const clearError = React.useCallback(() => {
+    setError(null);
+  }, []);
+
+  // Throw error to be caught by ErrorBoundary
+  if (error) {
+    throw error;
+  }
+
+  return { handleError, clearError };
 }
