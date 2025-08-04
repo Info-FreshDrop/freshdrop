@@ -33,7 +33,7 @@ export function MarketingDashboard() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'promos-create' | 'promos-reports' | 'analytics' | 'campaigns' | 'triggers' | 'email-analytics'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'promos-create' | 'promos-reports' | 'analytics' | 'campaigns' | 'triggers' | 'email-analytics' | 'campaign-performance' | 'customer-engagement' | 'revenue-attribution' | 'content-calendar' | 'content-schedule' | 'content-library' | 'customer-segments' | 'segments-create' | 'segments-analytics'>('dashboard');
   const [stats, setStats] = useState({
     activeCampaigns: 0,
     emailOpenRate: 0,
@@ -140,6 +140,42 @@ export function MarketingDashboard() {
 
   if (currentView === 'email-analytics') {
     return <EmailAnalyticsDashboard onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'campaign-performance') {
+    return <CampaignPerformanceAnalytics onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'customer-engagement') {
+    return <CustomerEngagementAnalytics onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'revenue-attribution') {
+    return <RevenueAttributionAnalytics onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'content-calendar') {
+    return <ContentCalendarManagement onBack={() => setCurrentView('dashboard')} initialView="calendar" />;
+  }
+
+  if (currentView === 'content-schedule') {
+    return <ContentCalendarManagement onBack={() => setCurrentView('dashboard')} initialView="schedule" />;
+  }
+
+  if (currentView === 'content-library') {
+    return <ContentCalendarManagement onBack={() => setCurrentView('dashboard')} initialView="library" />;
+  }
+
+  if (currentView === 'customer-segments') {
+    return <CustomerSegmentsManagement onBack={() => setCurrentView('dashboard')} initialView="segments" />;
+  }
+
+  if (currentView === 'segments-create') {
+    return <CustomerSegmentsManagement onBack={() => setCurrentView('dashboard')} initialView="create" />;
+  }
+
+  if (currentView === 'segments-analytics') {
+    return <CustomerSegmentsManagement onBack={() => setCurrentView('dashboard')} initialView="analytics" />;
   }
 
   return (
@@ -370,21 +406,21 @@ export function MarketingDashboard() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => setCurrentView('analytics')}
+                  onClick={() => setCurrentView('campaign-performance')}
                 >
                   Campaign Performance
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => setCurrentView('analytics')}
+                  onClick={() => setCurrentView('customer-engagement')}
                 >
                   Customer Engagement
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => setCurrentView('analytics')}
+                  onClick={() => setCurrentView('revenue-attribution')}
                 >
                   Revenue Attribution
                 </Button>
@@ -404,13 +440,25 @@ export function MarketingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('content-calendar')}
+                >
                   View Calendar
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('content-schedule')}
+                >
                   Schedule Content
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('content-library')}
+                >
                   Content Library
                 </Button>
               </div>
@@ -429,13 +477,25 @@ export function MarketingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('segments-create')}
+                >
                   Create Segment
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('customer-segments')}
+                >
                   Active Segments
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('segments-analytics')}
+                >
                   Segment Analytics
                 </Button>
               </div>
