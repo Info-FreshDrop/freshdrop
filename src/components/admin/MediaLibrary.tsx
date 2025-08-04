@@ -57,7 +57,7 @@ export function MediaLibrary({ onBack }: MediaLibraryProps) {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
-  const [selectedFolder, setSelectedFolder] = useState<string>('');
+  const [selectedFolder, setSelectedFolder] = useState<string>('all-folders');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
@@ -125,7 +125,7 @@ export function MediaLibrary({ onBack }: MediaLibraryProps) {
       filtered = filtered.filter(item => item.category === selectedCategory);
     }
 
-    if (selectedFolder) {
+    if (selectedFolder && selectedFolder !== 'all-folders') {
       filtered = filtered.filter(item => item.folder_path.startsWith(selectedFolder));
     }
 
@@ -392,7 +392,7 @@ export function MediaLibrary({ onBack }: MediaLibraryProps) {
               <SelectValue placeholder="All Folders" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Folders</SelectItem>
+              <SelectItem value="all-folders">All Folders</SelectItem>
               {getUniqueFolders().map((folder) => (
                 <SelectItem key={folder} value={folder}>
                   <Folder className="h-4 w-4 mr-2 inline" />
