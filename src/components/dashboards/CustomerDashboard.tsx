@@ -123,9 +123,13 @@ export function CustomerDashboard() {
       // Load washer information separately for orders that have washers
       if (allOrders.length > 0) {
         const ordersWithWashers = allOrders.filter(order => order.washer_id);
+        console.log('Orders with washers:', ordersWithWashers.length, ordersWithWashers.map(o => ({id: o.id.slice(0,8), washer_id: o.washer_id})));
+        
         if (ordersWithWashers.length > 0) {
           const washerIds = ordersWithWashers.map(order => order.washer_id);
-          const { data: washersData } = await supabase
+          console.log('Loading washers for IDs:', washerIds);
+          
+          const { data: washersData, error: washerError } = await supabase
             .from('washers')
             .select(`
               id,
@@ -134,10 +138,13 @@ export function CustomerDashboard() {
             `)
             .in('id', washerIds);
           
+          console.log('Washers data loaded:', washersData, 'error:', washerError);
+          
           // Merge washer data with orders
           allOrders = allOrders.map(order => {
             if (order.washer_id) {
               const washerInfo = washersData?.find(w => w.id === order.washer_id);
+              console.log(`Order ${order.id.slice(0,8)} - washer_id: ${order.washer_id}, found washer:`, washerInfo);
               return { ...order, washers: washerInfo };
             }
             return order;

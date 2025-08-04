@@ -46,6 +46,8 @@ export function OrderMessaging({
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('OrderMessaging useEffect - isOpen:', isOpen, 'orderId:', orderId, 'operatorId:', operatorId);
+    
     if (isOpen && orderId && operatorId) {
       loadMessages();
       
@@ -76,6 +78,12 @@ export function OrderMessaging({
       return () => {
         supabase.removeChannel(channel);
       };
+    } else {
+      console.log('OrderMessaging useEffect - not setting up subscription because:', {
+        isOpen,
+        orderId,
+        operatorId
+      });
     }
   }, [isOpen, orderId, operatorId]);
 
