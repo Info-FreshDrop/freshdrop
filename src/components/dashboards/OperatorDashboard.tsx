@@ -291,7 +291,10 @@ export function OperatorDashboard() {
         .from('orders')
         .select(`
           *,
-          profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone)
+          profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone),
+          wash_temp_preference:laundry_preferences!orders_wash_temp_preference_id_fkey(name),
+          dry_temp_preference:laundry_preferences!orders_dry_temp_preference_id_fkey(name),
+          soap_preference:laundry_preferences!orders_soap_preference_id_fkey(name)
         `)
         .in('status', ['placed', 'unclaimed'])
         .in('zip_code', washer.zip_codes)
@@ -308,7 +311,10 @@ export function OperatorDashboard() {
         .from('orders')
         .select(`
           *,
-          profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone)
+          profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone),
+          wash_temp_preference:laundry_preferences!orders_wash_temp_preference_id_fkey(name),
+          dry_temp_preference:laundry_preferences!orders_dry_temp_preference_id_fkey(name),
+          soap_preference:laundry_preferences!orders_soap_preference_id_fkey(name)
         `)
         .eq('washer_id', washer.id)
         .in('status', ['claimed', 'in_progress', 'picked_up', 'washed', 'folded', 'completed'])
@@ -348,7 +354,10 @@ export function OperatorDashboard() {
         .from('orders')
         .select(`
           *,
-          profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone)
+          profiles!orders_customer_id_profiles_fkey(first_name, last_name, phone),
+          wash_temp_preference:laundry_preferences!orders_wash_temp_preference_id_fkey(name),
+          dry_temp_preference:laundry_preferences!orders_dry_temp_preference_id_fkey(name),
+          soap_preference:laundry_preferences!orders_soap_preference_id_fkey(name)
         `)
         .eq('washer_id', washer.id)
         .in('status', ['claimed', 'in_progress', 'picked_up', 'washed', 'folded', 'completed'])
@@ -391,8 +400,8 @@ export function OperatorDashboard() {
   const getDetailedStepInstruction = (stepIndex: number, order: Order) => {
     const customerName = `${order.profiles?.first_name || 'Customer'} ${order.profiles?.last_name || ''}`.trim();
     const totalBags = order.bag_count || 1;
-    const washTempPref = (order as any).wash_temp_preference_name || 'standard';
-    const dryTempPref = (order as any).dry_temp_preference_name || ((order as any).is_air_dry ? 'Air dry' : 'standard');
+    const washTempPref = (order as any).wash_temp_preference?.name || 'standard';
+    const dryTempPref = (order as any).dry_temp_preference?.name || 'standard';
     
     switch (stepIndex) {
       case 0:
@@ -460,7 +469,8 @@ export function OperatorDashboard() {
       title: "Account and verify items", 
       description: "Count bags and verify against order", 
       requiresPhoto: false, 
-      instructions: `🔢 Expected bags: ${selectedOrder?.bag_count || 'Unknown'}. Enter the actual number of bags you picked up.`
+      instructions: `🔢 Expected bags: ${selectedOrder?.bag_count || 'Unknown'}. Enter the actual number of bags you picked up.`,
+      requiresBagCount: true
     },
     { 
       title: "Transport to washing location", 
@@ -472,13 +482,13 @@ export function OperatorDashboard() {
       title: "Washing process", 
       description: "Wash according to customer preferences", 
       requiresPhoto: false, 
-      instructions: `🧽 Customer preference: ${(selectedOrder as any)?.wash_temp_preference_name || 'standard'} wash temperature`
+      instructions: `🧽 Customer preference: ${(selectedOrder as any)?.wash_temp_preference?.name || 'standard'} wash temperature`
     },
     { 
       title: "Drying process", 
       description: "Dry according to customer preferences", 
       requiresPhoto: false, 
-      instructions: `🌪️ Customer preference: ${(selectedOrder as any)?.dry_temp_preference_name || ((selectedOrder as any)?.is_air_dry ? 'Air dry' : 'standard')}`
+      instructions: `🌪️ Customer preference: ${(selectedOrder as any)?.dry_temp_preference?.name || 'standard'}`
     },
     { 
       title: "Folding process", 
@@ -1351,21 +1361,21 @@ export function OperatorDashboard() {
                     </div>
                   )}
 
-                  {/* Wash Preferences - Show placeholder for now, will need to load from database */}
+                  {/* Wash Preferences */}
                   <div className="mt-4 pt-3 border-t">
                     <h5 className="font-medium mb-3">Wash Preferences</h5>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">Soap Type</p>
-                        <p className="font-medium">Standard Detergent</p>
+                        <p className="font-medium">{(selectedOrder as any)?.soap_preference?.name || 'Standard Detergent'}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Wash Temperature</p>
-                        <p className="font-medium">Warm</p>
+                        <p className="font-medium">{(selectedOrder as any)?.wash_temp_preference?.name || 'Standard'}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Dry Temperature</p>
-                        <p className="font-medium">Medium Heat</p>
+                        <p className="font-medium">{(selectedOrder as any)?.dry_temp_preference?.name || 'Standard'}</p>
                       </div>
                     </div>
                   </div>
@@ -1452,12 +1462,39 @@ export function OperatorDashboard() {
                                 </>
                               )}
                               {!step.requiresPhoto && isCurrent && (
-                                <Button 
-                                  size="sm" 
-                                  onClick={() => completeStep(stepNumber)}
-                                >
-                                  Complete Step
-                                </Button>
+                                <>
+                                  {(step as any).requiresBagCount ? (
+                                    <div className="flex items-center gap-2">
+                                      <Input
+                                        type="number"
+                                        placeholder="Bag count"
+                                        value={bagCountInput}
+                                        onChange={(e) => setBagCountInput(e.target.value)}
+                                        className="w-24"
+                                        min="1"
+                                      />
+                                      <Button 
+                                        size="sm" 
+                                        onClick={() => {
+                                          if (bagCountInput && parseInt(bagCountInput) > 0) {
+                                            completeStep(stepNumber);
+                                            setBagCountInput("");
+                                          }
+                                        }}
+                                        disabled={!bagCountInput || parseInt(bagCountInput) <= 0}
+                                      >
+                                        Complete Step
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <Button 
+                                      size="sm" 
+                                      onClick={() => completeStep(stepNumber)}
+                                    >
+                                      Complete Step
+                                    </Button>
+                                  )}
+                                </>
                               )}
                               {isCompleted && (
                                 <CheckCircle className="h-4 w-4 text-green-500" />
