@@ -180,9 +180,18 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
 
       // Send notification about order claim
       const order = availableOrders.find(o => o.id === orderId);
+      console.log('=== SENDING CLAIM NOTIFICATION ===');
+      console.log('Order found:', order);
       if (order) {
         try {
-          await supabase.functions.invoke('send-order-notifications', {
+          console.log('Calling notification function with:', {
+            orderId: order.id,
+            customerId: order.customer_id,
+            status: 'claimed',
+            orderNumber: order.id.substring(0, 8).toUpperCase()
+          });
+          
+          const result = await supabase.functions.invoke('send-order-notifications', {
             body: {
               orderId: order.id,
               customerId: order.customer_id,
@@ -190,9 +199,13 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
               orderNumber: order.id.substring(0, 8).toUpperCase()
             }
           });
+          
+          console.log('Notification function result:', result);
         } catch (notificationError) {
           console.error('Failed to send notification:', notificationError);
         }
+      } else {
+        console.error('Order not found for notification');
       }
 
       toast({
@@ -230,9 +243,19 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
 
       // Send notification about status change
       const order = myOrders.find(o => o.id === orderId);
+      console.log('=== SENDING STATUS CHANGE NOTIFICATION ===');
+      console.log('Order found:', order);
+      console.log('New status:', newStatus);
       if (order) {
         try {
-          await supabase.functions.invoke('send-order-notifications', {
+          console.log('Calling notification function with:', {
+            orderId: order.id,
+            customerId: order.customer_id,
+            status: newStatus,
+            orderNumber: order.id.substring(0, 8).toUpperCase()
+          });
+          
+          const result = await supabase.functions.invoke('send-order-notifications', {
             body: {
               orderId: order.id,
               customerId: order.customer_id,
@@ -240,9 +263,13 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
               orderNumber: order.id.substring(0, 8).toUpperCase()
             }
           });
+          
+          console.log('Notification function result:', result);
         } catch (notificationError) {
           console.error('Failed to send notification:', notificationError);
         }
+      } else {
+        console.error('Order not found for notification');
       }
 
       toast({
