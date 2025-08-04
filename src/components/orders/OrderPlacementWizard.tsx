@@ -370,9 +370,9 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         promoCode: formData.promoCode || null
       };
 
-      // Create payment intent
-      console.log('Creating payment intent with order data:', orderData);
-      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+      // Create order and payment intent
+      console.log('Creating order with payment data:', orderData);
+      const { data, error } = await supabase.functions.invoke('create-order-with-payment', {
         body: { orderData }
       });
 

@@ -38,6 +38,8 @@ interface Order {
   claimed_at: string | null;
   completed_at: string | null;
   created_at: string;
+  promo_code?: string | null;
+  discount_amount_cents?: number;
   profiles?: {
     first_name: string;
     last_name: string;
@@ -209,6 +211,11 @@ export function OrderHistory({ onBack }: OrderHistoryProps) {
                         <p>Type: {order.pickup_type}</p>
                         <p>Bags: {order.bag_count}</p>
                         <p>Total: ${(order.total_amount_cents / 100).toFixed(2)}</p>
+                        {order.promo_code && (
+                          <p className="text-green-600">
+                            Promo: {order.promo_code} (-${((order.discount_amount_cents || 0) / 100).toFixed(2)})
+                          </p>
+                        )}
                       </div>
                     </div>
                     

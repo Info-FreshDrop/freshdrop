@@ -30,8 +30,8 @@ export const EmbeddedPaymentForm: React.FC<EmbeddedPaymentFormProps> = ({
     try {
       console.log('Payment succeeded, confirming order:', paymentIntent.id);
       
-      // Call confirm-payment function to create the order
-      const { data, error } = await supabase.functions.invoke('confirm-payment', {
+      // Call confirm-order-payment function to update order status
+      const { data, error } = await supabase.functions.invoke('confirm-order-payment', {
         body: { paymentIntentId: paymentIntent.id }
       });
 

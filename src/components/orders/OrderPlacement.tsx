@@ -464,9 +464,9 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
         delivery_window_end: isExpress ? new Date(pickupEnd.getTime() + 2 * 60 * 60 * 1000).toISOString() : deliveryEnd.toISOString()
       };
 
-      // Create payment intent for embedded payment
-      console.log('Creating payment intent with order data:', orderData);
-      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+      // Create order and payment intent
+      console.log('Creating order with payment data:', orderData);
+      const { data, error } = await supabase.functions.invoke('create-order-with-payment', {
         body: { orderData }
       });
 

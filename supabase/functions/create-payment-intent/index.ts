@@ -151,10 +151,16 @@ serve(async (req) => {
     // Create Payment Intent with order data in metadata (don't create order yet)
     console.log("=== CREATING PAYMENT INTENT ===");
     
-    // Store order data as JSON in metadata for later retrieval
+    // Store essential order data in metadata (keeping under 500 char limit per field)
     const orderMetadata = {
       user_id: user.id,
-      order_data: JSON.stringify(orderData)
+      service_type: orderData.service_type,
+      pickup_type: orderData.pickup_type,
+      bag_count: String(orderData.bag_count),
+      total_amount: String(orderData.total_amount_cents),
+      promo_code: orderData.promoCode || "",
+      discount_amount: String(orderData.discount_amount_cents || 0),
+      zip_code: orderData.zip_code
     };
 
     const paymentIntent = await stripe.paymentIntents.create({
