@@ -869,6 +869,14 @@ export function OperatorDashboard() {
                                           <MapPin className="h-4 w-4 mr-1" />
                                           Map
                                         </Button>
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          onClick={() => setSelectedOrderForMessaging(order)}
+                                        >
+                                          <MessageSquare className="h-4 w-4 mr-1" />
+                                          Message
+                                        </Button>
                                       </div>
                                     </div>
                                   </CardContent>

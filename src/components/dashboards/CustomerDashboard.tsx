@@ -15,6 +15,7 @@ import { MobileOrderWizard } from "@/components/mobile/MobileOrderWizard";
 import { OrderHistory } from "@/components/orders/OrderHistory";
 import { ProfileModal } from "@/components/customer/ProfileModal";
 import { TipModal } from "@/components/customer/TipModal";
+import { OrderMessaging } from "@/components/customer/OrderMessaging";
 import { ChatWidget } from "@/components/customer/ChatWidget";
 import { NotificationCenter } from "@/components/customer/NotificationCenter";
 import { 
@@ -33,7 +34,8 @@ import {
   Gift,
   LogOut,
   ShoppingBag,
-  History
+  History,
+  MessageCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +62,7 @@ export function CustomerDashboard() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -96,7 +99,15 @@ export function CustomerDashboard() {
       setIsLoadingOrders(true);
       const { data, error } = await supabase
         .from('orders')
-        .select('*, customer_acknowledged')
+        .select(`
+          *, 
+          customer_acknowledged,
+          washers!orders_washer_id_fkey(
+            id,
+            user_id,
+            profiles!washers_user_id_fkey(first_name, last_name, phone)
+          )
+        `)
         .eq('customer_id', user?.id)
         .order('created_at', { ascending: false });
 
@@ -315,6 +326,17 @@ export function CustomerDashboard() {
                               <Package className="h-3 w-3 mr-1" />
                               Track Order
                             </Button>
+                            {order.washer_id && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 text-xs"
+                                onClick={() => setSelectedOrderForMessaging(order)}
+                              >
+                                <MessageCircle className="h-3 w-3 mr-1" />
+                                Message
+                              </Button>
+                            )}
                             {order.status === 'completed' && !order.customer_acknowledged && (
                               <>
                                 <Button
@@ -516,6 +538,21 @@ export function CustomerDashboard() {
             onRatingSubmitted={loadOrders}
           />
         </>
+      )}
+
+      {/* Order Messaging Modal */}
+      {selectedOrderForMessaging && (
+        <OrderMessaging
+          orderId={selectedOrderForMessaging.id}
+          operatorId={selectedOrderForMessaging.washers?.user_id}
+          operatorName={
+            selectedOrderForMessaging.washers?.profiles
+              ? `${selectedOrderForMessaging.washers.profiles.first_name || ''} ${selectedOrderForMessaging.washers.profiles.last_name || ''}`.trim()
+              : 'Operator'
+          }
+          isOpen={!!selectedOrderForMessaging}
+          onClose={() => setSelectedOrderForMessaging(null)}
+        />
       )}
 
       {/* Live Chat Widget */}
