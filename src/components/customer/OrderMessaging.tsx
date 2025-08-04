@@ -141,7 +141,7 @@ export function OrderMessaging({
   const sendMessage = async () => {
     if (!user || !operatorId || !newMessage.trim()) return;
 
-    console.log('Sending message with operatorId:', operatorId);
+    console.log('Sending message with operatorId:', operatorId, 'user.id:', user.id);
     setIsSending(true);
     try {
       // Get the actual user_id from the washer using operatorId (washer_id)
@@ -159,14 +159,18 @@ export function OrderMessaging({
       const recipientUserId = washerData.user_id;
       console.log('Found washer user_id:', recipientUserId);
 
+      // Log the data we're trying to insert
+      const messageData = {
+        order_id: orderId,
+        sender_id: user.id,
+        recipient_id: recipientUserId,
+        message: newMessage.trim()
+      };
+      console.log('Attempting to insert message:', messageData);
+
       const { error } = await supabase
         .from('order_messages')
-        .insert({
-          order_id: orderId,
-          sender_id: user.id,
-          recipient_id: recipientUserId,
-          message: newMessage.trim()
-        });
+        .insert(messageData);
 
       if (error) {
         console.error('Insert error:', error);
