@@ -20,7 +20,8 @@ import {
   Save,
   ArrowLeft,
   BarChart3,
-  Users
+  Users,
+  TrendingUp
 } from "lucide-react";
 import { ServiceAreasManagement } from "@/components/admin/ServiceAreasManagement";
 
@@ -158,6 +159,22 @@ export default function OwnerDashboard() {
           <p className="text-muted-foreground">
             Manage your laundry service settings and locations
           </p>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-0 shadow-soft hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/marketing-dashboard')}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-gradient-primary">
+                  <TrendingUp className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Marketing Dashboard</h3>
+                  <p className="text-sm text-muted-foreground">Manage campaigns & analytics</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="pricing" className="space-y-6">
