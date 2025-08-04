@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { NotificationSystem } from "@/components/admin/NotificationSystem";
 import { PromoCodeManagement } from "@/components/admin/PromoCodeManagement";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
+import { MarketingCampaignManagement } from "@/components/admin/MarketingCampaignManagement";
+import { BehavioralTriggersManagement } from "@/components/admin/BehavioralTriggersManagement";
 import { 
   Megaphone, 
   Mail, 
@@ -19,7 +21,7 @@ import {
 
 export function MarketingDashboard() {
   const { signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'analytics'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'analytics' | 'campaigns' | 'triggers'>('dashboard');
 
   if (currentView === 'notifications') {
     return <NotificationSystem onBack={() => setCurrentView('dashboard')} />;
@@ -31,6 +33,14 @@ export function MarketingDashboard() {
 
   if (currentView === 'analytics') {
     return <AnalyticsDashboard onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'campaigns') {
+    return <MarketingCampaignManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'triggers') {
+    return <BehavioralTriggersManagement onBack={() => setCurrentView('dashboard')} />;
   }
 
   return (
@@ -121,14 +131,26 @@ export function MarketingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="hero" className="w-full">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('campaigns')}
+                >
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  New Campaign
+                  Manage Campaigns
                 </Button>
-                <Button variant="outline" className="w-full">
-                  View Templates
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('triggers')}
+                >
+                  Behavioral Triggers
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('analytics')}
+                >
                   Campaign Analytics
                 </Button>
               </div>

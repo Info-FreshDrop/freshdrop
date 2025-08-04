@@ -14,6 +14,106 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_analytics: {
+        Row: {
+          bounce_count: number | null
+          campaign_id: string | null
+          clicked_count: number | null
+          conversion_count: number | null
+          created_at: string
+          date: string
+          delivered_count: number | null
+          id: string
+          opened_count: number | null
+          revenue_cents: number | null
+          sent_count: number | null
+          unsubscribe_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          bounce_count?: number | null
+          campaign_id?: string | null
+          clicked_count?: number | null
+          conversion_count?: number | null
+          created_at?: string
+          date: string
+          delivered_count?: number | null
+          id?: string
+          opened_count?: number | null
+          revenue_cents?: number | null
+          sent_count?: number | null
+          unsubscribe_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bounce_count?: number | null
+          campaign_id?: string | null
+          clicked_count?: number | null
+          conversion_count?: number | null
+          created_at?: string
+          date?: string
+          delivered_count?: number | null
+          id?: string
+          opened_count?: number | null
+          revenue_cents?: number | null
+          sent_count?: number | null
+          unsubscribe_count?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_analytics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_triggers: {
+        Row: {
+          campaign_id: string | null
+          conditions: Json
+          created_at: string
+          delay_minutes: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          conditions: Json
+          created_at?: string
+          delay_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          conditions?: Json
+          created_at?: string
+          delay_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_triggers_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clothes_items: {
         Row: {
           category: string
@@ -85,6 +185,45 @@ export type Database = {
           is_active?: boolean | null
           section?: string
           title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customer_segments: {
+        Row: {
+          conditions: Json
+          created_at: string
+          customer_count: number | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          last_updated: string | null
+          name: string
+          segment_type: string
+          updated_at: string
+        }
+        Insert: {
+          conditions: Json
+          created_at?: string
+          customer_count?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_updated?: string | null
+          name: string
+          segment_type: string
+          updated_at?: string
+        }
+        Update: {
+          conditions?: Json
+          created_at?: string
+          customer_count?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_updated?: string | null
+          name?: string
+          segment_type?: string
           updated_at?: string
         }
         Relationships: []
@@ -278,6 +417,143 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_campaigns: {
+        Row: {
+          campaign_type: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          name: string
+          recurring_pattern: string | null
+          schedule_date: string | null
+          starts_at: string | null
+          status: string
+          target_segment: string | null
+          template_id: string | null
+          trigger_conditions: Json | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_type: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          name: string
+          recurring_pattern?: string | null
+          schedule_date?: string | null
+          starts_at?: string | null
+          status?: string
+          target_segment?: string | null
+          template_id?: string | null
+          trigger_conditions?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          name?: string
+          recurring_pattern?: string | null
+          schedule_date?: string | null
+          starts_at?: string | null
+          status?: string
+          target_segment?: string | null
+          template_id?: string | null
+          trigger_conditions?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notification_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_delivery_log: {
+        Row: {
+          campaign_id: string | null
+          clicked_at: string | null
+          customer_id: string
+          delivered_at: string | null
+          delivery_provider: string | null
+          error_message: string | null
+          id: string
+          message_content: string | null
+          metadata: Json | null
+          notification_type: string
+          opened_at: string | null
+          provider_message_id: string | null
+          recipient: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+          template_id: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          clicked_at?: string | null
+          customer_id: string
+          delivered_at?: string | null
+          delivery_provider?: string | null
+          error_message?: string | null
+          id?: string
+          message_content?: string | null
+          metadata?: Json | null
+          notification_type: string
+          opened_at?: string | null
+          provider_message_id?: string | null
+          recipient: string
+          sent_at?: string | null
+          status: string
+          subject?: string | null
+          template_id?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          clicked_at?: string | null
+          customer_id?: string
+          delivered_at?: string | null
+          delivery_provider?: string | null
+          error_message?: string | null
+          id?: string
+          message_content?: string | null
+          metadata?: Json | null
+          notification_type?: string
+          opened_at?: string | null
+          provider_message_id?: string | null
+          recipient?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_delivery_log_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_delivery_log_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notification_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_logs: {
         Row: {
           created_at: string
@@ -333,38 +609,59 @@ export type Database = {
       }
       notification_templates: {
         Row: {
+          campaign_type: string | null
           created_at: string
           id: string
           is_active: boolean
           is_deleted: boolean
           message: string
+          personalization_data: Json | null
+          recurring_pattern: string | null
+          schedule_date: string | null
+          schedule_type: string | null
           status: string
           step_description: string | null
           subject: string
+          target_segment: string | null
+          trigger_conditions: Json | null
           trigger_step: number | null
           updated_at: string
         }
         Insert: {
+          campaign_type?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
           is_deleted?: boolean
           message: string
+          personalization_data?: Json | null
+          recurring_pattern?: string | null
+          schedule_date?: string | null
+          schedule_type?: string | null
           status: string
           step_description?: string | null
           subject: string
+          target_segment?: string | null
+          trigger_conditions?: Json | null
           trigger_step?: number | null
           updated_at?: string
         }
         Update: {
+          campaign_type?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
           is_deleted?: boolean
           message?: string
+          personalization_data?: Json | null
+          recurring_pattern?: string | null
+          schedule_date?: string | null
+          schedule_type?: string | null
           status?: string
           step_description?: string | null
           subject?: string
+          target_segment?: string | null
+          trigger_conditions?: Json | null
           trigger_step?: number | null
           updated_at?: string
         }
