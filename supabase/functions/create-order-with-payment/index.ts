@@ -79,7 +79,7 @@ serve(async (req) => {
       dry_temp_preference_id: orderData.dry_temp_preference_id,
       special_instructions: orderData.special_instructions,
       items: orderData.items,
-      status: 'pending_payment',
+      status: orderData.total_amount_cents === 0 ? 'placed' : 'placed', // Set to 'placed' for both free and paid orders initially
       promo_code: orderData.promoCode,
       discount_amount_cents: orderData.discount_amount_cents || 0,
       total_amount_cents: orderData.total_amount_cents,
