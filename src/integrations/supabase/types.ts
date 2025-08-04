@@ -189,6 +189,60 @@ export type Database = {
         }
         Relationships: []
       }
+      content_library: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          folder_path: string | null
+          id: string
+          is_active: boolean
+          mime_type: string
+          tags: string[] | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          folder_path?: string | null
+          id?: string
+          is_active?: boolean
+          mime_type: string
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          folder_path?: string | null
+          id?: string
+          is_active?: boolean
+          mime_type?: string
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_segments: {
         Row: {
           conditions: Json

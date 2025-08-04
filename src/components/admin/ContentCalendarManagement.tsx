@@ -8,14 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Calendar as CalendarIcon, Plus, Clock, FileText, Image } from "lucide-react";
+import { MediaLibrary } from "@/components/admin/MediaLibrary";
+import { ArrowLeft, Calendar as CalendarIcon, Plus, Clock, FileText, Image, Folder } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 interface ContentCalendarProps {
   onBack: () => void;
-  initialView?: 'calendar' | 'schedule' | 'library';
+  initialView?: 'calendar' | 'schedule' | 'library' | 'media-library';
 }
 
 interface ContentItem {
@@ -29,7 +30,7 @@ interface ContentItem {
 }
 
 export function ContentCalendarManagement({ onBack, initialView = 'calendar' }: ContentCalendarProps) {
-  const [currentView, setCurrentView] = useState<'calendar' | 'schedule' | 'library'>(initialView);
+  const [currentView, setCurrentView] = useState<'calendar' | 'schedule' | 'library' | 'media-library'>(initialView);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -124,6 +125,11 @@ export function ContentCalendarManagement({ onBack, initialView = 'calendar' }: 
     }
   };
 
+  // Media Library View
+  if (currentView === 'media-library') {
+    return <MediaLibrary onBack={() => setCurrentView('calendar')} />;
+  }
+
   // Calendar View
   if (currentView === 'calendar') {
     const scheduledItems = contentItems.filter(item => item.scheduledDate);
@@ -149,6 +155,10 @@ export function ContentCalendarManagement({ onBack, initialView = 'calendar' }: 
               </p>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setCurrentView('media-library')}>
+                <Folder className="h-4 w-4 mr-2" />
+                Media Library
+              </Button>
               <Button variant="outline" onClick={() => setCurrentView('schedule')}>
                 Schedule Content
               </Button>

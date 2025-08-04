@@ -13,6 +13,7 @@ import { CustomerEngagementAnalytics } from "@/components/admin/CustomerEngageme
 import { RevenueAttributionAnalytics } from "@/components/admin/RevenueAttributionAnalytics";
 import { ContentCalendarManagement } from "@/components/admin/ContentCalendarManagement";
 import { CustomerSegmentsManagement } from "@/components/admin/CustomerSegmentsManagement";
+import { MediaLibrary } from "@/components/admin/MediaLibrary";
 import { MarketingCampaignManagement } from "@/components/admin/MarketingCampaignManagement";
 import { BehavioralTriggersManagement } from "@/components/admin/BehavioralTriggersManagement";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,7 +34,7 @@ export function MarketingDashboard() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'promos-create' | 'promos-reports' | 'analytics' | 'campaigns' | 'triggers' | 'email-analytics' | 'campaign-performance' | 'customer-engagement' | 'revenue-attribution' | 'content-calendar' | 'content-schedule' | 'content-library' | 'customer-segments' | 'segments-create' | 'segments-analytics'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'promos-create' | 'promos-reports' | 'analytics' | 'campaigns' | 'triggers' | 'email-analytics' | 'campaign-performance' | 'customer-engagement' | 'revenue-attribution' | 'content-calendar' | 'content-schedule' | 'content-library' | 'media-library' | 'customer-segments' | 'segments-create' | 'segments-analytics'>('dashboard');
   const [stats, setStats] = useState({
     activeCampaigns: 0,
     emailOpenRate: 0,
@@ -164,6 +165,10 @@ export function MarketingDashboard() {
 
   if (currentView === 'content-library') {
     return <ContentCalendarManagement onBack={() => setCurrentView('dashboard')} initialView="library" />;
+  }
+
+  if (currentView === 'media-library') {
+    return <MediaLibrary onBack={() => setCurrentView('dashboard')} />;
   }
 
   if (currentView === 'customer-segments') {
@@ -441,6 +446,14 @@ export function MarketingDashboard() {
             <CardContent>
               <div className="space-y-2">
                 <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('media-library')}
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Media Library
+                </Button>
+                <Button 
                   variant="outline" 
                   className="w-full"
                   onClick={() => setCurrentView('content-calendar')}
@@ -453,13 +466,6 @@ export function MarketingDashboard() {
                   onClick={() => setCurrentView('content-schedule')}
                 >
                   Schedule Content
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setCurrentView('content-library')}
-                >
-                  Content Library
                 </Button>
               </div>
             </CardContent>
