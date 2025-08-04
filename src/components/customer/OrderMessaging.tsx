@@ -177,14 +177,20 @@ export function OrderMessaging({
 
       // Send email notification
       try {
+        const notificationPayload = {
+          notification_type: 'message',
+          customer_id: recipientUserId || user?.id,
+          operator_id: operatorId,
+          order_id: orderId,
+          subject: user?.id === recipientUserId ? 'New message from operator' : 'New message from customer',
+          message: `You have a new message: "${newMessage.trim()}"`,
+          sender_name: user?.user_metadata?.first_name || 'User'
+        };
+        
+        console.log('Sending notification with payload:', notificationPayload);
+        
         await supabase.functions.invoke('send-order-notifications', {
-          body: {
-            notification_type: 'message',
-            customer_id: recipientUserId,
-            order_id: orderId,
-            subject: 'New message from customer',
-            message: `You have a new message: "${newMessage.trim()}"`
-          }
+          body: notificationPayload
         });
       } catch (emailError) {
         console.error('Email notification error:', emailError);
