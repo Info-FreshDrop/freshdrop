@@ -144,60 +144,25 @@ export function OrderMessaging({
     console.log('Sending message with operatorId:', operatorId, 'user.id:', user.id);
     setIsSending(true);
     try {
-      // Get the actual user_id from the washer using operatorId (washer_id)
-      const { data: washerData, error: washerError } = await supabase
-        .from('washers')
-        .select('user_id')
-        .eq('id', operatorId)
-        .single();
-      
-      if (washerError || !washerData?.user_id) {
-        console.error('Failed to find operator user ID:', washerError);
-        throw new Error('Could not find operator');
-      }
-
-      const recipientUserId = washerData.user_id;
-      console.log('Found washer user_id:', recipientUserId);
-
-      // Log the data we're trying to insert
-      const messageData = {
-        order_id: orderId,
-        sender_id: user.id,
-        recipient_id: recipientUserId,
-        message: newMessage.trim()
-      };
-      console.log('Attempting to insert message:', messageData);
-
-      const { error } = await supabase
-        .from('order_messages')
-        .insert(messageData);
+      // Use secure database function to insert message
+      const { data, error } = await supabase.rpc('insert_order_message', {
+        p_order_id: orderId,
+        p_recipient_washer_id: operatorId,
+        p_message: newMessage.trim()
+      });
 
       if (error) {
-        console.error('Insert error:', error);
-        throw error;
+        console.error('RPC error:', error);
+        throw new Error(`Database error: ${error.message}`);
       }
 
-      // Send email notification
-      try {
-        const notificationPayload = {
-          notification_type: 'message',
-          customer_id: recipientUserId || user?.id,
-          operator_id: operatorId,
-          order_id: orderId,
-          subject: user?.id === recipientUserId ? 'New message from operator' : 'New message from customer',
-          message: `You have a new message: "${newMessage.trim()}"`,
-          sender_name: user?.user_metadata?.first_name || 'User'
-        };
-        
-        console.log('Sending notification with payload:', notificationPayload);
-        
-        await supabase.functions.invoke('send-order-notifications', {
-          body: notificationPayload
-        });
-      } catch (emailError) {
-        console.error('Email notification error:', emailError);
+      const result = data as any;
+      if (!result?.success) {
+        console.error('Function returned error:', result?.error);
+        throw new Error(result?.error || 'Failed to send message');
       }
 
+      console.log('Message sent successfully:', data);
       setNewMessage("");
       toast({
         title: "Message Sent",
@@ -205,9 +170,23 @@ export function OrderMessaging({
       });
     } catch (error) {
       console.error('Error sending message:', error);
+      let errorMessage = 'Failed to send message. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Not authenticated')) {
+          errorMessage = 'Please log in to send messages.';
+        } else if (error.message.includes('Order not found')) {
+          errorMessage = 'You do not have permission to message about this order.';
+        } else if (error.message.includes('Recipient washer not found')) {
+          errorMessage = 'The operator for this order could not be found.';
+        } else if (error.message.includes('Database error')) {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
