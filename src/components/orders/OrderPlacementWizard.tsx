@@ -194,6 +194,42 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     return minDate.toISOString().split('T')[0];
   };
 
+  const validatePickupDateTime = () => {
+    if (!formData.pickupDate || !formData.timeWindow) return { valid: true, message: "" };
+    
+    const now = new Date();
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+    
+    const selectedDate = new Date(formData.pickupDate);
+    let selectedStartTime;
+    
+    switch (formData.timeWindow) {
+      case 'morning':
+        selectedStartTime = new Date(selectedDate);
+        selectedStartTime.setHours(6, 0, 0, 0);
+        break;
+      case 'lunch':
+        selectedStartTime = new Date(selectedDate);
+        selectedStartTime.setHours(12, 0, 0, 0);
+        break;
+      case 'evening':
+        selectedStartTime = new Date(selectedDate);
+        selectedStartTime.setHours(17, 0, 0, 0);
+        break;
+      default:
+        return { valid: true, message: "" };
+    }
+    
+    if (selectedStartTime <= oneHourFromNow) {
+      return { 
+        valid: false, 
+        message: "Pickup time must be at least 1 hour from now. Please select a later date or time window." 
+      };
+    }
+    
+    return { valid: true, message: "" };
+  };
+
   const calculateTotal = () => {
     let total = formData.bagCount * 3500; // $35 per bag
     
@@ -242,8 +278,10 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         return formData.zipCode && validateServiceArea().valid && serviceType && 
                (orderType === 'locker' ? formData.lockerId : formData.pickupAddress);
       case 2:
+        const dateTimeValidation = validatePickupDateTime();
         return formData.timeWindow && formData.pickupDate && 
-               formData.soapPreference && formData.washTempPreference && formData.dryTempPreference;
+               formData.soapPreference && formData.washTempPreference && formData.dryTempPreference &&
+               dateTimeValidation.valid;
       case 3:
         return true; // Shop is optional
       default:
@@ -538,6 +576,12 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
             <SelectItem value="evening">Evening (5PM - 7PM)</SelectItem>
           </SelectContent>
         </Select>
+        {!validatePickupDateTime().valid && (
+          <div className="flex items-center gap-2 text-red-600">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">{validatePickupDateTime().message}</span>
+          </div>
+        )}
       </div>
 
       {/* Bag Count */}

@@ -310,6 +310,42 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     return { valid: true, message: "" };
   };
 
+  const validatePickupDateTime = () => {
+    if (!formData.pickupDate || !formData.timeWindow) return { valid: true, message: "" };
+    
+    const now = new Date();
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+    
+    const selectedDate = new Date(formData.pickupDate);
+    let selectedStartTime;
+    
+    switch (formData.timeWindow) {
+      case 'morning':
+        selectedStartTime = new Date(selectedDate);
+        selectedStartTime.setHours(6, 0, 0, 0);
+        break;
+      case 'lunch':
+        selectedStartTime = new Date(selectedDate);
+        selectedStartTime.setHours(12, 0, 0, 0);
+        break;
+      case 'evening':
+        selectedStartTime = new Date(selectedDate);
+        selectedStartTime.setHours(17, 0, 0, 0);
+        break;
+      default:
+        return { valid: true, message: "" };
+    }
+    
+    if (selectedStartTime <= oneHourFromNow) {
+      return { 
+        valid: false, 
+        message: "Pickup time must be at least 1 hour from now. Please select a later date or time window." 
+      };
+    }
+    
+    return { valid: true, message: "" };
+  };
+
   const calculateTotal = () => {
     let total = formData.bagCount * 3500; // $35 per bag
     
@@ -355,6 +391,18 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
         toast({
           title: "Service Not Available",
           description: validation.message,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate pickup date and time
+      const dateTimeValidation = validatePickupDateTime();
+      if (!dateTimeValidation.valid) {
+        toast({
+          title: "Invalid Pickup Time",
+          description: dateTimeValidation.message,
           variant: "destructive",
         });
         setIsLoading(false);
@@ -797,19 +845,25 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="time-window">Pickup Time Window</Label>
-                    <Select value={formData.timeWindow} onValueChange={(value) => handleInputChange('timeWindow', value)} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select pickup time window" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="morning">Morning (6AM - 8AM)</SelectItem>
-                        <SelectItem value="lunch">Lunch (12PM - 2PM)</SelectItem>
-                        <SelectItem value="evening">Evening (5PM - 7PM)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Drop-off will be in the same time window the following day
-                    </p>
+                     <Select value={formData.timeWindow} onValueChange={(value) => handleInputChange('timeWindow', value)} required>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Select pickup time window" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="morning">Morning (6AM - 8AM)</SelectItem>
+                         <SelectItem value="lunch">Lunch (12PM - 2PM)</SelectItem>
+                         <SelectItem value="evening">Evening (5PM - 7PM)</SelectItem>
+                       </SelectContent>
+                     </Select>
+                     <p className="text-xs text-muted-foreground">
+                       Drop-off will be in the same time window the following day
+                     </p>
+                     {!validatePickupDateTime().valid && (
+                       <div className="flex items-center gap-2 text-red-600">
+                         <AlertCircle className="h-4 w-4" />
+                         <span className="text-sm">{validatePickupDateTime().message}</span>
+                       </div>
+                     )}
                   </div>
 
                   {/* Laundry Preferences */}
