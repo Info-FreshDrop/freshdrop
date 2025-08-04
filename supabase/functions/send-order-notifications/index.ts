@@ -104,7 +104,18 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Phone:', phone);
     console.log('Name:', name);
 
-    const statusMessages = {
+    // Fetch notification template from database
+    const { data: template, error: templateError } = await supabase
+      .from('notification_templates')
+      .select('subject, message')
+      .eq('status', status)
+      .eq('is_active', true)
+      .single();
+
+    console.log('Template fetch result:', { template, templateError });
+
+    // Fallback status messages if template not found
+    const defaultMessages = {
       'unclaimed': {
         subject: 'Order Confirmed - Looking for Operator',
         message: 'Your order has been confirmed! We\'re finding the perfect operator to handle your laundry.'
@@ -121,9 +132,21 @@ const handler = async (req: Request): Promise<Response> => {
         subject: 'Laundry Being Washed',
         message: 'Your laundry is currently being washed with care!'
       },
+      'rinsing': {
+        subject: 'Rinse Cycle - Fresh Drop',
+        message: 'Your laundry is in the rinse cycle, almost ready for drying.'
+      },
       'drying': {
         subject: 'Laundry Being Dried',
         message: 'Your laundry has been washed and is now being dried!'
+      },
+      'folding': {
+        subject: 'Folding & Packaging - Fresh Drop',
+        message: 'Your clean laundry is being carefully folded and packaged for delivery.'
+      },
+      'delivering': {
+        subject: 'Out for Delivery - Fresh Drop',
+        message: 'Your fresh, clean laundry is out for delivery and will arrive soon!'
       },
       'folded': {
         subject: 'Laundry Folded & Ready',
@@ -147,10 +170,14 @@ const handler = async (req: Request): Promise<Response> => {
       }
     };
 
-    const notification = statusMessages[status as keyof typeof statusMessages];
+    // Use template if available, otherwise use default
+    const notification = template || defaultMessages[status as keyof typeof defaultMessages];
     if (!notification) {
       throw new Error(`Unknown status: ${status}`);
     }
+
+    // Replace variables in template message
+    const processedMessage = notification.message.replace(/\{customerName\}/g, name || 'Valued Customer');
 
     const promises = [];
 
@@ -166,7 +193,7 @@ const handler = async (req: Request): Promise<Response> => {
             <h1 style="color: #2563eb;">FreshDrop Laundry</h1>
             <h2>Order Update - ${notification.subject}</h2>
             <p>Hi ${name || 'Valued Customer'},</p>
-            <p>${notification.message}</p>
+            <p>${processedMessage}</p>
             <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <strong>Order Details:</strong><br>
               Order ID: ${orderNumber || orderId}<br>
@@ -197,7 +224,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send SMS notification  
     if (phone && Deno.env.get('TWILIO_ACCOUNT_SID') && Deno.env.get('TWILIO_AUTH_TOKEN')) {
       console.log('Sending SMS to:', phone);
-      const smsMessage = `FreshDrop: ${notification.subject}. ${notification.message} Order: ${orderNumber || orderId}`;
+      const smsMessage = `FreshDrop: ${notification.subject}. ${processedMessage} Order: ${orderNumber || orderId}`;
       
       const smsPromise = fetch('https://api.twilio.com/2010-04-01/Accounts/' + Deno.env.get('TWILIO_ACCOUNT_SID') + '/Messages.json', {
         method: 'POST',

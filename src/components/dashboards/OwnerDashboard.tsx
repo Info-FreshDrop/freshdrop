@@ -14,6 +14,7 @@ import { OrderIssueTracking } from "@/components/admin/OrderIssueTracking";
 import { OperatorWorkloadBalance } from "@/components/admin/OperatorWorkloadBalance";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { NotificationTesting } from "@/components/admin/NotificationTesting";
+import NotificationTemplateManagement from "@/components/admin/NotificationTemplateManagement";
 import { CustomerManagement } from "@/components/admin/CustomerManagement";
 import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,12 +29,13 @@ import {
   Shield,
   ArrowLeft,
   UserPlus,
-  Bell
+  Bell,
+  MessageSquare
 } from "lucide-react";
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'customer-management'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -286,6 +288,10 @@ export function OwnerDashboard() {
         </div>
       </div>
     );
+  }
+
+  if (currentView === 'notification-templates') {
+    return <NotificationTemplateManagement onBack={() => setCurrentView('dashboard')} />;
   }
 
   if (currentView === 'customer-management') {
@@ -710,6 +716,33 @@ export function OwnerDashboard() {
                 </Button>
                 <Button variant="outline" className="w-full">
                   View Logs
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-blue-500" />
+                Notification Templates
+              </CardTitle>
+              <CardDescription>
+                Customize email and SMS notification messages
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('notification-templates')}
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Edit Templates
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Preview Messages
                 </Button>
               </div>
             </CardContent>
