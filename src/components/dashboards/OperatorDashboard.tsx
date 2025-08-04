@@ -39,6 +39,7 @@ import { OrdersOverviewMap } from '../orders/OrdersOverviewMap';
 import { OperatorProfile } from '../customer/OperatorProfile';
 import { OperatorZipCodeEditModal } from '../admin/OperatorZipCodeEditModal';
 import { OrderMessaging } from '../customer/OrderMessaging';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 interface Order {
   id: string;
@@ -91,6 +92,28 @@ interface WasherData {
   current_location?: {
     coordinates: [number, number];
   };
+}
+
+// Message Button Component with Unread Count
+function OperatorMessageButton({ order, onClick }: { order: Order; onClick: () => void }) {
+  const unreadCount = useUnreadMessages(order.id);
+  
+  return (
+    <Button 
+      variant="outline" 
+      size="sm"
+      className="relative"
+      onClick={onClick}
+    >
+      <MessageSquare className="h-4 w-4 mr-1" />
+      Message
+      {unreadCount > 0 && (
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+          {unreadCount}
+        </div>
+      )}
+    </Button>
+  );
 }
 
 export function OperatorDashboard() {
@@ -869,14 +892,10 @@ export function OperatorDashboard() {
                                           <MapPin className="h-4 w-4 mr-1" />
                                           Map
                                         </Button>
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
+                                        <OperatorMessageButton 
+                                          order={order}
                                           onClick={() => setSelectedOrderForMessaging(order)}
-                                        >
-                                          <MessageSquare className="h-4 w-4 mr-1" />
-                                          Message
-                                        </Button>
+                                        />
                                       </div>
                                     </div>
                                   </CardContent>
@@ -1125,18 +1144,13 @@ export function OperatorDashboard() {
                   
                   {/* Quick Actions */}
                   <div className="mt-4 pt-3 border-t">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-2"
+                    <OperatorMessageButton 
+                      order={selectedOrder}
                       onClick={() => {
                         console.log('Message Customer clicked for order:', selectedOrder.id);
                         setSelectedOrderForMessaging(selectedOrder);
                       }}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      Message Customer
-                    </Button>
+                    />
                   </div>
                   
                   {/* Addresses */}
