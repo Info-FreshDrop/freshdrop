@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,11 +17,13 @@ import {
   PlusCircle,
   BarChart3,
   Calendar,
-  Target
+  Target,
+  ArrowLeft
 } from "lucide-react";
 
 export function MarketingDashboard() {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'analytics' | 'campaigns' | 'triggers'>('dashboard');
 
   if (currentView === 'notifications') {
@@ -56,6 +59,14 @@ export function MarketingDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/owner-dashboard')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Owner Dashboard
+            </Button>
             <Badge variant="secondary" className="px-3 py-1">
               <Megaphone className="h-3 w-3 mr-1" />
               Marketing Access
