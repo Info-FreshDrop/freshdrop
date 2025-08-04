@@ -114,6 +114,7 @@ export function CustomerDashboard() {
       if (error) throw error;
       
       const allOrders = data || [];
+      console.log('Raw orders from database:', allOrders);
       console.log('All orders with customer_acknowledged:', allOrders.map(o => ({id: o.id.slice(0,8), status: o.status, acknowledged: o.customer_acknowledged})));
       
       // Separate active orders from acknowledged completed ones
@@ -128,7 +129,8 @@ export function CustomerDashboard() {
         (['completed', 'cancelled'].includes(order.status)) && order.customer_acknowledged
       );
       
-      console.log('Active orders:', activeOrders.length, 'Completed orders:', completedOrders.length);
+      console.log('Active orders:', activeOrders.length, activeOrders);
+      console.log('Completed orders:', completedOrders.length, completedOrders);
       
       setOrders(activeOrders);
       setOrderHistory(completedOrders);
@@ -256,7 +258,11 @@ export function CustomerDashboard() {
               {/* Active Orders */}
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">Your Orders</h3>
-                {orders.length === 0 ? (
+                {isLoadingOrders ? (
+                  <Card className="p-6 text-center border-0 shadow-sm bg-white">
+                    <p>Loading orders...</p>
+                  </Card>
+                ) : orders.length === 0 ? (
                   <Card className="p-6 text-center border-0 shadow-sm bg-white">
                     <div className="relative h-32 mb-4 rounded-lg overflow-hidden">
                       <img 
