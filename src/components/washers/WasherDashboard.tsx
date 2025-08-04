@@ -30,7 +30,7 @@ interface Order {
   id: string;
   pickup_type: 'locker' | 'pickup_delivery';
   service_type: 'wash_fold' | 'wash_hang_dry' | 'express';
-  status: 'placed' | 'unclaimed' | 'claimed' | 'in_progress' | 'washed' | 'returned' | 'completed' | 'cancelled';
+  status: 'placed' | 'unclaimed' | 'claimed' | 'in_progress' | 'washing' | 'drying' | 'folding' | 'delivering' | 'washed' | 'returned' | 'completed' | 'cancelled';
   is_express: boolean;
   pickup_address?: string;
   delivery_address?: string;
@@ -308,6 +308,14 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
       case 'claimed':
       case 'in_progress':
         return 'bg-blue-100 text-blue-800';
+      case 'washing':
+        return 'bg-orange-100 text-orange-800';
+      case 'drying':
+        return 'bg-purple-100 text-purple-800';
+      case 'folding':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'delivering':
+        return 'bg-teal-100 text-teal-800';
       case 'washed':
         return 'bg-purple-100 text-purple-800';
       case 'returned':
@@ -319,14 +327,35 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
   };
 
   const taskSteps = [
-    "Go to pickup location",
-    "Locate laundry bags", 
-    "Take photo of bags",
-    "Begin wash & fold",
-    "Complete washing",
-    "Drop off laundry",
-    "Take delivery photo",
-    "Mark as complete"
+    "Drive to pickup location",
+    "Locate and collect laundry bags", 
+    "Take pickup photo and verify bag count",
+    "Transport laundry to washing location",
+    "Sort clothes by fabric type and color",
+    "Load first batch into washing machine",
+    "Start washing cycle (30-45 min)",
+    "Transfer clothes from washer to dryer",
+    "Start drying cycle (45-60 min)",
+    "Remove clothes and begin folding/hanging",
+    "Complete folding and organize by customer",
+    "Transport to delivery location",
+    "Take delivery photo and complete handoff"
+  ];
+
+  const stepStatuses = [
+    'in_progress', // Step 1: Drive to pickup
+    'in_progress', // Step 2: Locate bags
+    'in_progress', // Step 3: Take pickup photo
+    'in_progress', // Step 4: Transport to washing
+    'washing',     // Step 5: Sort clothes
+    'washing',     // Step 6: Load washer
+    'washing',     // Step 7: Start wash cycle
+    'drying',      // Step 8: Transfer to dryer
+    'drying',      // Step 9: Start drying
+    'folding',     // Step 10: Remove and fold
+    'folding',     // Step 11: Complete folding
+    'delivering',  // Step 12: Transport to delivery
+    'completed'    // Step 13: Complete handoff
   ];
 
   if (selectedOrder) {
@@ -424,7 +453,7 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
 
               {taskStep < taskSteps.length && (
                 <div className="mt-6 space-y-4">
-                  {(taskStep === 2 || taskStep === 6) && (
+                  {(taskStep === 2 || taskStep === 12) && (
                     <div className="space-y-2">
                       <Label htmlFor="photo">
                         {taskStep === 2 ? 'Upload pickup photo' : 'Upload delivery photo'}
@@ -444,7 +473,7 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
                     </div>
                   )}
 
-                  {taskStep === 7 && (
+                  {taskStep === 12 && (
                     <div className="space-y-2">
                       <Label htmlFor="notes">Final Notes (Optional)</Label>
                       <Textarea
@@ -459,22 +488,20 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
                   <Button
                     variant="hero"
                     className="w-full"
-                    onClick={() => {
+                    onClick={async () => {
                       if (taskStep === taskSteps.length - 1) {
-                        // This is the final step (step 13) - mark as completed
-                        updateOrderStatus(selectedOrder.id, 'completed');
+                        // Final step - mark as completed
+                        await updateOrderStatus(selectedOrder.id, 'completed');
                       } else {
-                        setTaskStep(prev => prev + 1);
-                        if (taskStep === 0) {
-                          updateOrderStatus(selectedOrder.id, 'in_progress');
+                        // Progress to next step
+                        const newStep = taskStep + 1;
+                        setTaskStep(newStep);
+                        
+                        // Update order status based on current step
+                        const newStatus = stepStatuses[newStep] || stepStatuses[taskStep];
+                        if (newStatus !== stepStatuses[taskStep]) {
+                          await updateOrderStatus(selectedOrder.id, newStatus);
                         }
-                        if (taskStep === 3) {
-                          updateOrderStatus(selectedOrder.id, 'washed');
-                        }
-                        if (taskStep === 5) {
-                          updateOrderStatus(selectedOrder.id, 'returned');
-                        }
-                        // Don't mark as completed until final step
                       }
                     }}
                   >

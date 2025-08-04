@@ -154,7 +154,7 @@ export function LiveOrderManagement({ onBack }: LiveOrderManagementProps) {
   const filteredOrders = orders.filter(order => {
     const matchesTab = activeTab === "all" || 
       (activeTab === "new" && order.status === "unclaimed") ||
-      (activeTab === "active" && ["claimed", "in_progress", "washed"].includes(order.status)) ||
+      (activeTab === "active" && ["claimed", "in_progress", "washing", "drying", "folding", "delivering", "washed"].includes(order.status)) ||
       (activeTab === "completed" && order.status === "completed") ||
       (activeTab === "issues" && order.status === "cancelled");
 
@@ -268,7 +268,11 @@ export function LiveOrderManagement({ onBack }: LiveOrderManagementProps) {
     switch (status) {
       case 'unclaimed': return 'bg-yellow-100 text-yellow-800';
       case 'claimed': return 'bg-blue-100 text-blue-800';
-      case 'in_progress': return 'bg-purple-100 text-purple-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'washing': return 'bg-orange-100 text-orange-800';
+      case 'drying': return 'bg-purple-100 text-purple-800';
+      case 'folding': return 'bg-indigo-100 text-indigo-800';
+      case 'delivering': return 'bg-teal-100 text-teal-800';
       case 'washed': return 'bg-indigo-100 text-indigo-800';
       case 'completed': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
@@ -361,6 +365,10 @@ export function LiveOrderManagement({ onBack }: LiveOrderManagementProps) {
                   <SelectItem value="unclaimed">Unclaimed</SelectItem>
                   <SelectItem value="claimed">Claimed</SelectItem>
                   <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="washing">Washing</SelectItem>
+                  <SelectItem value="drying">Drying</SelectItem>
+                  <SelectItem value="folding">Folding</SelectItem>
+                  <SelectItem value="delivering">Delivering</SelectItem>
                   <SelectItem value="washed">Washed</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -392,7 +400,7 @@ export function LiveOrderManagement({ onBack }: LiveOrderManagementProps) {
               New ({orders.filter(o => o.status === 'unclaimed').length})
             </TabsTrigger>
             <TabsTrigger value="active">
-              Active ({orders.filter(o => ['claimed', 'in_progress', 'washed'].includes(o.status)).length})
+              Active ({orders.filter(o => ['claimed', 'in_progress', 'washing', 'drying', 'folding', 'delivering', 'washed'].includes(o.status)).length})
             </TabsTrigger>
             <TabsTrigger value="completed">
               Completed ({orders.filter(o => o.status === 'completed').length})
