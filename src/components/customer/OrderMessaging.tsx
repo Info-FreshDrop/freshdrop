@@ -141,18 +141,54 @@ export function OrderMessaging({
   const sendMessage = async () => {
     if (!user || !operatorId || !newMessage.trim()) return;
 
+    console.log('Sending message with operatorId:', operatorId);
     setIsSending(true);
     try {
+      // First get the actual user_id from the washer
+      let recipientUserId = operatorId;
+      
+      // If operatorId looks like a washer ID (UUID), get the user_id
+      if (operatorId && operatorId.length === 36 && operatorId.includes('-')) {
+        const { data: washerData } = await supabase
+          .from('washers')
+          .select('user_id')
+          .eq('id', operatorId)
+          .single();
+        
+        if (washerData?.user_id) {
+          recipientUserId = washerData.user_id;
+          console.log('Found washer user_id:', recipientUserId);
+        }
+      }
+
       const { error } = await supabase
         .from('order_messages')
         .insert({
           order_id: orderId,
           sender_id: user.id,
-          recipient_id: operatorId,
+          recipient_id: recipientUserId,
           message: newMessage.trim()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Insert error:', error);
+        throw error;
+      }
+
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-order-notifications', {
+          body: {
+            notification_type: 'message',
+            customer_id: recipientUserId,
+            order_id: orderId,
+            subject: 'New message from customer',
+            message: `You have a new message: "${newMessage.trim()}"`
+          }
+        });
+      } catch (emailError) {
+        console.error('Email notification error:', emailError);
+      }
 
       setNewMessage("");
       toast({
@@ -227,13 +263,16 @@ export function OrderMessaging({
                       key={message.id}
                       className={`flex ${isFromUser ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
+                       <div
+                        className={`max-w-[80%] rounded-lg p-3 relative ${
                           isFromUser
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted'
                         }`}
                       >
+                        {!isFromUser && !message.is_read && (
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+                        )}
                         <div className="text-sm">{message.message}</div>
                         <div className={`text-xs mt-1 opacity-70 ${
                           isFromUser ? 'text-primary-foreground' : 'text-muted-foreground'

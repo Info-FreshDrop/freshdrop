@@ -39,9 +39,55 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import laundryServiceImg from "@/assets/laundry-service.jpg";
 import cleanLaundryImg from "@/assets/clean-laundry.jpg";
 import laundryDeliveryImg from "@/assets/laundry-delivery.jpg";
+
+function MessageButton({ order }: { order: any }) {
+  const unreadCount = useUnreadMessages(order.id);
+  const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<any>(null);
+  const [showMessaging, setShowMessaging] = useState(false);
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        className="flex-1 text-xs relative"
+        onClick={() => {
+          setSelectedOrderForMessaging(order);
+          setShowMessaging(true);
+        }}
+      >
+        <MessageCircle className="h-3 w-3 mr-1" />
+        Message
+        {unreadCount > 0 && (
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+            {unreadCount}
+          </div>
+        )}
+      </Button>
+      
+      {showMessaging && selectedOrderForMessaging && (
+        <OrderMessaging
+          orderId={selectedOrderForMessaging.id}
+          operatorId={selectedOrderForMessaging.washers?.user_id || selectedOrderForMessaging.washer_id}
+          operatorName={
+            selectedOrderForMessaging.washers?.profiles
+              ? `${selectedOrderForMessaging.washers.profiles.first_name || ''} ${selectedOrderForMessaging.washers.profiles.last_name || ''}`.trim()
+              : 'Operator'
+          }
+          isOpen={showMessaging}
+          onClose={() => {
+            setShowMessaging(false);
+            setSelectedOrderForMessaging(null);
+          }}
+        />
+      )}
+    </>
+  );
+}
 
 export function CustomerDashboard() {
   const { user, signOut } = useAuth();
@@ -62,8 +108,6 @@ export function CustomerDashboard() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
-  const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<any>(null);
-  const [showMessaging, setShowMessaging] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -374,23 +418,7 @@ export function CustomerDashboard() {
                               <Package className="h-3 w-3 mr-1" />
                               Track Order
                             </Button>
-                            {order.washer_id && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 text-xs"
-                                onClick={() => {
-                                  console.log('Message button clicked for order:', order.id);
-                                  console.log('Order washer_id:', order.washer_id);
-                                  console.log('Order washers:', order.washers);
-                                  setSelectedOrderForMessaging(order);
-                                  setShowMessaging(true);
-                                }}
-                              >
-                                <MessageCircle className="h-3 w-3 mr-1" />
-                                Message
-                              </Button>
-                            )}
+                            {order.washer_id && <MessageButton order={order} />}
                             {order.status === 'completed' && !order.customer_acknowledged && (
                               <>
                                 <Button
@@ -594,23 +622,6 @@ export function CustomerDashboard() {
         </>
       )}
 
-      {/* Order Messaging Modal */}
-      {showMessaging && selectedOrderForMessaging && (
-        <OrderMessaging
-          orderId={selectedOrderForMessaging.id}
-          operatorId={selectedOrderForMessaging.washers?.user_id || selectedOrderForMessaging.washer_id}
-          operatorName={
-            selectedOrderForMessaging.washers?.profiles
-              ? `${selectedOrderForMessaging.washers.profiles.first_name || ''} ${selectedOrderForMessaging.washers.profiles.last_name || ''}`.trim()
-              : 'Operator'
-          }
-          isOpen={showMessaging}
-          onClose={() => {
-            setShowMessaging(false);
-            setSelectedOrderForMessaging(null);
-          }}
-        />
-      )}
 
       {/* Live Chat Widget */}
       <ChatWidget />
