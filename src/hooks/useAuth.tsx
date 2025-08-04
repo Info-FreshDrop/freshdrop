@@ -25,10 +25,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserRole = async (userId: string) => {
     try {
+      console.log('🔍 Fetching role for user:', userId);
       const { data, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId);
+      
+      console.log('🔍 Role query result:', { data, error: roleError });
       
       if (!roleError && data && data.length > 0) {
         const roles = data.map(r => r.role);
@@ -45,25 +48,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         setUserRole(primaryRole);
-        console.log('User role set to:', primaryRole);
+        console.log('✅ User role set to:', primaryRole);
         return primaryRole;
       }
     } catch (roleError) {
-      console.error('Role fetch error:', roleError);
+      console.error('❌ Role fetch error:', roleError);
     }
     
     // Fallback to customer role
+    console.log('⚠️ Falling back to customer role');
     setUserRole('customer');
     return 'customer';
   };
 
   useEffect(() => {
-    console.log('Auth effect started');
+    console.log('🚀 Auth effect started');
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, !!session);
+        console.log('🔄 Auth state changed:', event, 'Session exists:', !!session);
+        if (session?.user) {
+          console.log('👤 User ID:', session.user.id);
+          console.log('📧 User email:', session.user.email);
+        }
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -71,9 +79,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           // Use setTimeout to prevent potential deadlock
           setTimeout(() => {
-            fetchUserRole(session.user.id).finally(() => setLoading(false));
+            fetchUserRole(session.user.id).finally(() => {
+              console.log('✅ Auth loading complete');
+              setLoading(false);
+            });
           }, 0);
         } else {
+          console.log('❌ No session, setting role to null');
           setUserRole(null);
           setLoading(false);
         }
@@ -82,10 +94,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('Initial session check:', !!session, error);
+      console.log('🔍 Initial session check - Session exists:', !!session, 'Error:', error);
       
       if (error) {
-        console.error('Session error:', error);
+        console.error('❌ Session error:', error);
         setLoading(false);
         return;
       }
@@ -94,8 +106,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserRole(session.user.id).finally(() => setLoading(false));
+        console.log('👤 Initial user ID:', session.user.id);
+        fetchUserRole(session.user.id).finally(() => {
+          console.log('✅ Initial auth loading complete');
+          setLoading(false);
+        });
       } else {
+        console.log('❌ No initial session');
         setUserRole(null);
         setLoading(false);
       }

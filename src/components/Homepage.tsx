@@ -72,9 +72,13 @@ export function Homepage() {
   }
 
   // Redirect authenticated users to their role-based dashboard
+  console.log('🏠 Homepage render - User:', !!user, 'Role:', userRole, 'Loading:', loading);
+  
   if (user && userRole) {
+    console.log('🎯 Rendering dashboard for role:', userRole);
     switch (userRole) {
       case 'customer':
+        console.log('📱 Rendering CustomerDashboard');
         return <CustomerDashboard />;
       case 'washer':
         return <WasherDashboard onBack={() => {}} />;
@@ -85,9 +89,12 @@ export function Homepage() {
       case 'marketing':
         return <MarketingDashboard />;
       default:
+        console.log('📱 Rendering default CustomerDashboard');
         return <CustomerDashboard />;
     }
   }
+  
+  console.log('🌐 Rendering public homepage');
 
   return (
     <div className="min-h-screen">
