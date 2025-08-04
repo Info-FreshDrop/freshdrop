@@ -1729,6 +1729,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      insert_order_message: {
+        Args: {
+          p_order_id: string
+          p_recipient_washer_id: string
+          p_message: string
+        }
+        Returns: Json
+      }
       is_admin_role: {
         Args: { user_uuid: string }
         Returns: boolean
