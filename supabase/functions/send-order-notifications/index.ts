@@ -16,6 +16,7 @@ interface NotificationRequest {
   customerName?: string;
   orderNumber?: string;
   currentStep?: number;
+  step?: number; // For step-based notifications
 }
 
 const supabase = createClient(
@@ -36,12 +37,13 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { orderId, customerId, status, customerEmail, customerPhone, customerName, orderNumber }: NotificationRequest = await req.json();
+    const { orderId, customerId, status, customerEmail, customerPhone, customerName, orderNumber, step }: NotificationRequest = await req.json();
 
     console.log('=== NOTIFICATION REQUEST ===');
     console.log('Order ID:', orderId);
     console.log('Customer ID:', customerId);
     console.log('Status:', status);
+    console.log('Step:', step);
     console.log('Provided email:', customerEmail);
     console.log('Provided phone:', customerPhone);
     console.log('Provided name:', customerName);
@@ -105,14 +107,38 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Name:', name);
 
     // Fetch notification template from database
-    const { data: template, error: templateError } = await supabase
-      .from('notification_templates')
-      .select('subject, message')
-      .eq('status', status)
-      .eq('is_active', true)
-      .single();
+    // First try to find by step number, then fall back to status
+    let template;
+    if (step) {
+      console.log('Looking for step-based template:', step);
+      const { data: stepTemplate, error: stepError } = await supabase
+        .from('notification_templates')
+        .select('subject, message')
+        .eq('trigger_step', step)
+        .eq('is_active', true)
+        .eq('is_deleted', false)
+        .single();
+      
+      console.log('Step-based template result:', { stepTemplate, stepError });
+      template = stepTemplate;
+    }
 
-    console.log('Template fetch result:', { template, templateError });
+    // If no step-based template found, try status-based
+    if (!template) {
+      console.log('Looking for status-based template:', status);
+      const { data: statusTemplate, error: statusError } = await supabase
+        .from('notification_templates')
+        .select('subject, message')
+        .eq('status', status)
+        .eq('is_active', true)
+        .eq('is_deleted', false)
+        .single();
+
+      console.log('Status-based template result:', { statusTemplate, statusError });
+      template = statusTemplate;
+    }
+
+    console.log('Final template:', template);
 
     // Fallback status messages if template not found
     const defaultMessages = {
@@ -198,6 +224,7 @@ const handler = async (req: Request): Promise<Response> => {
               <strong>Order Details:</strong><br>
               Order ID: ${orderNumber || orderId}<br>
               Status: ${status.replace('_', ' ').toUpperCase()}
+              ${step ? `<br>Step: ${step}` : ''}
             </div>
             <p>Thank you for choosing FreshDrop!</p>
             <p style="color: #6b7280; font-size: 14px;">

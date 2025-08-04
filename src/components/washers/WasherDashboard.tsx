@@ -226,9 +226,12 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
     setIsLoading(false);
   };
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (orderId: string, newStatus: string, stepNumber?: number) => {
     try {
-      const updateData: any = { status: newStatus };
+      const updateData: any = { 
+        status: newStatus,
+        current_step: stepNumber || null
+      };
       
       if (newStatus === 'completed') {
         updateData.completed_at = new Date().toISOString();
@@ -241,11 +244,12 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
 
       if (error) throw error;
 
-      // Send notification about status change
+      // Send notification about status change with step information
       const order = myOrders.find(o => o.id === orderId);
       console.log('=== SENDING STATUS CHANGE NOTIFICATION ===');
       console.log('Order found:', order);
       console.log('New status:', newStatus);
+      console.log('Step number:', stepNumber);
       if (order) {
         try {
           console.log('Calling notification function with:', {
@@ -260,7 +264,8 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
               orderId: order.id,
               customerId: order.customer_id,
               status: newStatus,
-              orderNumber: order.id.substring(0, 8).toUpperCase()
+              orderNumber: order.id.substring(0, 8).toUpperCase(),
+              step: stepNumber
             }
           });
           
@@ -500,7 +505,7 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
                         // Update order status based on current step
                         const newStatus = stepStatuses[newStep] || stepStatuses[taskStep];
                         if (newStatus !== stepStatuses[taskStep]) {
-                          await updateOrderStatus(selectedOrder.id, newStatus);
+                          await updateOrderStatus(selectedOrder.id, newStatus, newStep + 1);
                         }
                       }
                     }}

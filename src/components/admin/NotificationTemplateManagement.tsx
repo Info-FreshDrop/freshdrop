@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Edit2, Save, X, Eye, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Eye, RotateCcw, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,6 +17,9 @@ interface NotificationTemplate {
   subject: string;
   message: string;
   is_active: boolean;
+  trigger_step?: number;
+  step_description?: string;
+  is_deleted: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -27,9 +30,11 @@ interface NotificationTemplateManagementProps {
 
 export default function NotificationTemplateManagement({ onBack }: NotificationTemplateManagementProps) {
   const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
+  const [deletedTemplates, setDeletedTemplates] = useState<NotificationTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTemplate, setEditingTemplate] = useState<NotificationTemplate | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<NotificationTemplate | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -61,10 +66,15 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
       const { data, error } = await supabase
         .from('notification_templates')
         .select('*')
-        .order('status');
+        .order('trigger_step', { nullsFirst: false });
 
       if (error) throw error;
-      setTemplates(data || []);
+      
+      const activeTemplates = (data || []).filter(t => !t.is_deleted);
+      const deletedTemplates = (data || []).filter(t => t.is_deleted);
+      
+      setTemplates(activeTemplates);
+      setDeletedTemplates(deletedTemplates);
     } catch (error) {
       console.error('Error loading templates:', error);
       toast({
@@ -123,6 +133,62 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
       toast({
         title: "Error",
         description: "Failed to update template status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Delete template (soft delete)
+  const deleteTemplate = async (template: NotificationTemplate) => {
+    try {
+      const { error } = await supabase
+        .from('notification_templates')
+        .update({
+          is_deleted: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', template.id);
+
+      if (error) throw error;
+      
+      await loadTemplates();
+      toast({
+        title: "Success",
+        description: "Template deleted successfully"
+      });
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete template",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Restore deleted template
+  const restoreTemplate = async (template: NotificationTemplate) => {
+    try {
+      const { error } = await supabase
+        .from('notification_templates')
+        .update({
+          is_deleted: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', template.id);
+
+      if (error) throw error;
+      
+      await loadTemplates();
+      toast({
+        title: "Success",
+        description: "Template restored successfully"
+      });
+    } catch (error) {
+      console.error('Error restoring template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to restore template",
         variant: "destructive"
       });
     }
@@ -192,11 +258,29 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
         <h1 className="text-3xl font-bold">Notification Templates</h1>
       </div>
 
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Active Templates</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDeleted(!showDeleted)}
+          >
+            {showDeleted ? "Hide Deleted" : "Show Deleted"} ({deletedTemplates.length})
+          </Button>
+        </div>
+      </div>
+
       <div className="grid gap-4">
         {templates.map((template) => (
           <Card key={template.id} className={`${!template.is_active ? 'opacity-60' : ''}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div className="flex items-center gap-3">
+                {template.trigger_step && (
+                  <Badge variant="default" className="bg-primary/10 text-primary">
+                    Step {template.trigger_step}
+                  </Badge>
+                )}
                 <CardTitle className="text-lg">{formatStatus(template.status)}</CardTitle>
                 <Badge variant={template.is_active ? "default" : "secondary"}>
                   {template.is_active ? "Active" : "Disabled"}
@@ -230,6 +314,11 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
                               <strong>Order Details:</strong><br />
                               Order ID: ORDER123<br />
                               Status: {formatStatus(template.status).toUpperCase()}
+                              {template.trigger_step && (
+                                <>
+                                  <br />Step: {template.trigger_step}
+                                </>
+                              )}
                             </div>
                             <p className="mb-2">Thank you for choosing FreshDrop!</p>
                             <p className="text-gray-600 text-sm">
@@ -247,10 +336,22 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
                 <Button variant="outline" size="sm" onClick={() => resetToDefault(template)}>
                   <RotateCcw className="w-4 h-4" />
                 </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => deleteTemplate(template)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
+                {template.step_description && (
+                  <div>
+                    <strong>Trigger:</strong> {template.step_description}
+                  </div>
+                )}
                 <div>
                   <strong>Subject:</strong> {template.subject}
                 </div>
@@ -264,6 +365,50 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
             </CardContent>
           </Card>
         ))}
+
+        {showDeleted && deletedTemplates.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-4 text-muted-foreground">Deleted Templates</h3>
+            <div className="space-y-4">
+              {deletedTemplates.map((template) => (
+                <Card key={template.id} className="opacity-60 border-dashed">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          {template.trigger_step && (
+                            <Badge variant="secondary" className="opacity-60">
+                              Step {template.trigger_step}
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className="capitalize opacity-60">
+                            {formatStatus(template.status)}
+                          </Badge>
+                          <Badge variant="secondary">Deleted</Badge>
+                        </div>
+                        <h4 className="font-medium text-muted-foreground mb-1">
+                          {template.subject}
+                        </h4>
+                        {template.step_description && (
+                          <p className="text-xs text-muted-foreground mb-1">
+                            {template.step_description}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => restoreTemplate(template)}
+                      >
+                        Restore
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Dialog */}
@@ -274,6 +419,13 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
               <DialogTitle>Edit Template - {formatStatus(editingTemplate.status)}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              {editingTemplate.trigger_step && (
+                <div className="bg-muted p-3 rounded-lg">
+                  <p className="text-sm">
+                    <strong>Triggered by Step {editingTemplate.trigger_step}:</strong> {editingTemplate.step_description}
+                  </p>
+                </div>
+              )}
               <div>
                 <Label htmlFor="subject">Subject Line</Label>
                 <Input

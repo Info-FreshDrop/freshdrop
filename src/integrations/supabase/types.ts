@@ -336,27 +336,36 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          is_deleted: boolean
           message: string
           status: string
+          step_description: string | null
           subject: string
+          trigger_step: number | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           is_active?: boolean
+          is_deleted?: boolean
           message: string
           status: string
+          step_description?: string | null
           subject: string
+          trigger_step?: number | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           is_active?: boolean
+          is_deleted?: boolean
           message?: string
           status?: string
+          step_description?: string | null
           subject?: string
+          trigger_step?: number | null
           updated_at?: string
         }
         Relationships: []
