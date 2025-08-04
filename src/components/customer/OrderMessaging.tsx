@@ -144,22 +144,20 @@ export function OrderMessaging({
     console.log('Sending message with operatorId:', operatorId);
     setIsSending(true);
     try {
-      // First get the actual user_id from the washer
-      let recipientUserId = operatorId;
+      // Get the actual user_id from the washer using operatorId (washer_id)
+      const { data: washerData, error: washerError } = await supabase
+        .from('washers')
+        .select('user_id')
+        .eq('id', operatorId)
+        .single();
       
-      // If operatorId looks like a washer ID (UUID), get the user_id
-      if (operatorId && operatorId.length === 36 && operatorId.includes('-')) {
-        const { data: washerData } = await supabase
-          .from('washers')
-          .select('user_id')
-          .eq('id', operatorId)
-          .single();
-        
-        if (washerData?.user_id) {
-          recipientUserId = washerData.user_id;
-          console.log('Found washer user_id:', recipientUserId);
-        }
+      if (washerError || !washerData?.user_id) {
+        console.error('Failed to find operator user ID:', washerError);
+        throw new Error('Could not find operator');
       }
+
+      const recipientUserId = washerData.user_id;
+      console.log('Found washer user_id:', recipientUserId);
 
       const { error } = await supabase
         .from('order_messages')
