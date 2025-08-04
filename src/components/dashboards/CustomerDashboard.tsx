@@ -63,6 +63,7 @@ export function CustomerDashboard() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<any>(null);
+  const [showMessaging, setShowMessaging] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -378,7 +379,13 @@ export function CustomerDashboard() {
                                 variant="outline"
                                 size="sm"
                                 className="flex-1 text-xs"
-                                onClick={() => setSelectedOrderForMessaging(order)}
+                                onClick={() => {
+                                  console.log('Message button clicked for order:', order.id);
+                                  console.log('Order washer_id:', order.washer_id);
+                                  console.log('Order washers:', order.washers);
+                                  setSelectedOrderForMessaging(order);
+                                  setShowMessaging(true);
+                                }}
                               >
                                 <MessageCircle className="h-3 w-3 mr-1" />
                                 Message
@@ -588,17 +595,20 @@ export function CustomerDashboard() {
       )}
 
       {/* Order Messaging Modal */}
-      {selectedOrderForMessaging && (
+      {showMessaging && selectedOrderForMessaging && (
         <OrderMessaging
           orderId={selectedOrderForMessaging.id}
-          operatorId={selectedOrderForMessaging.washers?.user_id}
+          operatorId={selectedOrderForMessaging.washers?.user_id || selectedOrderForMessaging.washer_id}
           operatorName={
             selectedOrderForMessaging.washers?.profiles
               ? `${selectedOrderForMessaging.washers.profiles.first_name || ''} ${selectedOrderForMessaging.washers.profiles.last_name || ''}`.trim()
               : 'Operator'
           }
-          isOpen={!!selectedOrderForMessaging}
-          onClose={() => setSelectedOrderForMessaging(null)}
+          isOpen={showMessaging}
+          onClose={() => {
+            setShowMessaging(false);
+            setSelectedOrderForMessaging(null);
+          }}
         />
       )}
 
