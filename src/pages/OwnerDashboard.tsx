@@ -135,8 +135,7 @@ export default function OwnerDashboard() {
   if (currentView === 'service-areas') {
     return <ServiceAreasManagement onBack={() => setCurrentView('dashboard')} />;
   }
-  const handleSignOut = async () => {
-    await signOut();
+  const handleExitDashboard = () => {
     navigate('/');
   };
 
@@ -146,7 +145,7 @@ export default function OwnerDashboard() {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={handleSignOut}
+            onClick={handleExitDashboard}
             className="p-0 h-auto text-muted-foreground hover:text-foreground mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
