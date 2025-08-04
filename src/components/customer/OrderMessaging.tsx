@@ -149,7 +149,7 @@ export function OrderMessaging({
       setNewMessage("");
       toast({
         title: "Message Sent",
-        description: "Your message has been sent to the operator"
+        description: "Your message has been sent"
       });
     } catch (error) {
       console.error('Error sending message:', error);
