@@ -105,15 +105,7 @@ export function CustomerDashboard() {
       setIsLoadingOrders(true);
       const { data, error } = await supabase
         .from('orders')
-        .select(`
-          *, 
-          customer_acknowledged,
-          washers!orders_washer_id_fkey(
-            id,
-            user_id,
-            profiles!washers_user_id_fkey(first_name, last_name, phone)
-          )
-        `)
+        .select(`*`)
         .eq('customer_id', user?.id)
         .order('created_at', { ascending: false });
 
