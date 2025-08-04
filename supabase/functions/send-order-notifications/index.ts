@@ -110,9 +110,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email notification
     if (email) {
+      console.log('Sending email to:', email);
       promises.push(
         resend.emails.send({
-          from: "FreshDrop <orders@freshdrop.com>",
+          from: "FreshDrop <onboarding@resend.dev>",
           to: [email],
           subject: notification.subject,
           html: `
