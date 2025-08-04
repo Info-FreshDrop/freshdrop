@@ -263,9 +263,9 @@ export function OrderMessaging({
                               : 'bg-muted'
                           }`}
                         >
-                          {!isFromUser && !message.is_read && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
-                          )}
+                        {message.recipient_id === user?.id && !message.is_read && (
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+                        )}
                           <div className="text-sm">{message.message}</div>
                           <div className={`text-xs mt-1 opacity-70 ${
                             isFromUser ? 'text-primary-foreground' : 'text-muted-foreground'
