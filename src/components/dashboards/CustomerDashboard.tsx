@@ -117,10 +117,13 @@ export function CustomerDashboard() {
       console.log('All orders with customer_acknowledged:', allOrders.map(o => ({id: o.id.slice(0,8), status: o.status, acknowledged: o.customer_acknowledged})));
       
       // Separate active orders from acknowledged completed ones
-      const activeOrders = allOrders.filter(order => 
-        !['completed', 'cancelled'].includes(order.status) || 
-        (order.status === 'completed' && !order.customer_acknowledged)
-      );
+      const activeOrders = allOrders.filter(order => {
+        // Show as active if not completed/cancelled, or if completed but not acknowledged
+        if (!['completed', 'cancelled'].includes(order.status)) {
+          return true;
+        }
+        return order.status === 'completed' && !order.customer_acknowledged;
+      });
       const completedOrders = allOrders.filter(order => 
         (['completed', 'cancelled'].includes(order.status)) && order.customer_acknowledged
       );
