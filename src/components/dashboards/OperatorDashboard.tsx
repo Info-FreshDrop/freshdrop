@@ -31,7 +31,8 @@ import {
   ArrowLeft,
   Check,
   Settings,
-  User
+  User,
+  ExternalLink
 } from "lucide-react";
 import { ServiceAreaModal } from './ServiceAreaModal';
 import { LiveOrderMap } from '../orders/LiveOrderMap';
@@ -40,6 +41,58 @@ import { OperatorProfile } from '../customer/OperatorProfile';
 import { OperatorZipCodeEditModal } from '../admin/OperatorZipCodeEditModal';
 import { OrderMessaging } from '../customer/OrderMessaging';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+
+// Simple map component for navigation
+function NavigationMap({ destination }: { destination?: string }) {
+  if (!destination) {
+    return (
+      <div className="w-full h-48 bg-muted rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No destination address available</p>
+        </div>
+      </div>
+    );
+  }
+
+  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+  const appleMapsUrl = `http://maps.apple.com/?daddr=${encodeURIComponent(destination)}`;
+
+  return (
+    <div className="w-full bg-muted rounded-lg p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <MapPin className="h-5 w-5 text-primary" />
+        <h5 className="font-medium">Navigation to Destination</h5>
+      </div>
+      <div className="space-y-3">
+        <div className="text-sm">
+          <p className="font-medium">📍 Destination:</p>
+          <p className="text-muted-foreground">{destination}</p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.open(googleMapsUrl, '_blank')}
+            className="flex-1"
+          >
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Google Maps
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.open(appleMapsUrl, '_blank')}
+            className="flex-1"
+          >
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Apple Maps
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface Order {
   id: string;
@@ -336,19 +389,183 @@ export function OperatorDashboard() {
   };
 
   const getWorkflowSteps = () => [
-    { title: "Prepare and What to Bring", description: "Review order details and gather necessary supplies", requiresPhoto: false, instructions: "Bring: laundry bags, waterproof labels, permanent marker, phone for photos, cleaning supplies per customer preferences" },
-    { title: "Go to Address", description: "Navigate to customer's pickup location", requiresPhoto: false, instructions: "Drive to pickup address, park safely, notify customer of arrival via app or call" },
-    { title: "Locate Bags", description: "Find and identify customer's laundry bags", requiresPhoto: false, instructions: "Look for laundry bags at specified pickup location (door, porch, designated area)" },
-    { title: "Take Photo", description: "Document pickup with photo", requiresPhoto: true, instructions: "Take clear photo showing all bags being collected, include house number or identifying features" },
-    { title: "Label Bags", description: "Apply identification labels to bags", requiresPhoto: false, instructions: "Label each bag with: Customer name, Order #, Bag count (1 of 3, 2 of 3, etc.), Pickup date/time" },
-    { title: "Count", description: "Count and verify number of bags", requiresPhoto: false, instructions: "Count total bags, verify matches order details, note any discrepancies in app" },
-    { title: "Pickup", description: "Collect all laundry items", requiresPhoto: false, instructions: "Load all labeled bags securely in vehicle, ensure nothing left behind" },
-    { title: "Wash", description: "Wash laundry according to preferences", requiresPhoto: false, instructions: "Sort by colors and fabric types, use customer's specified: soap type, water temperature, special care instructions" },
-    { title: "Dry", description: "Dry laundry with appropriate settings", requiresPhoto: false, instructions: "Use customer's preferred dry temperature, remove promptly to prevent wrinkles, air dry delicates if specified" },
-    { title: "Fold", description: "Fold and organize clean laundry", requiresPhoto: false, instructions: "Fold neatly using customer preferences: hanging vs folding, special folding requests, separate by family member if requested" },
-    { title: "Bag and Relabel", description: "Package folded items and apply labels", requiresPhoto: false, instructions: "Package in clean bags, label with: Customer name, Order #, 'CLEAN - Ready for Delivery', Completion date/time" },
-    { title: "Drive to Drop Off", description: "Transport to delivery location", requiresPhoto: false, instructions: "Drive to delivery address (may be different from pickup), park safely, prepare for handoff" },
-    { title: "Drop Off Photo and Complete", description: "Deliver items and document completion", requiresPhoto: true, instructions: "Deliver to specified location, take photo showing delivered bags with house number/door, mark order complete in app" }
+    { 
+      title: "Prepare and What to Bring", 
+      description: "Review order details and gather necessary supplies", 
+      requiresPhoto: false, 
+      instructions: `📋 REQUIRED ITEMS TO BRING:
+• Clear waterproof bags (for sorting and transport)
+• Large waterproof labels (for bag identification)
+• Permanent marker (for writing customer details)
+• Phone with FreshDrop app (for photos and updates)
+• Customer-specific supplies for this order:
+  - Standard detergent (check order preferences)
+  - Fabric softener if requested
+  - ${selectedOrder?.special_instructions || 'No special care items'}
+
+📍 ORDER DETAILS:
+• Customer: ${selectedOrder?.profiles ? `${selectedOrder.profiles.first_name} ${selectedOrder.profiles.last_name}` : 'N/A'}
+• Order #: ${selectedOrder?.id?.slice(-8) || 'N/A'}
+• Pickup Address: ${selectedOrder?.pickup_address || 'See order details'}
+• Special Instructions: ${selectedOrder?.special_instructions || 'None'}
+• Estimated Bags: ${selectedOrder?.bag_count || 'Unknown'}`
+    },
+    { 
+      title: "Navigate to Pickup Address", 
+      description: "Use GPS navigation to reach customer's location", 
+      requiresPhoto: false, 
+      instructions: `🗺️ NAVIGATION TO: ${selectedOrder?.pickup_address || 'See order details'}
+      
+🚗 DRIVING INSTRUCTIONS:
+• Use the map below for turn-by-turn directions
+• Estimate 15-20 minutes travel time
+• Call customer when 5 minutes away: ${selectedOrder?.profiles?.phone || 'See order details'}
+• Look for parking near front door area
+
+📱 ARRIVAL PROTOCOL:
+• Park safely and legally
+• Turn on hazard lights if needed
+• Text customer through FreshDrop app: "Arrived for pickup"
+• Wait maximum 3 minutes for customer response`,
+      showMap: true,
+      destination: selectedOrder?.pickup_address
+    },
+    { 
+      title: "Locate Customer's Laundry", 
+      description: "Find and identify customer's laundry bags at pickup location", 
+      requiresPhoto: false, 
+      instructions: `🔍 SEARCH FOR LAUNDRY:
+• Look at: ${selectedOrder?.pickup_address || 'specified address'}
+• Check common locations: front door, porch, side door, garage
+• Look for: bags, baskets, or containers with laundry
+• Special notes: ${selectedOrder?.special_instructions || 'No special pickup instructions'}
+• If not found: Call customer at ${selectedOrder?.profiles?.phone || 'phone number in order'}`
+    },
+    { 
+      title: "Document Pickup Condition", 
+      description: "Take photo of laundry before processing", 
+      requiresPhoto: true, 
+      instructions: `📸 PHOTO REQUIREMENTS:
+• Take clear photo showing ALL bags/items being collected
+• Include house number or identifying landmark
+• Show current condition of laundry items
+• Take multiple angles if needed
+• Estimated items: ${selectedOrder?.bag_count || 'See order'} bags/containers`
+    },
+    { 
+      title: "Label Each Bag", 
+      description: "Apply waterproof identification labels", 
+      requiresPhoto: false, 
+      instructions: `🏷️ LABELING PROTOCOL:
+• Label EACH bag with permanent marker:
+  - Customer: ${selectedOrder?.profiles ? `${selectedOrder.profiles.first_name} ${selectedOrder.profiles.last_name}` : 'Customer Name'}
+  - Order #: ${selectedOrder?.id?.slice(-8) || 'Order ID'}
+  - Bag Count: (1 of ${selectedOrder?.bag_count || '?'}, 2 of ${selectedOrder?.bag_count || '?'}, etc.)
+  - Pickup Date: ${new Date().toLocaleDateString()}
+  - Pickup Time: ${new Date().toLocaleTimeString()}
+• Attach labels securely to prevent loss during wash`
+    },
+    { 
+      title: "Count and Verify Items", 
+      description: "Count bags and verify against order details", 
+      requiresPhoto: false, 
+      instructions: `🔢 VERIFICATION CHECKLIST:
+• Count total bags: Expected ${selectedOrder?.bag_count || 'Unknown'} bags
+• Verify items match order description
+• Note any discrepancies in the app immediately
+• Check for: delicates, dry-clean only items, valuable items
+• Special instructions: ${selectedOrder?.special_instructions || 'None'}
+• If count differs: Contact customer before proceeding`
+    },
+    { 
+      title: "Secure Pickup Complete", 
+      description: "Load all items safely in vehicle", 
+      requiresPhoto: false, 
+      instructions: `🚗 LOADING PROTOCOL:
+• Load all labeled bags securely in vehicle
+• Separate delicates if identified
+• Ensure nothing left behind at pickup location
+• Double-check pickup area is clean
+• Update order status to "Picked Up" in app
+• Notify customer via app: "Your laundry has been collected"`
+    },
+    { 
+      title: "Professional Washing Process", 
+      description: "Wash according to customer preferences and fabric care", 
+      requiresPhoto: false, 
+      instructions: `🧽 WASHING PROTOCOL FOR ORDER #${selectedOrder?.id?.slice(-8) || ''}:
+• Sort by: Colors (whites, lights, darks), Fabric types, Care instructions
+• Water temperature: Follow garment labels (Hot: whites, Warm: lights, Cold: darks)
+• Detergent: Use quality detergent appropriate for fabric type
+• Special care: ${selectedOrder?.special_instructions || 'Standard care instructions'}
+• Pre-treat any visible stains with appropriate stain remover
+• Load machines according to capacity (don't overpack)`
+    },
+    { 
+      title: "Professional Drying Process", 
+      description: "Dry items using appropriate settings and methods", 
+      requiresPhoto: false, 
+      instructions: `🌪️ DRYING PROTOCOL:
+• Check care labels: Tumble dry vs. air dry
+• Temperature settings: High (cottons), Medium (synthetics), Low (delicates)
+• Air dry: Silk, wool, bras, swimwear, anything with "air dry" label
+• Remove promptly to prevent wrinkles
+• Shake out items before folding
+• Special drying notes: ${selectedOrder?.special_instructions || 'Follow standard care labels'}`
+    },
+    { 
+      title: "Professional Folding & Organization", 
+      description: "Fold and organize according to customer preferences", 
+      requiresPhoto: false, 
+      instructions: `👔 FOLDING STANDARDS FOR ${selectedOrder?.profiles ? selectedOrder.profiles.first_name : 'CUSTOMER'}:
+• Fold method: Neat, consistent folds (Marie Kondo style preferred)
+• Shirts: Fold or hang (check customer preferences)
+• Pants: Fold lengthwise, then in half
+• Delicates: Fold gently, use tissue paper if needed
+• Matching: Pair socks, organize by type
+• Quality check: Ensure all items are clean and properly dried`
+    },
+    { 
+      title: "Clean Packaging & Re-labeling", 
+      description: "Package in fresh bags with delivery labels", 
+      requiresPhoto: false, 
+      instructions: `📦 PACKAGING PROTOCOL:
+• Use fresh, clean FreshDrop bags
+• Package by: Customer preference, family member, or item type
+• New labels for each bag:
+  - Customer: ${selectedOrder?.profiles ? `${selectedOrder.profiles.first_name} ${selectedOrder.profiles.last_name}` : 'Customer Name'}
+  - Order #: ${selectedOrder?.id?.slice(-8) || 'Order ID'}
+  - Status: "CLEAN - Ready for Delivery"
+  - Completion Date: ${new Date().toLocaleDateString()}
+  - Delivery Address: ${selectedOrder?.delivery_address || selectedOrder?.pickup_address || 'See order details'}`
+    },
+    { 
+      title: "Navigate to Delivery Location", 
+      description: "Transport to customer's delivery address", 
+      requiresPhoto: false, 
+      instructions: `🗺️ DELIVERY NAVIGATION:
+• Destination: ${selectedOrder?.delivery_address || selectedOrder?.pickup_address || 'See order details'}
+• Estimated delivery time: 15-20 minutes
+• Contact customer when 5 minutes away
+• Customer phone: ${selectedOrder?.profiles?.phone || 'See order details'}
+• Park safely near delivery location
+• Prepare packages for easy handoff`,
+      showMap: true,
+      destination: selectedOrder?.delivery_address || selectedOrder?.pickup_address
+    },
+    { 
+      title: "Complete Delivery & Documentation", 
+      description: "Deliver clean laundry and document completion", 
+      requiresPhoto: true, 
+      instructions: `✅ DELIVERY COMPLETION FOR ORDER #${selectedOrder?.id?.slice(-8) || ''}:
+• Deliver to: ${selectedOrder?.delivery_address || selectedOrder?.pickup_address || 'specified location'}
+• Hand to customer or place at designated spot
+• 📸 FINAL PHOTO: Show delivered bags with house number/door
+• Update order status to "Completed" in app
+• Ask customer to rate service in FreshDrop app
+• Thank customer: "${selectedOrder?.profiles ? selectedOrder.profiles.first_name : 'Customer'}, your FreshDrop order is complete!"
+• Total bags delivered: ${selectedOrder?.bag_count || 'All'} bags`
+    }
   ];
 
   const handleTakePhoto = (stepNumber: number) => {
@@ -1303,8 +1520,14 @@ export function OperatorDashboard() {
                           </div>
                           
                           {step.instructions && isCurrent && (
-                            <div className="mt-3 p-3 bg-blue-100 rounded text-sm">
-                              <p><strong>Instructions:</strong> {step.instructions}</p>
+                            <div className="mt-3 p-3 bg-blue-100 rounded text-sm space-y-3">
+                              <div>
+                                <p><strong>Instructions:</strong></p>
+                                <pre className="whitespace-pre-wrap text-sm mt-1">{step.instructions}</pre>
+                              </div>
+                              {(step as any).showMap && (
+                                <NavigationMap destination={(step as any).destination} />
+                              )}
                             </div>
                           )}
                         </div>
