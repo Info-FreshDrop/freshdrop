@@ -211,16 +211,17 @@ export function OrderMessaging({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
-      <div className="w-full sm:max-w-md h-full sm:h-auto sm:max-h-[85vh] bg-background border-0 shadow-soft rounded-t-lg sm:rounded-lg flex flex-col">
-        {/* Header */}
-        <div className="flex-shrink-0 p-4 border-b">
+    <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+      <div className="w-full max-w-md bg-background shadow-soft flex flex-col" 
+           style={{ height: 'calc(100vh - env(safe-area-inset-top))' }}>
+        {/* Header - Fixed height */}
+        <div className="flex-shrink-0 p-3 border-b bg-background">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
+              <MessageCircle className="h-4 w-4" />
               <div>
-                <h3 className="font-semibold">Chat with {operatorName || 'Operator'}</h3>
-                <div className="text-sm text-muted-foreground">
+                <h3 className="text-sm font-semibold">Chat with {operatorName || 'Operator'}</h3>
+                <div className="text-xs text-muted-foreground">
                   Order #{orderId.slice(-8)}
                 </div>
               </div>
@@ -231,57 +232,59 @@ export function OrderMessaging({
           </div>
         </div>
         
-        {/* Messages */}
-        <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full p-4">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-sm text-muted-foreground">Loading messages...</div>
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-sm text-muted-foreground text-center">
-                  No messages yet.<br />
-                  Start a conversation with your operator!
+        {/* Messages - Flexible height */}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="p-3">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-sm text-muted-foreground">Loading messages...</div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message) => {
-                  const isFromUser = message.sender_id === user?.id;
-                  return (
-                    <div
-                      key={message.id}
-                      className={`flex ${isFromUser ? 'justify-end' : 'justify-start'}`}
-                    >
-                       <div
-                        className={`max-w-[80%] rounded-lg p-3 relative ${
-                          isFromUser
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
+              ) : messages.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-sm text-muted-foreground text-center">
+                    No messages yet.<br />
+                    Start a conversation with your operator!
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {messages.map((message) => {
+                    const isFromUser = message.sender_id === user?.id;
+                    return (
+                      <div
+                        key={message.id}
+                        className={`flex ${isFromUser ? 'justify-end' : 'justify-start'}`}
                       >
-                        {!isFromUser && !message.is_read && (
-                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
-                        )}
-                        <div className="text-sm">{message.message}</div>
-                        <div className={`text-xs mt-1 opacity-70 ${
-                          isFromUser ? 'text-primary-foreground' : 'text-muted-foreground'
-                        }`}>
-                          {formatTime(message.created_at)}
+                         <div
+                          className={`max-w-[80%] rounded-lg p-3 relative ${
+                            isFromUser
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          {!isFromUser && !message.is_read && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+                          )}
+                          <div className="text-sm">{message.message}</div>
+                          <div className={`text-xs mt-1 opacity-70 ${
+                            isFromUser ? 'text-primary-foreground' : 'text-muted-foreground'
+                          }`}>
+                            {formatTime(message.created_at)}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
           </ScrollArea>
         </div>
         
-        {/* Input Section */}
-        <div className="flex-shrink-0 border-t p-4 bg-background">
+        {/* Input Section - Fixed at bottom */}
+        <div className="flex-shrink-0 border-t p-3 bg-background">
           <div className="flex gap-2">
             <Input
               placeholder="Type your message..."
@@ -289,6 +292,7 @@ export function OrderMessaging({
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               disabled={!operatorId || isSending}
+              className="text-sm"
             />
             <Button 
               onClick={sendMessage}
