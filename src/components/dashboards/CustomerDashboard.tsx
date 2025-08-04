@@ -16,6 +16,7 @@ import { OrderHistory } from "@/components/orders/OrderHistory";
 import { ProfileModal } from "@/components/customer/ProfileModal";
 import { TipModal } from "@/components/customer/TipModal";
 import { ChatWidget } from "@/components/customer/ChatWidget";
+import { NotificationCenter } from "@/components/customer/NotificationCenter";
 import { 
   Package, 
   User, 
@@ -192,14 +193,17 @@ export function CustomerDashboard() {
                 </p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowProfileModal(true)}
-              className="h-10 w-10 rounded-full"
-            >
-              <Settings className="h-5 w-5 text-slate-600" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <NotificationCenter />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowProfileModal(true)}
+                className="h-10 w-10 rounded-full"
+              >
+                <Settings className="h-5 w-5 text-slate-600" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

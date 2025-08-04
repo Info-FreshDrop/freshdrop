@@ -13,6 +13,7 @@ import { LiveOrderManagement } from "@/components/admin/LiveOrderManagement";
 import { OrderIssueTracking } from "@/components/admin/OrderIssueTracking";
 import { OperatorWorkloadBalance } from "@/components/admin/OperatorWorkloadBalance";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { NotificationTesting } from "@/components/admin/NotificationTesting";
 import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -25,12 +26,13 @@ import {
   BarChart3,
   Shield,
   ArrowLeft,
-  UserPlus
+  UserPlus,
+  Bell
 } from "lucide-react";
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -250,6 +252,36 @@ export function OwnerDashboard() {
           </div>
 
           <UserManagement onBack={() => setCurrentView('dashboard')} />
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'notifications') {
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentView('dashboard')}
+              className="p-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Notification System
+            </h1>
+            <p className="text-muted-foreground">
+              Test and monitor notification delivery
+            </p>
+          </div>
+
+          <NotificationTesting />
         </div>
       </div>
     );
@@ -646,6 +678,33 @@ export function OwnerDashboard() {
                 </Button>
                 <Button variant="outline" className="w-full">
                   View Team Members
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-orange-500" />
+                Notification System
+              </CardTitle>
+              <CardDescription>
+                Test and monitor notification delivery
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('notifications')}
+                >
+                  <Bell className="h-4 w-4 mr-2" />
+                  Test Notifications
+                </Button>
+                <Button variant="outline" className="w-full">
+                  View Logs
                 </Button>
               </div>
             </CardContent>

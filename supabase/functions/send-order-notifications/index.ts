@@ -23,7 +23,12 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Initialize Resend with API key validation
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+if (!RESEND_API_KEY) {
+  console.error("RESEND_API_KEY environment variable is not set");
+}
+const resend = new Resend(RESEND_API_KEY);
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
@@ -40,6 +45,12 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Provided email:', customerEmail);
     console.log('Provided phone:', customerPhone);
     console.log('Provided name:', customerName);
+    
+    // Validate critical environment variables
+    if (!RESEND_API_KEY) {
+      throw new Error('Email service not configured - RESEND_API_KEY missing');
+    }
+    console.log('RESEND_API_KEY configured:', RESEND_API_KEY.substring(0, 10) + '...');
 
     // Log notification attempt
     const logNotification = async (type: string, recipient: string, logStatus: string, messageContent: string, error?: string) => {
@@ -167,15 +178,25 @@ const handler = async (req: Request): Promise<Response> => {
             </p>
           </div>
         `,
+      }).then(async (result) => {
+        console.log('Email API response:', result);
+        if (result.error) {
+          throw new Error(`Resend API error: ${result.error.message}`);
+        }
+        await logNotification('email', email, 'sent', notification.message);
+        return result;
+      }).catch(async (error) => {
+        console.error('Email sending failed:', error);
+        await logNotification('email', email, 'failed', notification.message, error.message);
+        throw error;
       });
-      promises.push(emailPromise);
       
-      // Log email attempt
-      await logNotification('email', email, 'pending', notification.message);
+      promises.push(emailPromise);
     }
 
-    // Send SMS notification
-    if (phone) {
+    // Send SMS notification  
+    if (phone && Deno.env.get('TWILIO_ACCOUNT_SID') && Deno.env.get('TWILIO_AUTH_TOKEN')) {
+      console.log('Sending SMS to:', phone);
       const smsMessage = `FreshDrop: ${notification.subject}. ${notification.message} Order: ${orderNumber || orderId}`;
       
       const smsPromise = fetch('https://api.twilio.com/2010-04-01/Accounts/' + Deno.env.get('TWILIO_ACCOUNT_SID') + '/Messages.json', {
@@ -189,30 +210,30 @@ const handler = async (req: Request): Promise<Response> => {
           To: phone,
           Body: smsMessage,
         }),
+      }).then(async (response) => {
+        const result = await response.json();
+        console.log('SMS API response:', result);
+        if (!response.ok) {
+          throw new Error(`Twilio API error: ${result.message}`);
+        }
+        await logNotification('sms', phone, 'sent', smsMessage);
+        return result;
+      }).catch(async (error) => {
+        console.error('SMS sending failed:', error);
+        await logNotification('sms', phone, 'failed', smsMessage, error.message);
+        throw error;
       });
-      promises.push(smsPromise);
       
-      // Log SMS attempt
-      await logNotification('sms', phone, 'pending', smsMessage);
+      promises.push(smsPromise);
+    } else if (phone) {
+      console.log('SMS not sent - Twilio not configured');
+      await logNotification('sms', phone, 'failed', 'SMS service not configured', 'Twilio credentials missing');
     }
 
     console.log(`Attempting to send ${promises.length} notifications...`);
     const results = await Promise.allSettled(promises);
     
-    // Log results with detailed information and update database
-    results.forEach(async (result, index) => {
-      const type = index === 0 && email ? 'email' : 'sms';
-      const recipient = type === 'email' ? email : phone;
-      const messageContent = type === 'email' ? notification.message : `FreshDrop: ${notification.subject}. ${notification.message} Order: ${orderNumber || orderId}`;
-      
-      if (result.status === 'rejected') {
-        console.error(`${type.toUpperCase()} notification failed:`, result.reason);
-        await logNotification(type, recipient!, 'failed', messageContent, result.reason?.toString());
-      } else {
-        console.log(`${type.toUpperCase()} notification sent successfully:`, result.value);
-        await logNotification(type, recipient!, 'sent', messageContent);
-      }
-    });
+    console.log('Notification results:', results.map(r => ({ status: r.status, reason: r.status === 'rejected' ? r.reason?.message : 'success' })));
 
     return new Response(
       JSON.stringify({ 
