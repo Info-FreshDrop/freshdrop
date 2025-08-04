@@ -89,12 +89,26 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
 
   const updateTemplate = async (template: NotificationTemplate) => {
     try {
+      // Validate step number if provided
+      if (template.trigger_step !== null && template.trigger_step !== undefined) {
+        if (template.trigger_step < 1 || template.trigger_step > 13) {
+          toast({
+            title: "Validation Error",
+            description: "Trigger step must be between 1 and 13",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('notification_templates')
         .update({
           subject: template.subject,
           message: template.message,
-          is_active: template.is_active
+          is_active: template.is_active,
+          trigger_step: template.trigger_step,
+          step_description: template.step_description
         })
         .eq('id', template.id);
 
@@ -419,13 +433,6 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
               <DialogTitle>Edit Template - {formatStatus(editingTemplate.status)}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              {editingTemplate.trigger_step && (
-                <div className="bg-muted p-3 rounded-lg">
-                  <p className="text-sm">
-                    <strong>Triggered by Step {editingTemplate.trigger_step}:</strong> {editingTemplate.step_description}
-                  </p>
-                </div>
-              )}
               <div>
                 <Label htmlFor="subject">Subject Line</Label>
                 <Input
@@ -447,6 +454,41 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
                 <p className="text-sm text-muted-foreground mt-1">
                   Use {'{customerName}'} to insert the customer's name automatically
                 </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="trigger_step">Trigger Step (1-13)</Label>
+                  <Input
+                    id="trigger_step"
+                    type="number"
+                    min="1"
+                    max="13"
+                    value={editingTemplate.trigger_step || ''}
+                    onChange={(e) => setEditingTemplate({ 
+                      ...editingTemplate, 
+                      trigger_step: e.target.value ? parseInt(e.target.value) : null 
+                    })}
+                    placeholder="Leave empty for status-based"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Which workflow step should trigger this notification
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="step_description">Step Description</Label>
+                  <Input
+                    id="step_description"
+                    value={editingTemplate.step_description || ''}
+                    onChange={(e) => setEditingTemplate({ 
+                      ...editingTemplate, 
+                      step_description: e.target.value || null 
+                    })}
+                    placeholder="Describe what happens at this step"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Brief description of the step (optional)
+                  </p>
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Switch
