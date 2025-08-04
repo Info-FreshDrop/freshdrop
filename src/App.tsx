@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import OwnerDashboard from "./pages/OwnerDashboard";
+import MarketingDashboard from "./pages/MarketingDashboard";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
 import OperatorSignup from "./pages/OperatorSignup";
@@ -28,6 +29,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+              <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/operator-signup" element={<OperatorSignup />} />
