@@ -1741,6 +1741,18 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: boolean
       }
+      send_order_notification: {
+        Args: {
+          p_notification_type: string
+          p_customer_id: string
+          p_operator_id: string
+          p_order_id: string
+          p_subject: string
+          p_message: string
+          p_sender_name: string
+        }
+        Returns: undefined
+      }
       validate_promo_code_usage: {
         Args: {
           code_to_check: string

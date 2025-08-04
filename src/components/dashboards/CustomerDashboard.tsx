@@ -72,7 +72,7 @@ function MessageButton({ order }: { order: any }) {
       {showMessaging && selectedOrderForMessaging && (
         <OrderMessaging
           orderId={selectedOrderForMessaging.id}
-          operatorId={selectedOrderForMessaging.washers?.user_id || selectedOrderForMessaging.washer_id}
+          operatorId={selectedOrderForMessaging.washer_id}
           operatorName={
             selectedOrderForMessaging.washers?.profiles
               ? `${selectedOrderForMessaging.washers.profiles.first_name || ''} ${selectedOrderForMessaging.washers.profiles.last_name || ''}`.trim()
