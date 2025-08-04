@@ -14,6 +14,7 @@ import { OrderIssueTracking } from "@/components/admin/OrderIssueTracking";
 import { OperatorWorkloadBalance } from "@/components/admin/OperatorWorkloadBalance";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { NotificationTesting } from "@/components/admin/NotificationTesting";
+import { CustomerManagement } from "@/components/admin/CustomerManagement";
 import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -32,7 +33,7 @@ import {
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'customer-management'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -285,6 +286,10 @@ export function OwnerDashboard() {
         </div>
       </div>
     );
+  }
+
+  if (currentView === 'customer-management') {
+    return <CustomerManagement onBack={() => setCurrentView('dashboard')} />;
   }
 
   if (currentView === 'live-orders') {
@@ -722,7 +727,11 @@ export function OwnerDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('customer-management')}
+                >
                   Customer List
                 </Button>
                 <Button variant="outline" className="w-full">
