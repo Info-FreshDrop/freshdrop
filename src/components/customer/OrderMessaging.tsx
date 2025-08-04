@@ -211,8 +211,8 @@ export function OrderMessaging({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md max-h-[85vh] flex flex-col border-0 shadow-soft">
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <Card className="w-full sm:max-w-md h-[90vh] sm:h-auto sm:max-h-[85vh] flex flex-col border-0 shadow-soft rounded-t-lg sm:rounded-lg">
         <CardHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
