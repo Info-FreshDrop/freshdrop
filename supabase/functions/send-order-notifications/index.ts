@@ -33,7 +33,13 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { orderId, customerId, status, customerEmail, customerPhone, customerName, orderNumber }: NotificationRequest = await req.json();
 
-    console.log('Sending notifications for order:', orderId, 'status:', status);
+    console.log('=== NOTIFICATION REQUEST ===');
+    console.log('Order ID:', orderId);
+    console.log('Customer ID:', customerId);
+    console.log('Status:', status);
+    console.log('Provided email:', customerEmail);
+    console.log('Provided phone:', customerPhone);
+    console.log('Provided name:', customerName);
 
     // Get customer details if not provided
     let email = customerEmail;
@@ -41,11 +47,15 @@ const handler = async (req: Request): Promise<Response> => {
     let name = customerName;
 
     if (!email || !phone || !name) {
-      const { data: profile } = await supabase
+      console.log('Fetching missing customer details...');
+      
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('first_name, last_name, phone')
         .eq('user_id', customerId)
         .single();
+
+      console.log('Profile fetch result:', { profile, profileError });
 
       if (profile) {
         name = name || `${profile.first_name} ${profile.last_name}`;
@@ -53,10 +63,17 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       if (!email) {
-        const { data: { user } } = await supabase.auth.admin.getUserById(customerId);
+        console.log('Fetching user email...');
+        const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(customerId);
+        console.log('User fetch result:', { user: user?.email, userError });
         email = user?.email;
       }
     }
+
+    console.log('Final customer details:');
+    console.log('Email:', email);
+    console.log('Phone:', phone);
+    console.log('Name:', name);
 
     const statusMessages = {
       'unclaimed': {
@@ -157,14 +174,16 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    console.log(`Attempting to send ${promises.length} notifications...`);
     const results = await Promise.allSettled(promises);
     
-    // Log results
+    // Log results with detailed information
     results.forEach((result, index) => {
+      const type = index === 0 && email ? 'Email' : 'SMS';
       if (result.status === 'rejected') {
-        console.error(`Notification ${index} failed:`, result.reason);
+        console.error(`${type} notification failed:`, result.reason);
       } else {
-        console.log(`Notification ${index} sent successfully`);
+        console.log(`${type} notification sent successfully:`, result.value);
       }
     });
 
