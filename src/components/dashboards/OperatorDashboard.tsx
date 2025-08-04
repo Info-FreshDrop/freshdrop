@@ -388,183 +388,129 @@ export function OperatorDashboard() {
     setShowLiveMap(true);
   };
 
+  const getDetailedStepInstruction = (stepIndex: number, order: Order) => {
+    const customerName = `${order.profiles?.first_name || 'Customer'} ${order.profiles?.last_name || ''}`.trim();
+    const totalBags = order.bag_count || 1;
+    const washTempPref = (order as any).wash_temp_preference_name || 'standard';
+    const dryTempPref = (order as any).dry_temp_preference_name || ((order as any).is_air_dry ? 'Air dry' : 'standard');
+    
+    switch (stepIndex) {
+      case 0:
+        return "Prepare for pickup - Bring clear bags, large waterproof labels, and a permanent marker";
+      case 1:
+        return `Use the map below to navigate to customer pickup location. The bag should be outside when you arrive.`;
+      case 2:
+        return "Locate the bags at the pickup location and proceed to the next step.";
+      case 3:
+        return `Label each bag with: "${customerName} - Bag X of ${totalBags} - Order #${order.id.slice(0, 8)} - DIRTY"`;
+      case 4:
+        return `Account and verify items - Expected bags: ${totalBags}. Enter the actual number of bags you picked up.`;
+      case 5:
+        return "Transport bags to your washing location safely.";
+      case 6:
+        return `Washing process - Customer preference: ${washTempPref} wash temperature`;
+      case 7:
+        return `Drying process - Customer preference: ${dryTempPref}`;
+      case 8:
+        return "Folding process - Fold clothes neatly according to customer preferences.";
+      case 9:
+        return "Quality check - Ensure all items are clean, properly folded, and ready for delivery.";
+      case 10:
+        return `Re-label bags for delivery with: "${customerName} - Bag X of ${totalBags} - Order #${order.id.slice(0, 8)} - CLEAN"`;
+      case 11:
+        return `Use the map below to navigate to delivery location (same as pickup). Deliver within 24 hours of pickup.`;
+      case 12:
+        return "Complete delivery - Ensure customer receives all bags and mark order as complete.";
+      default:
+        return "Complete this step";
+    }
+  };
+
   const getWorkflowSteps = () => [
     { 
-      title: "Prepare and What to Bring", 
-      description: "Review order details and gather necessary supplies", 
+      title: "Prepare for pickup", 
+      description: "Bring clear bags, large waterproof labels, and a permanent marker", 
       requiresPhoto: false, 
       instructions: `📋 REQUIRED ITEMS TO BRING:
 • Clear waterproof bags (for sorting and transport)
 • Large waterproof labels (for bag identification)
-• Permanent marker (for writing customer details)
-• Phone with FreshDrop app (for photos and updates)
-• Customer-specific supplies for this order:
-  - Standard detergent (check order preferences)
-  - Fabric softener if requested
-  - ${selectedOrder?.special_instructions || 'No special care items'}
-
-📍 ORDER DETAILS:
-• Customer: ${selectedOrder?.profiles ? `${selectedOrder.profiles.first_name} ${selectedOrder.profiles.last_name}` : 'N/A'}
-• Order #: ${selectedOrder?.id?.slice(-8) || 'N/A'}
-• Pickup Address: ${selectedOrder?.pickup_address || 'See order details'}
-• Special Instructions: ${selectedOrder?.special_instructions || 'None'}
-• Estimated Bags: ${selectedOrder?.bag_count || 'Unknown'}`
+• Permanent marker (for writing customer details)`
     },
     { 
-      title: "Navigate to Pickup Address", 
-      description: "Use GPS navigation to reach customer's location", 
+      title: "Navigate to pickup location", 
+      description: "Use the map below", 
       requiresPhoto: false, 
-      instructions: `🗺️ NAVIGATION TO: ${selectedOrder?.pickup_address || 'See order details'}
-      
-🚗 DRIVING INSTRUCTIONS:
-• Use the map below for turn-by-turn directions
-• Estimate 15-20 minutes travel time
-• Call customer when 5 minutes away: ${selectedOrder?.profiles?.phone || 'See order details'}
-• Look for parking near front door area
-
-📱 ARRIVAL PROTOCOL:
-• Park safely and legally
-• Turn on hazard lights if needed
-• Text customer through FreshDrop app: "Arrived for pickup"
-• Wait maximum 3 minutes for customer response`,
+      instructions: `🗺️ Use the map below to navigate to customer pickup location. The bag should be outside when you arrive.`,
       showMap: true,
       destination: selectedOrder?.pickup_address
     },
     { 
-      title: "Locate Customer's Laundry", 
-      description: "Find and identify customer's laundry bags at pickup location", 
+      title: "Locate bags at pickup location", 
+      description: "Find customer's laundry bags", 
       requiresPhoto: false, 
-      instructions: `🔍 SEARCH FOR LAUNDRY:
-• Look at: ${selectedOrder?.pickup_address || 'specified address'}
-• Check common locations: front door, porch, side door, garage
-• Look for: bags, baskets, or containers with laundry
-• Special notes: ${selectedOrder?.special_instructions || 'No special pickup instructions'}
-• If not found: Call customer at ${selectedOrder?.profiles?.phone || 'phone number in order'}`
+      instructions: `🔍 Locate the bags at the pickup location and proceed to the next step.`
     },
     { 
-      title: "Document Pickup Condition", 
-      description: "Take photo of laundry before processing", 
-      requiresPhoto: true, 
-      instructions: `📸 PHOTO REQUIREMENTS:
-• Take clear photo showing ALL bags/items being collected
-• Include house number or identifying landmark
-• Show current condition of laundry items
-• Take multiple angles if needed
-• Estimated items: ${selectedOrder?.bag_count || 'See order'} bags/containers`
-    },
-    { 
-      title: "Label Each Bag", 
+      title: "Label each bag with customer info", 
       description: "Apply waterproof identification labels", 
-      requiresPhoto: false, 
-      instructions: `🏷️ LABELING PROTOCOL:
-• Label EACH bag with permanent marker:
-  - Customer: ${selectedOrder?.profiles ? `${selectedOrder.profiles.first_name} ${selectedOrder.profiles.last_name}` : 'Customer Name'}
-  - Order #: ${selectedOrder?.id?.slice(-8) || 'Order ID'}
-  - Bag Count: (1 of ${selectedOrder?.bag_count || '?'}, 2 of ${selectedOrder?.bag_count || '?'}, etc.)
-  - Pickup Date: ${new Date().toLocaleDateString()}
-  - Pickup Time: ${new Date().toLocaleTimeString()}
-• Attach labels securely to prevent loss during wash`
+      requiresPhoto: true, 
+      instructions: `🏷️ Label each bag with: "${selectedOrder?.profiles ? `${selectedOrder.profiles.first_name} ${selectedOrder.profiles.last_name}` : 'Customer Name'} - Bag X of ${selectedOrder?.bag_count || '?'} - Order #${selectedOrder?.id?.slice(0, 8) || 'Order ID'} - DIRTY"`
     },
     { 
-      title: "Count and Verify Items", 
-      description: "Count bags and verify against order details", 
+      title: "Account and verify items", 
+      description: "Count bags and verify against order", 
       requiresPhoto: false, 
-      instructions: `🔢 VERIFICATION CHECKLIST:
-• Count total bags: Expected ${selectedOrder?.bag_count || 'Unknown'} bags
-• Verify items match order description
-• Note any discrepancies in the app immediately
-• Check for: delicates, dry-clean only items, valuable items
-• Special instructions: ${selectedOrder?.special_instructions || 'None'}
-• If count differs: Contact customer before proceeding`
+      instructions: `🔢 Expected bags: ${selectedOrder?.bag_count || 'Unknown'}. Enter the actual number of bags you picked up.`
     },
     { 
-      title: "Secure Pickup Complete", 
-      description: "Load all items safely in vehicle", 
+      title: "Transport to washing location", 
+      description: "Load and transport safely", 
       requiresPhoto: false, 
-      instructions: `🚗 LOADING PROTOCOL:
-• Load all labeled bags securely in vehicle
-• Separate delicates if identified
-• Ensure nothing left behind at pickup location
-• Double-check pickup area is clean
-• Update order status to "Picked Up" in app
-• Notify customer via app: "Your laundry has been collected"`
+      instructions: `🚗 Transport bags to your washing location safely.`
     },
     { 
-      title: "Professional Washing Process", 
-      description: "Wash according to customer preferences and fabric care", 
+      title: "Washing process", 
+      description: "Wash according to customer preferences", 
       requiresPhoto: false, 
-      instructions: `🧽 WASHING PROTOCOL FOR ORDER #${selectedOrder?.id?.slice(-8) || ''}:
-• Sort by: Colors (whites, lights, darks), Fabric types, Care instructions
-• Water temperature: Follow garment labels (Hot: whites, Warm: lights, Cold: darks)
-• Detergent: Use quality detergent appropriate for fabric type
-• Special care: ${selectedOrder?.special_instructions || 'Standard care instructions'}
-• Pre-treat any visible stains with appropriate stain remover
-• Load machines according to capacity (don't overpack)`
+      instructions: `🧽 Customer preference: ${(selectedOrder as any)?.wash_temp_preference_name || 'standard'} wash temperature`
     },
     { 
-      title: "Professional Drying Process", 
-      description: "Dry items using appropriate settings and methods", 
+      title: "Drying process", 
+      description: "Dry according to customer preferences", 
       requiresPhoto: false, 
-      instructions: `🌪️ DRYING PROTOCOL:
-• Check care labels: Tumble dry vs. air dry
-• Temperature settings: High (cottons), Medium (synthetics), Low (delicates)
-• Air dry: Silk, wool, bras, swimwear, anything with "air dry" label
-• Remove promptly to prevent wrinkles
-• Shake out items before folding
-• Special drying notes: ${selectedOrder?.special_instructions || 'Follow standard care labels'}`
+      instructions: `🌪️ Customer preference: ${(selectedOrder as any)?.dry_temp_preference_name || ((selectedOrder as any)?.is_air_dry ? 'Air dry' : 'standard')}`
     },
     { 
-      title: "Professional Folding & Organization", 
-      description: "Fold and organize according to customer preferences", 
+      title: "Folding process", 
+      description: "Fold clothes neatly", 
       requiresPhoto: false, 
-      instructions: `👔 FOLDING STANDARDS FOR ${selectedOrder?.profiles ? selectedOrder.profiles.first_name : 'CUSTOMER'}:
-• Fold method: Neat, consistent folds (Marie Kondo style preferred)
-• Shirts: Fold or hang (check customer preferences)
-• Pants: Fold lengthwise, then in half
-• Delicates: Fold gently, use tissue paper if needed
-• Matching: Pair socks, organize by type
-• Quality check: Ensure all items are clean and properly dried`
+      instructions: `👔 Fold clothes neatly according to customer preferences.`
     },
     { 
-      title: "Clean Packaging & Re-labeling", 
-      description: "Package in fresh bags with delivery labels", 
+      title: "Quality check", 
+      description: "Ensure items are ready for delivery", 
       requiresPhoto: false, 
-      instructions: `📦 PACKAGING PROTOCOL:
-• Use fresh, clean FreshDrop bags
-• Package by: Customer preference, family member, or item type
-• New labels for each bag:
-  - Customer: ${selectedOrder?.profiles ? `${selectedOrder.profiles.first_name} ${selectedOrder.profiles.last_name}` : 'Customer Name'}
-  - Order #: ${selectedOrder?.id?.slice(-8) || 'Order ID'}
-  - Status: "CLEAN - Ready for Delivery"
-  - Completion Date: ${new Date().toLocaleDateString()}
-  - Delivery Address: ${selectedOrder?.delivery_address || selectedOrder?.pickup_address || 'See order details'}`
+      instructions: `✅ Ensure all items are clean, properly folded, and ready for delivery.`
     },
     { 
-      title: "Navigate to Delivery Location", 
-      description: "Transport to customer's delivery address", 
+      title: "Re-label bags for delivery", 
+      description: "Apply clean delivery labels", 
       requiresPhoto: false, 
-      instructions: `🗺️ DELIVERY NAVIGATION:
-• Destination: ${selectedOrder?.delivery_address || selectedOrder?.pickup_address || 'See order details'}
-• Estimated delivery time: 15-20 minutes
-• Contact customer when 5 minutes away
-• Customer phone: ${selectedOrder?.profiles?.phone || 'See order details'}
-• Park safely near delivery location
-• Prepare packages for easy handoff`,
+      instructions: `📦 Re-label bags with: "${selectedOrder?.profiles ? `${selectedOrder.profiles.first_name} ${selectedOrder.profiles.last_name}` : 'Customer Name'} - Bag X of ${selectedOrder?.bag_count || '?'} - Order #${selectedOrder?.id?.slice(0, 8) || 'Order ID'} - CLEAN"`
+    },
+    { 
+      title: "Navigate to delivery location", 
+      description: "Use the map below", 
+      requiresPhoto: false, 
+      instructions: `🗺️ Use the map below to navigate to delivery location (same as pickup). Deliver within 24 hours of pickup.`,
       showMap: true,
       destination: selectedOrder?.delivery_address || selectedOrder?.pickup_address
     },
     { 
-      title: "Complete Delivery & Documentation", 
-      description: "Deliver clean laundry and document completion", 
+      title: "Complete delivery", 
+      description: "Deliver and document completion", 
       requiresPhoto: true, 
-      instructions: `✅ DELIVERY COMPLETION FOR ORDER #${selectedOrder?.id?.slice(-8) || ''}:
-• Deliver to: ${selectedOrder?.delivery_address || selectedOrder?.pickup_address || 'specified location'}
-• Hand to customer or place at designated spot
-• 📸 FINAL PHOTO: Show delivered bags with house number/door
-• Update order status to "Completed" in app
-• Ask customer to rate service in FreshDrop app
-• Thank customer: "${selectedOrder?.profiles ? selectedOrder.profiles.first_name : 'Customer'}, your FreshDrop order is complete!"
-• Total bags delivered: ${selectedOrder?.bag_count || 'All'} bags`
+      instructions: `✅ Complete delivery - Ensure customer receives all bags and mark order as complete.`
     }
   ];
 
