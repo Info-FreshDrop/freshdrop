@@ -278,6 +278,59 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_logs: {
+        Row: {
+          created_at: string
+          customer_id: string
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          message_content: string | null
+          notification_type: string
+          order_id: string | null
+          recipient: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          message_content?: string | null
+          notification_type: string
+          order_id?: string | null
+          recipient?: string | null
+          sent_at?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          message_content?: string | null
+          notification_type?: string
+          order_id?: string | null
+          recipient?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operator_applications: {
         Row: {
           address: string

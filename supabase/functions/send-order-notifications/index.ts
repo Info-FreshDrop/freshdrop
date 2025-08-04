@@ -41,6 +41,24 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Provided phone:', customerPhone);
     console.log('Provided name:', customerName);
 
+    // Log notification attempt
+    const logNotification = async (type: string, recipient: string, logStatus: string, messageContent: string, error?: string) => {
+      try {
+        await supabase.from('notification_logs').insert({
+          order_id: orderId,
+          customer_id: customerId,
+          notification_type: type,
+          status: logStatus,
+          recipient: recipient,
+          message_content: messageContent,
+          error_message: error,
+          sent_at: logStatus === 'sent' ? new Date().toISOString() : null
+        });
+      } catch (logError) {
+        console.error('Failed to log notification:', logError);
+      }
+    };
+
     // Get customer details if not provided
     let email = customerEmail;
     let phone = customerPhone;
@@ -128,62 +146,71 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email notification
     if (email) {
       console.log('Sending email to:', email);
-      promises.push(
-        resend.emails.send({
-          from: "FreshDrop <onboarding@resend.dev>",
-          to: [email],
-          subject: notification.subject,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h1 style="color: #2563eb;">FreshDrop Laundry</h1>
-              <h2>Order Update - ${notification.subject}</h2>
-              <p>Hi ${name || 'Valued Customer'},</p>
-              <p>${notification.message}</p>
-              <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <strong>Order Details:</strong><br>
-                Order ID: ${orderNumber || orderId}<br>
-                Status: ${status.replace('_', ' ').toUpperCase()}
-              </div>
-              <p>Thank you for choosing FreshDrop!</p>
-              <p style="color: #6b7280; font-size: 14px;">
-                If you have any questions, please contact our support team.
-              </p>
+      const emailPromise = resend.emails.send({
+        from: "FreshDrop <onboarding@resend.dev>",
+        to: [email],
+        subject: notification.subject,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #2563eb;">FreshDrop Laundry</h1>
+            <h2>Order Update - ${notification.subject}</h2>
+            <p>Hi ${name || 'Valued Customer'},</p>
+            <p>${notification.message}</p>
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <strong>Order Details:</strong><br>
+              Order ID: ${orderNumber || orderId}<br>
+              Status: ${status.replace('_', ' ').toUpperCase()}
             </div>
-          `,
-        })
-      );
+            <p>Thank you for choosing FreshDrop!</p>
+            <p style="color: #6b7280; font-size: 14px;">
+              If you have any questions, please contact our support team.
+            </p>
+          </div>
+        `,
+      });
+      promises.push(emailPromise);
+      
+      // Log email attempt
+      await logNotification('email', email, 'pending', notification.message);
     }
 
     // Send SMS notification
     if (phone) {
       const smsMessage = `FreshDrop: ${notification.subject}. ${notification.message} Order: ${orderNumber || orderId}`;
       
-      promises.push(
-        fetch('https://api.twilio.com/2010-04-01/Accounts/' + Deno.env.get('TWILIO_ACCOUNT_SID') + '/Messages.json', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Basic ' + btoa(Deno.env.get('TWILIO_ACCOUNT_SID') + ':' + Deno.env.get('TWILIO_AUTH_TOKEN')),
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            From: Deno.env.get('TWILIO_PHONE_NUMBER') || '',
-            To: phone,
-            Body: smsMessage,
-          }),
-        })
-      );
+      const smsPromise = fetch('https://api.twilio.com/2010-04-01/Accounts/' + Deno.env.get('TWILIO_ACCOUNT_SID') + '/Messages.json', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa(Deno.env.get('TWILIO_ACCOUNT_SID') + ':' + Deno.env.get('TWILIO_AUTH_TOKEN')),
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          From: Deno.env.get('TWILIO_PHONE_NUMBER') || '',
+          To: phone,
+          Body: smsMessage,
+        }),
+      });
+      promises.push(smsPromise);
+      
+      // Log SMS attempt
+      await logNotification('sms', phone, 'pending', smsMessage);
     }
 
     console.log(`Attempting to send ${promises.length} notifications...`);
     const results = await Promise.allSettled(promises);
     
-    // Log results with detailed information
-    results.forEach((result, index) => {
-      const type = index === 0 && email ? 'Email' : 'SMS';
+    // Log results with detailed information and update database
+    results.forEach(async (result, index) => {
+      const type = index === 0 && email ? 'email' : 'sms';
+      const recipient = type === 'email' ? email : phone;
+      const messageContent = type === 'email' ? notification.message : `FreshDrop: ${notification.subject}. ${notification.message} Order: ${orderNumber || orderId}`;
+      
       if (result.status === 'rejected') {
-        console.error(`${type} notification failed:`, result.reason);
+        console.error(`${type.toUpperCase()} notification failed:`, result.reason);
+        await logNotification(type, recipient!, 'failed', messageContent, result.reason?.toString());
       } else {
-        console.log(`${type} notification sent successfully:`, result.value);
+        console.log(`${type.toUpperCase()} notification sent successfully:`, result.value);
+        await logNotification(type, recipient!, 'sent', messageContent);
       }
     });
 
