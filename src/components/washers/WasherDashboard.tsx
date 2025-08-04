@@ -178,6 +178,23 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
 
       if (error) throw error;
 
+      // Send notification about order claim
+      const order = availableOrders.find(o => o.id === orderId);
+      if (order) {
+        try {
+          await supabase.functions.invoke('send-order-notifications', {
+            body: {
+              orderId: order.id,
+              customerId: order.customer_id,
+              status: 'claimed',
+              orderNumber: order.id.substring(0, 8).toUpperCase()
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to send notification:', notificationError);
+        }
+      }
+
       toast({
         title: "Order Claimed",
         description: "You have successfully claimed this order.",
@@ -210,6 +227,23 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
         .eq('id', orderId);
 
       if (error) throw error;
+
+      // Send notification about status change
+      const order = myOrders.find(o => o.id === orderId);
+      if (order) {
+        try {
+          await supabase.functions.invoke('send-order-notifications', {
+            body: {
+              orderId: order.id,
+              customerId: order.customer_id,
+              status: newStatus,
+              orderNumber: order.id.substring(0, 8).toUpperCase()
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to send notification:', notificationError);
+        }
+      }
 
       toast({
         title: "Status Updated",
