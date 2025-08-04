@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { NotificationSystem } from "@/components/admin/NotificationSystem";
 import { PromoCodeManagement } from "@/components/admin/PromoCodeManagement";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
+import { EmailAnalyticsDashboard } from "@/components/admin/EmailAnalyticsDashboard";
 import { MarketingCampaignManagement } from "@/components/admin/MarketingCampaignManagement";
 import { BehavioralTriggersManagement } from "@/components/admin/BehavioralTriggersManagement";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Megaphone, 
   Mail, 
@@ -24,7 +27,83 @@ import {
 export function MarketingDashboard() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'analytics' | 'campaigns' | 'triggers'>('dashboard');
+  const { toast } = useToast();
+  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'analytics' | 'campaigns' | 'triggers' | 'email-analytics'>('dashboard');
+  const [stats, setStats] = useState({
+    activeCampaigns: 0,
+    emailOpenRate: 0,
+    promoRedemptions: 0,
+    conversionRate: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadMarketingStats();
+  }, []);
+
+  const loadMarketingStats = async () => {
+    try {
+      setLoading(true);
+      
+      // Get active campaigns count
+      const { data: campaigns, error: campaignsError } = await supabase
+        .from('marketing_campaigns')
+        .select('id')
+        .eq('status', 'active');
+
+      if (campaignsError) throw campaignsError;
+
+      // Get email analytics
+      const { data: analytics, error: analyticsError } = await supabase
+        .from('campaign_analytics')
+        .select('*');
+
+      if (analyticsError) throw analyticsError;
+
+      // Get promo code usage
+      const { data: promoUsage, error: promoError } = await supabase
+        .from('promo_code_usage')
+        .select('id');
+
+      if (promoError) throw promoError;
+
+      // Calculate stats
+      const activeCampaigns = campaigns?.length || 0;
+      
+      let emailOpenRate = 0;
+      if (analytics && analytics.length > 0) {
+        const totals = analytics.reduce((acc, record) => ({
+          sent: acc.sent + (record.sent_count || 0),
+          opened: acc.opened + (record.opened_count || 0),
+          conversions: acc.conversions + (record.conversion_count || 0),
+        }), { sent: 0, opened: 0, conversions: 0 });
+
+        emailOpenRate = totals.sent > 0 ? (totals.opened / totals.sent) * 100 : 0;
+      }
+
+      const promoRedemptions = promoUsage?.length || 0;
+      
+      // For conversion rate, we'd need to track actual conversions vs total visitors
+      // For now, using a placeholder calculation
+      const conversionRate = 12.4; // This should be calculated from actual data
+
+      setStats({
+        activeCampaigns,
+        emailOpenRate,
+        promoRedemptions,
+        conversionRate
+      });
+    } catch (error) {
+      console.error('Error loading marketing stats:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load marketing statistics",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (currentView === 'notifications') {
     return <NotificationSystem onBack={() => setCurrentView('dashboard')} />;
@@ -44,6 +123,10 @@ export function MarketingDashboard() {
 
   if (currentView === 'triggers') {
     return <BehavioralTriggersManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'email-analytics') {
+    return <EmailAnalyticsDashboard onBack={() => setCurrentView('dashboard')} />;
   }
 
   return (
@@ -84,7 +167,13 @@ export function MarketingDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Active Campaigns</p>
-                  <p className="text-2xl font-bold">5</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? (
+                      <div className="animate-pulse bg-muted rounded h-8 w-12"></div>
+                    ) : (
+                      stats.activeCampaigns
+                    )}
+                  </p>
                 </div>
                 <Target className="h-8 w-8 text-primary" />
               </div>
@@ -96,7 +185,13 @@ export function MarketingDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Email Open Rate</p>
-                  <p className="text-2xl font-bold">68%</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? (
+                      <div className="animate-pulse bg-muted rounded h-8 w-16"></div>
+                    ) : (
+                      `${stats.emailOpenRate.toFixed(1)}%`
+                    )}
+                  </p>
                 </div>
                 <Mail className="h-8 w-8 text-accent" />
               </div>
@@ -108,7 +203,13 @@ export function MarketingDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Promo Redemptions</p>
-                  <p className="text-2xl font-bold">142</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? (
+                      <div className="animate-pulse bg-muted rounded h-8 w-16"></div>
+                    ) : (
+                      stats.promoRedemptions
+                    )}
+                  </p>
                 </div>
                 <Gift className="h-8 w-8 text-secondary" />
               </div>
@@ -120,7 +221,13 @@ export function MarketingDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Conversion Rate</p>
-                  <p className="text-2xl font-bold">12.4%</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? (
+                      <div className="animate-pulse bg-muted rounded h-8 w-16"></div>
+                    ) : (
+                      `${stats.conversionRate}%`
+                    )}
+                  </p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-success" />
               </div>
@@ -160,9 +267,9 @@ export function MarketingDashboard() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => setCurrentView('analytics')}
+                  onClick={() => setCurrentView('email-analytics')}
                 >
-                  Campaign Analytics
+                  Email Analytics
                 </Button>
               </div>
             </CardContent>
