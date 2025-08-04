@@ -105,22 +105,46 @@ export function CustomerDashboard() {
       setIsLoadingOrders(true);
       const { data, error } = await supabase
         .from('orders')
-        .select(`
-          *,
-          washers!orders_washer_id_fkey(
-            id,
-            user_id,
-            profiles!washers_user_id_fkey(first_name, last_name, phone)
-          )
-        `)
+        .select(`*`)
         .eq('customer_id', user?.id)
         .order('created_at', { ascending: false });
 
       console.log('Supabase query result - data:', data, 'error:', error);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading orders:', error);
+        throw error;
+      }
+
+      console.log('Orders loaded successfully:', data?.length || 0, 'orders');
       
-      const allOrders = data || [];
+      let allOrders = data || [];
+      
+      // Load washer information separately for orders that have washers
+      if (allOrders.length > 0) {
+        const ordersWithWashers = allOrders.filter(order => order.washer_id);
+        if (ordersWithWashers.length > 0) {
+          const washerIds = ordersWithWashers.map(order => order.washer_id);
+          const { data: washersData } = await supabase
+            .from('washers')
+            .select(`
+              id,
+              user_id,
+              profiles!washers_user_id_fkey(first_name, last_name, phone)
+            `)
+            .in('id', washerIds);
+          
+          // Merge washer data with orders
+          allOrders = allOrders.map(order => {
+            if (order.washer_id) {
+              const washerInfo = washersData?.find(w => w.id === order.washer_id);
+              return { ...order, washers: washerInfo };
+            }
+            return order;
+          });
+        }
+      }
+      
       console.log('Raw orders from database:', allOrders);
       console.log('All orders with customer_acknowledged:', allOrders.map(o => ({id: o.id.slice(0,8), status: o.status, acknowledged: o.customer_acknowledged})));
       
