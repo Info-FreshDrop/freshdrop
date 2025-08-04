@@ -23,7 +23,11 @@ const handler = async (req: Request): Promise<Response> => {
       checkInactivityTriggers(),
       checkPostOrderTriggers(),
       checkMilestoneTriggers(),
-      checkAbandonedCartTriggers()
+      checkAbandonedCartTriggers(),
+      checkNewSignupTriggers(),
+      checkReviewPostedTriggers(),
+      checkReferralSharedTriggers(),
+      checkBirthdayTriggers()
     ]);
 
     return new Response(JSON.stringify({ success: true, message: 'Behavioral triggers processed' }), {
@@ -195,6 +199,160 @@ async function checkAbandonedCartTriggers() {
   // Implementation would depend on how abandoned carts are tracked
   // This is a placeholder for the logic
   console.log('Abandoned cart triggers checked (placeholder implementation)');
+}
+
+async function checkNewSignupTriggers() {
+  console.log('Checking new signup triggers...');
+  
+  const { data: triggers } = await supabase
+    .from('campaign_triggers')
+    .select(`
+      *,
+      campaign:marketing_campaigns(*)
+    `)
+    .eq('trigger_type', 'new_signup')
+    .eq('is_active', true);
+
+  if (!triggers) return;
+
+  for (const trigger of triggers) {
+    const conditions = trigger.conditions as any;
+    const hoursAfterSignup = conditions.hoursAfterSignup || 1;
+    
+    // Find users who signed up within the specified timeframe
+    const targetTime = new Date();
+    targetTime.setHours(targetTime.getHours() - hoursAfterSignup);
+    
+    const { data: newUsers } = await supabase
+      .from('profiles')
+      .select('user_id, first_name, last_name, created_at')
+      .gte('created_at', targetTime.toISOString())
+      .lte('created_at', new Date(targetTime.getTime() + 60 * 60 * 1000).toISOString()); // 1 hour window
+    
+    if (newUsers && newUsers.length > 0) {
+      console.log(`Found ${newUsers.length} new users for signup trigger ${trigger.id}`);
+      
+      for (const user of newUsers) {
+        const recentlySent = await wasRecentlySent(user.user_id, trigger.campaign.id, 1);
+        
+        if (!recentlySent) {
+          await triggerMarketingCampaign(trigger.campaign.id, user.user_id, trigger.delay_minutes);
+        }
+      }
+    }
+  }
+}
+
+async function checkReviewPostedTriggers() {
+  console.log('Checking review posted triggers...');
+  
+  const { data: triggers } = await supabase
+    .from('campaign_triggers')
+    .select(`
+      *,
+      campaign:marketing_campaigns(*)
+    `)
+    .eq('trigger_type', 'review_posted')
+    .eq('is_active', true);
+
+  if (!triggers) return;
+
+  for (const trigger of triggers) {
+    const conditions = trigger.conditions as any;
+    const hoursAfterReview = conditions.hoursAfterReview || 2;
+    
+    // Find recent order ratings (as proxy for reviews)
+    const targetTime = new Date();
+    targetTime.setHours(targetTime.getHours() - hoursAfterReview);
+    
+    const { data: recentRatings } = await supabase
+      .from('order_ratings')
+      .select('customer_id, created_at')
+      .gte('created_at', targetTime.toISOString())
+      .lte('created_at', new Date(targetTime.getTime() + 60 * 60 * 1000).toISOString());
+    
+    if (recentRatings && recentRatings.length > 0) {
+      console.log(`Found ${recentRatings.length} recent reviews for trigger ${trigger.id}`);
+      
+      for (const rating of recentRatings) {
+        const recentlySent = await wasRecentlySent(rating.customer_id, trigger.campaign.id, 7);
+        
+        if (!recentlySent) {
+          await triggerMarketingCampaign(trigger.campaign.id, rating.customer_id, trigger.delay_minutes);
+        }
+      }
+    }
+  }
+}
+
+async function checkReferralSharedTriggers() {
+  console.log('Checking referral shared triggers...');
+  
+  const { data: triggers } = await supabase
+    .from('campaign_triggers')
+    .select(`
+      *,
+      campaign:marketing_campaigns(*)
+    `)
+    .eq('trigger_type', 'referral_shared')
+    .eq('is_active', true);
+
+  if (!triggers) return;
+
+  for (const trigger of triggers) {
+    const conditions = trigger.conditions as any;
+    const hoursAfterReferral = conditions.hoursAfterReferral || 1;
+    
+    // Find recent referral code usage
+    const targetTime = new Date();
+    targetTime.setHours(targetTime.getHours() - hoursAfterReferral);
+    
+    const { data: recentReferrals } = await supabase
+      .from('referral_uses')
+      .select('referrer_user_id, created_at')
+      .gte('created_at', targetTime.toISOString())
+      .lte('created_at', new Date(targetTime.getTime() + 60 * 60 * 1000).toISOString());
+    
+    if (recentReferrals && recentReferrals.length > 0) {
+      console.log(`Found ${recentReferrals.length} recent referrals for trigger ${trigger.id}`);
+      
+      for (const referral of recentReferrals) {
+        const recentlySent = await wasRecentlySent(referral.referrer_user_id, trigger.campaign.id, 1);
+        
+        if (!recentlySent) {
+          await triggerMarketingCampaign(trigger.campaign.id, referral.referrer_user_id, trigger.delay_minutes);
+        }
+      }
+    }
+  }
+}
+
+async function checkBirthdayTriggers() {
+  console.log('Checking birthday triggers...');
+  
+  const { data: triggers } = await supabase
+    .from('campaign_triggers')
+    .select(`
+      *,
+      campaign:marketing_campaigns(*)
+    `)
+    .eq('trigger_type', 'birthday')
+    .eq('is_active', true);
+
+  if (!triggers) return;
+
+  for (const trigger of triggers) {
+    const conditions = trigger.conditions as any;
+    const daysBeforeBirthday = conditions.daysBeforeBirthday || 3;
+    
+    // Calculate target date range for birthdays
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + daysBeforeBirthday);
+    
+    // This would require a birthday field in profiles table
+    // For now, this is a placeholder implementation
+    console.log(`Birthday triggers checked for ${daysBeforeBirthday} days before birthday (placeholder implementation)`);
+  }
 }
 
 async function wasRecentlySent(customerId: string, campaignId: string, withinDays: number): Promise<boolean> {

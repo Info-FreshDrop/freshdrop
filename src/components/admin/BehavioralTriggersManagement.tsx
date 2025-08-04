@@ -50,7 +50,11 @@ export function BehavioralTriggersManagement({ onBack }: BehavioralTriggersManag
     inactiveDays: 14,
     hoursAfterDelivery: 2,
     orderCount: 5,
-    abandonedHours: 24
+    abandonedHours: 24,
+    daysBeforeBirthday: 3,
+    hoursAfterSignup: 1,
+    hoursAfterReview: 2,
+    hoursAfterReferral: 1
   });
 
   useEffect(() => {
@@ -109,6 +113,18 @@ export function BehavioralTriggersManagement({ onBack }: BehavioralTriggersManag
         case 'abandoned_cart':
           conditions = { abandonedHours: conditionValues.abandonedHours };
           break;
+        case 'new_signup':
+          conditions = { hoursAfterSignup: conditionValues.hoursAfterSignup };
+          break;
+        case 'review_posted':
+          conditions = { hoursAfterReview: conditionValues.hoursAfterReview };
+          break;
+        case 'referral_shared':
+          conditions = { hoursAfterReferral: conditionValues.hoursAfterReferral };
+          break;
+        case 'birthday':
+          conditions = { daysBeforeBirthday: conditionValues.daysBeforeBirthday };
+          break;
       }
 
       const { error } = await supabase
@@ -138,7 +154,11 @@ export function BehavioralTriggersManagement({ onBack }: BehavioralTriggersManag
         inactiveDays: 14,
         hoursAfterDelivery: 2,
         orderCount: 5,
-        abandonedHours: 24
+        abandonedHours: 24,
+        daysBeforeBirthday: 3,
+        hoursAfterSignup: 1,
+        hoursAfterReview: 2,
+        hoursAfterReferral: 1
       });
       loadData();
     } catch (error) {
@@ -207,6 +227,10 @@ export function BehavioralTriggersManagement({ onBack }: BehavioralTriggersManag
       case 'post_order': return 'bg-blue-100 text-blue-800';
       case 'milestone': return 'bg-green-100 text-green-800';
       case 'abandoned_cart': return 'bg-red-100 text-red-800';
+      case 'new_signup': return 'bg-purple-100 text-purple-800';
+      case 'review_posted': return 'bg-yellow-100 text-yellow-800';
+      case 'referral_shared': return 'bg-pink-100 text-pink-800';
+      case 'birthday': return 'bg-indigo-100 text-indigo-800';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
@@ -217,6 +241,10 @@ export function BehavioralTriggersManagement({ onBack }: BehavioralTriggersManag
       case 'post_order': return Target;
       case 'milestone': return Users;
       case 'abandoned_cart': return Clock;
+      case 'new_signup': return Plus;
+      case 'review_posted': return Edit;
+      case 'referral_shared': return Users;
+      case 'birthday': return Users;
       default: return Clock;
     }
   };
@@ -231,6 +259,14 @@ export function BehavioralTriggersManagement({ onBack }: BehavioralTriggersManag
         return `${conditions.orderCount || 5} orders completed`;
       case 'abandoned_cart':
         return `${conditions.abandonedHours || 24} hours since cart abandonment`;
+      case 'new_signup':
+        return `${conditions.hoursAfterSignup || 1} hours after signup`;
+      case 'review_posted':
+        return `${conditions.hoursAfterReview || 2} hours after review posted`;
+      case 'referral_shared':
+        return `${conditions.hoursAfterReferral || 1} hours after referral shared`;
+      case 'birthday':
+        return `${conditions.daysBeforeBirthday || 3} days before birthday`;
       default:
         return 'Custom conditions';
     }
@@ -288,6 +324,10 @@ export function BehavioralTriggersManagement({ onBack }: BehavioralTriggersManag
                       <SelectItem value="post_order">Post-Order Follow-up</SelectItem>
                       <SelectItem value="milestone">Order Milestone</SelectItem>
                       <SelectItem value="abandoned_cart">Abandoned Cart</SelectItem>
+                      <SelectItem value="new_signup">Welcome New User</SelectItem>
+                      <SelectItem value="review_posted">Review Thank You</SelectItem>
+                      <SelectItem value="referral_shared">Referral Reward</SelectItem>
+                      <SelectItem value="birthday">Birthday Campaign</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -372,6 +412,71 @@ export function BehavioralTriggersManagement({ onBack }: BehavioralTriggersManag
                   />
                   <p className="text-sm text-muted-foreground mt-1">
                     Trigger this many hours after cart abandonment
+                  </p>
+                </div>
+              )}
+
+              {newTrigger.trigger_type === 'new_signup' && (
+                <div>
+                  <Label htmlFor="hoursAfterSignup">Hours After Signup</Label>
+                  <Input
+                    id="hoursAfterSignup"
+                    type="number"
+                    value={conditionValues.hoursAfterSignup}
+                    onChange={(e) => setConditionValues({ ...conditionValues, hoursAfterSignup: parseInt(e.target.value) })}
+                    min="1"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Send welcome email this many hours after user signup
+                  </p>
+                </div>
+              )}
+
+              {newTrigger.trigger_type === 'review_posted' && (
+                <div>
+                  <Label htmlFor="hoursAfterReview">Hours After Review</Label>
+                  <Input
+                    id="hoursAfterReview"
+                    type="number"
+                    value={conditionValues.hoursAfterReview}
+                    onChange={(e) => setConditionValues({ ...conditionValues, hoursAfterReview: parseInt(e.target.value) })}
+                    min="1"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Thank customer this many hours after they leave a review
+                  </p>
+                </div>
+              )}
+
+              {newTrigger.trigger_type === 'referral_shared' && (
+                <div>
+                  <Label htmlFor="hoursAfterReferral">Hours After Referral</Label>
+                  <Input
+                    id="hoursAfterReferral"
+                    type="number"
+                    value={conditionValues.hoursAfterReferral}
+                    onChange={(e) => setConditionValues({ ...conditionValues, hoursAfterReferral: parseInt(e.target.value) })}
+                    min="1"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Send reward notification this many hours after referral is shared
+                  </p>
+                </div>
+              )}
+
+              {newTrigger.trigger_type === 'birthday' && (
+                <div>
+                  <Label htmlFor="daysBeforeBirthday">Days Before Birthday</Label>
+                  <Input
+                    id="daysBeforeBirthday"
+                    type="number"
+                    value={conditionValues.daysBeforeBirthday}
+                    onChange={(e) => setConditionValues({ ...conditionValues, daysBeforeBirthday: parseInt(e.target.value) })}
+                    min="1"
+                    max="30"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Send birthday message this many days before customer's birthday
                   </p>
                 </div>
               )}
