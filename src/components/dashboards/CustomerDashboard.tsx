@@ -95,7 +95,13 @@ export function CustomerDashboard() {
   };
 
   const loadOrders = async () => {
+    if (!user?.id) {
+      console.log('No user ID available for loading orders');
+      return;
+    }
+    
     try {
+      console.log('Loading orders for user:', user.id);
       setIsLoadingOrders(true);
       const { data, error } = await supabase
         .from('orders')
@@ -110,6 +116,8 @@ export function CustomerDashboard() {
         `)
         .eq('customer_id', user?.id)
         .order('created_at', { ascending: false });
+
+      console.log('Supabase query result - data:', data, 'error:', error);
 
       if (error) throw error;
       
