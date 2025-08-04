@@ -7,13 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Percent, DollarSign, ShoppingBag } from 'lucide-react';
+import { Plus, Edit, Trash2, Percent, DollarSign, ShoppingBag, CalendarIcon, ArrowLeft, Eye } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface PromoCodeManagementProps {
   onBack: () => void;
+  initialView?: 'list' | 'create' | 'reports';
 }
 
 interface PromoCode {
@@ -25,6 +30,9 @@ interface PromoCode {
   is_active: boolean;
   one_time_use_per_user: boolean;
   restricted_to_item_ids: string[] | null;
+  visible_to_customers: boolean;
+  valid_from: string | null;
+  valid_until: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -36,11 +44,11 @@ interface ClothesItem {
   price_cents: number;
 }
 
-export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack }) => {
+export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack, initialView = 'list' }) => {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [clothesItems, setClothesItems] = useState<ClothesItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [currentView, setCurrentView] = useState<'list' | 'create' | 'reports'>(initialView);
   const [editingCode, setEditingCode] = useState<PromoCode | null>(null);
   const [formData, setFormData] = useState({
     code: '',
@@ -49,6 +57,9 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
     description: '',
     is_active: true,
     one_time_use_per_user: false,
+    visible_to_customers: false,
+    valid_from: null as Date | null,
+    valid_until: null as Date | null,
     restricted_to_item_ids: [] as string[]
   });
   const { toast } = useToast();
@@ -106,10 +117,13 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
       description: '',
       is_active: true,
       one_time_use_per_user: false,
+      visible_to_customers: false,
+      valid_from: null,
+      valid_until: null,
       restricted_to_item_ids: []
     });
     setEditingCode(null);
-    setShowForm(false);
+    setCurrentView('list');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -144,6 +158,16 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
         return;
       }
 
+      // Check if valid_until is after valid_from
+      if (formData.valid_from && formData.valid_until && formData.valid_until < formData.valid_from) {
+        toast({
+          title: "Error",
+          description: "End date must be after start date",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const promoData = {
         code: formData.code.toUpperCase().trim(),
         discount_type: formData.discount_type,
@@ -151,6 +175,9 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
         description: formData.description.trim() || null,
         is_active: formData.is_active,
         one_time_use_per_user: formData.one_time_use_per_user,
+        visible_to_customers: formData.visible_to_customers,
+        valid_from: formData.valid_from?.toISOString() || null,
+        valid_until: formData.valid_until?.toISOString() || null,
         restricted_to_item_ids: formData.restricted_to_item_ids.length > 0 ? formData.restricted_to_item_ids : null,
         updated_at: new Date().toISOString()
       };
@@ -212,9 +239,12 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
       description: promoCode.description || '',
       is_active: promoCode.is_active,
       one_time_use_per_user: promoCode.one_time_use_per_user,
+      visible_to_customers: promoCode.visible_to_customers,
+      valid_from: promoCode.valid_from ? new Date(promoCode.valid_from) : null,
+      valid_until: promoCode.valid_until ? new Date(promoCode.valid_until) : null,
       restricted_to_item_ids: promoCode.restricted_to_item_ids || []
     });
-    setShowForm(true);
+    setCurrentView('create');
   };
 
   const handleDelete = async (id: string) => {
@@ -286,40 +316,61 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
     }));
   };
 
+  const renderDatePicker = (label: string, field: 'valid_from' | 'valid_until') => (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start text-left font-normal",
+              !formData[field] && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {formData[field] ? format(formData[field], "PPP") : "Pick a date"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={formData[field]}
+            onSelect={(date) => handleInputChange(field, date)}
+            initialFocus
+            className={cn("p-3 pointer-events-auto")}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
   }
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Button onClick={onBack} variant="outline" className="mb-4">
-            ← Back to Dashboard
-          </Button>
-          <h1 className="text-3xl font-bold">Promo Code Management</h1>
-          <p className="text-muted-foreground">Create and manage discount codes for customers</p>
-        </div>
-        <Button 
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          {editingCode ? 'Cancel Edit' : 'Create Promo Code'}
-        </Button>
-      </div>
-
-      {/* Create/Edit Form */}
-      {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingCode ? 'Edit Promo Code' : 'Create New Promo Code'}</CardTitle>
-            <CardDescription>
+  // Create Form View
+  if (currentView === 'create') {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Button onClick={() => setCurrentView('list')} variant="outline" className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Promo Codes
+            </Button>
+            <h1 className="text-3xl font-bold">
+              {editingCode ? 'Edit Promo Code' : 'Create New Promo Code'}
+            </h1>
+            <p className="text-muted-foreground">
               {editingCode ? 'Update the promo code details' : 'Add a new discount code for customers'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            </p>
+          </div>
+        </div>
+
+        <Card>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="code">Promo Code</Label>
@@ -380,6 +431,12 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
                 />
               </div>
 
+              {/* Date Range */}
+              <div className="grid grid-cols-2 gap-4">
+                {renderDatePicker('Valid From (Optional)', 'valid_from')}
+                {renderDatePicker('Valid Until (Optional)', 'valid_until')}
+              </div>
+
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Switch
@@ -388,6 +445,15 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
                     onCheckedChange={(checked) => handleInputChange('is_active', checked)}
                   />
                   <Label htmlFor="is_active">Active</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="visible_to_customers"
+                    checked={formData.visible_to_customers}
+                    onCheckedChange={(checked) => handleInputChange('visible_to_customers', checked)}
+                  />
+                  <Label htmlFor="visible_to_customers">Visible to customers (show in carousel)</Label>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -436,14 +502,77 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
             </form>
           </CardContent>
         </Card>
-      )}
+      </div>
+    );
+  }
+
+  // Reports View
+  if (currentView === 'reports') {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Button onClick={() => setCurrentView('list')} variant="outline" className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Promo Codes
+            </Button>
+            <h1 className="text-3xl font-bold">Promo Code Reports</h1>
+            <p className="text-muted-foreground">Track redemption analytics and performance</p>
+          </div>
+        </div>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center py-8">
+              <Percent className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">Reports Coming Soon</h3>
+              <p className="text-muted-foreground">Detailed analytics and redemption reports will be available here.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Main List View
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <Button onClick={onBack} variant="outline" className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          <h1 className="text-3xl font-bold">Promo Code Management</h1>
+          <p className="text-muted-foreground">Create and manage discount codes for customers</p>
+        </div>
+        <Button 
+          onClick={() => setCurrentView('create')}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Create Promo Code
+        </Button>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4">
+        <Button 
+          variant="outline" 
+          onClick={() => setCurrentView('reports')}
+          className="flex items-center gap-2"
+        >
+          <Percent className="h-4 w-4" />
+          View Reports
+        </Button>
+      </div>
 
       {/* Promo Codes List */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Percent className="h-5 w-5" />
-            Active Promo Codes ({promoCodes.filter(p => p.is_active).length})
+            All Promo Codes ({promoCodes.length})
           </CardTitle>
           <CardDescription>Manage your discount codes</CardDescription>
         </CardHeader>
@@ -453,7 +582,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
               <Percent className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No promo codes yet</h3>
               <p className="text-muted-foreground mb-4">Create your first promo code to start offering discounts</p>
-              <Button onClick={() => setShowForm(true)}>
+              <Button onClick={() => setCurrentView('create')}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Promo Code
               </Button>
@@ -482,6 +611,18 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
                       )}
                       <div className="flex gap-4 text-xs text-muted-foreground">
                         <span>Created: {new Date(promoCode.created_at).toLocaleDateString()}</span>
+                        {promoCode.valid_from && (
+                          <span>From: {new Date(promoCode.valid_from).toLocaleDateString()}</span>
+                        )}
+                        {promoCode.valid_until && (
+                          <span>Until: {new Date(promoCode.valid_until).toLocaleDateString()}</span>
+                        )}
+                        {promoCode.visible_to_customers && (
+                          <Badge variant="outline" className="text-xs flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            Visible
+                          </Badge>
+                        )}
                         {promoCode.one_time_use_per_user && (
                           <Badge variant="outline" className="text-xs">One-time use</Badge>
                         )}

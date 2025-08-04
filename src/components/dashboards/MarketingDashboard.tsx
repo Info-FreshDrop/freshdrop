@@ -28,7 +28,7 @@ export function MarketingDashboard() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'analytics' | 'campaigns' | 'triggers' | 'email-analytics'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'notifications' | 'promos' | 'promos-create' | 'promos-reports' | 'analytics' | 'campaigns' | 'triggers' | 'email-analytics'>('dashboard');
   const [stats, setStats] = useState({
     activeCampaigns: 0,
     emailOpenRate: 0,
@@ -110,7 +110,15 @@ export function MarketingDashboard() {
   }
 
   if (currentView === 'promos') {
-    return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} />;
+    return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} initialView="list" />;
+  }
+
+  if (currentView === 'promos-create') {
+    return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} initialView="create" />;
+  }
+
+  if (currentView === 'promos-reports') {
+    return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} initialView="reports" />;
   }
 
   if (currentView === 'analytics') {
@@ -290,7 +298,7 @@ export function MarketingDashboard() {
                 <Button 
                   variant="hero" 
                   className="w-full"
-                  onClick={() => setCurrentView('promos')}
+                  onClick={() => setCurrentView('promos-create')}
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Create Promo Code
@@ -305,7 +313,7 @@ export function MarketingDashboard() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => setCurrentView('promos')}
+                  onClick={() => setCurrentView('promos-reports')}
                 >
                   Redemption Reports
                 </Button>

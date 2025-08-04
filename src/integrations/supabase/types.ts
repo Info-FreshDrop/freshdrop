@@ -1176,6 +1176,9 @@ export type Database = {
           one_time_use_per_user: boolean
           restricted_to_item_ids: string[] | null
           updated_at: string
+          valid_from: string | null
+          valid_until: string | null
+          visible_to_customers: boolean | null
         }
         Insert: {
           code: string
@@ -1189,6 +1192,9 @@ export type Database = {
           one_time_use_per_user?: boolean
           restricted_to_item_ids?: string[] | null
           updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          visible_to_customers?: boolean | null
         }
         Update: {
           code?: string
@@ -1202,6 +1208,9 @@ export type Database = {
           one_time_use_per_user?: boolean
           restricted_to_item_ids?: string[] | null
           updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          visible_to_customers?: boolean | null
         }
         Relationships: []
       }
