@@ -211,25 +211,29 @@ export function OrderMessaging({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-      <Card className="w-full sm:max-w-md h-[90vh] sm:h-auto sm:max-h-[85vh] flex flex-col border-0 shadow-soft rounded-t-lg sm:rounded-lg">
-        <CardHeader className="flex-shrink-0">
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
+      <div className="w-full sm:max-w-md h-full sm:h-auto sm:max-h-[85vh] bg-background border-0 shadow-soft rounded-t-lg sm:rounded-lg flex flex-col">
+        {/* Header */}
+        <div className="flex-shrink-0 p-4 border-b">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5" />
-              Chat with {operatorName || 'Operator'}
-            </CardTitle>
+              <div>
+                <h3 className="font-semibold">Chat with {operatorName || 'Operator'}</h3>
+                <div className="text-sm text-muted-foreground">
+                  Order #{orderId.slice(-8)}
+                </div>
+              </div>
+            </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="text-sm text-muted-foreground">
-            Order #{orderId.slice(-8)}
-          </div>
-        </CardHeader>
+        </div>
         
-        <CardContent className="flex-1 flex flex-col p-0">
-          <ScrollArea className="flex-1 p-4">
+        {/* Messages */}
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full p-4">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-sm text-muted-foreground">Loading messages...</div>
@@ -274,32 +278,33 @@ export function OrderMessaging({
               </div>
             )}
           </ScrollArea>
-          
-          <div className="border-t p-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Type your message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={!operatorId || isSending}
-              />
-              <Button 
-                onClick={sendMessage}
-                disabled={!newMessage.trim() || !operatorId || isSending}
-                size="sm"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-            {!operatorId && (
-              <div className="text-xs text-muted-foreground mt-2">
-                Messaging will be available once an operator is assigned
-              </div>
-            )}
+        </div>
+        
+        {/* Input Section */}
+        <div className="flex-shrink-0 border-t p-4 bg-background">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Type your message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={!operatorId || isSending}
+            />
+            <Button 
+              onClick={sendMessage}
+              disabled={!newMessage.trim() || !operatorId || isSending}
+              size="sm"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+          {!operatorId && (
+            <div className="text-xs text-muted-foreground mt-2">
+              Messaging will be available once an operator is assigned
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
