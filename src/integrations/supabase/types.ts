@@ -1666,11 +1666,15 @@ export type Database = {
       washers: {
         Row: {
           approval_status: string | null
+          availability_schedule: Json | null
+          available_time_slots: string[] | null
           created_at: string
           id: string
           is_active: boolean | null
           is_online: boolean | null
           locker_access: string[] | null
+          max_orders_per_day: number | null
+          service_radius_miles: number | null
           signup_expires_at: string | null
           signup_token: string | null
           updated_at: string
@@ -1679,11 +1683,15 @@ export type Database = {
         }
         Insert: {
           approval_status?: string | null
+          availability_schedule?: Json | null
+          available_time_slots?: string[] | null
           created_at?: string
           id?: string
           is_active?: boolean | null
           is_online?: boolean | null
           locker_access?: string[] | null
+          max_orders_per_day?: number | null
+          service_radius_miles?: number | null
           signup_expires_at?: string | null
           signup_token?: string | null
           updated_at?: string
@@ -1692,11 +1700,15 @@ export type Database = {
         }
         Update: {
           approval_status?: string | null
+          availability_schedule?: Json | null
+          available_time_slots?: string[] | null
           created_at?: string
           id?: string
           is_active?: boolean | null
           is_online?: boolean | null
           locker_access?: string[] | null
+          max_orders_per_day?: number | null
+          service_radius_miles?: number | null
           signup_expires_at?: string | null
           signup_token?: string | null
           updated_at?: string

@@ -41,6 +41,7 @@ import { OperatorProfile } from '../customer/OperatorProfile';
 import { OperatorZipCodeEditModal } from '../admin/OperatorZipCodeEditModal';
 import { OrderMessaging } from '../customer/OrderMessaging';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { OperatorProfileSettings } from './OperatorProfileSettings';
 
 // Simple map component for navigation
 function NavigationMap({ destination }: { destination?: string }) {
@@ -142,6 +143,10 @@ interface WasherData {
   zip_codes: string[];
   is_online: boolean;
   is_active: boolean;
+  availability_schedule?: any;
+  available_time_slots?: string[];
+  max_orders_per_day?: number;
+  service_radius_miles?: number;
   current_location?: {
     coordinates: [number, number];
   };
@@ -196,6 +201,7 @@ export function OperatorDashboard() {
   const [selectedMapOrder, setSelectedMapOrder] = useState<Order | null>(null);
   const [operatorLocation, setOperatorLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [showZipCodeEdit, setShowZipCodeEdit] = useState(false);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -876,6 +882,15 @@ export function OperatorDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowProfileSettings(true)}
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Settings
+            </Button>
             <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
               washerData.is_online ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
             }`}>
@@ -1607,6 +1622,13 @@ export function OperatorDashboard() {
             onClose={() => setSelectedOrderForMessaging(null)}
           />
         )}
+
+        {/* Profile Settings Modal */}
+        <OperatorProfileSettings
+          isOpen={showProfileSettings}
+          onClose={() => setShowProfileSettings(false)}
+          onSave={loadDashboardData}
+        />
       </div>
     </div>
   );
