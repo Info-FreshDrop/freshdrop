@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '@/lib/stripe';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
+import { LaundryInstructionsModal } from './LaundryInstructionsModal';
 import { 
   Package, 
   MapPin, 
@@ -24,7 +25,8 @@ import {
   CheckCircle,
   ArrowLeft,
   Crosshair,
-  Loader2
+  Loader2,
+  Info
 } from "lucide-react";
 
 interface OrderPlacementProps {
@@ -45,6 +47,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
   const [laundryPreferences, setLaundryPreferences] = useState<any[]>([]);
   const [selectedPickupDate, setSelectedPickupDate] = useState('');
   const [showPayment, setShowPayment] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
   const [orderId, setOrderId] = useState('');
   const [formData, setFormData] = useState({
@@ -380,8 +383,19 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     return total;
   };
 
+  const handleContinueToPayment = () => {
+    setShowInstructions(false);
+    proceedWithOrder();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Show instructions modal first
+    setShowInstructions(true);
+  };
+
+  const proceedWithOrder = async () => {
     setIsLoading(true);
 
     try {
@@ -1115,6 +1129,13 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
               {isLoading ? "Processing Payment..." : `Pay Now - $${(calculateTotal() / 100).toFixed(2)}`}
             </Button>
         </form>
+        
+        {/* Instructions Modal */}
+        <LaundryInstructionsModal
+          isOpen={showInstructions}
+          onClose={() => setShowInstructions(false)}
+          onContinue={handleContinueToPayment}
+        />
       </div>
     </div>
   );
