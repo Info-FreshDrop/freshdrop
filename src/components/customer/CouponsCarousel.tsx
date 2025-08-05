@@ -75,10 +75,10 @@ export function CouponsCarousel() {
         Available Coupons
       </h3>
       
-      <Carousel className="w-full">
-        <CarouselContent>
+      <Carousel className="w-full" opts={{ align: "start", loop: false }}>
+        <CarouselContent className="-ml-2 md:-ml-4">
           {coupons.map((coupon) => (
-            <CarouselItem key={coupon.id} className="md:basis-1/2 lg:basis-1/3">
+            <CarouselItem key={coupon.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
               <Card className="border-0 shadow-soft bg-gradient-to-br from-primary/5 to-accent/5 hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   {coupon.image_url && (
@@ -124,9 +124,20 @@ export function CouponsCarousel() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
+        <CarouselPrevious className="hidden md:flex" />
+        <CarouselNext className="hidden md:flex" />
       </Carousel>
+      
+      {/* Mobile navigation dots */}
+      <div className="flex justify-center gap-2 mt-4 md:hidden">
+        {coupons.map((_, index) => (
+          <button
+            key={index}
+            className="w-2 h-2 rounded-full bg-muted hover:bg-primary transition-colors"
+            aria-label={`Go to coupon ${index + 1}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
