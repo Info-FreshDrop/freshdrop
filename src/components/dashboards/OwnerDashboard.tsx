@@ -37,6 +37,8 @@ export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
   const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
+  const [liveOrders, setLiveOrders] = useState<any[]>([]);
+  const [completedOrders, setCompletedOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
     activeOperators: 0,
@@ -70,6 +72,17 @@ export function OwnerDashboard() {
       
       console.log('Owner dashboard - all orders query:', { allOrdersData, allOrdersError });
       setAllOrders(allOrdersData || []);
+
+      // Separate live orders from completed/cancelled orders
+      const live = (allOrdersData || []).filter(order => 
+        !['completed', 'cancelled'].includes(order.status)
+      );
+      const completed = (allOrdersData || []).filter(order => 
+        ['completed', 'cancelled'].includes(order.status)
+      );
+      
+      setLiveOrders(live);
+      setCompletedOrders(completed);
 
       // Get financial data (sum of all completed orders)
       const { data: financialData } = await supabase
@@ -319,22 +332,22 @@ export function OwnerDashboard() {
           
           <div className="mb-6">
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              All Orders
+              Live Orders
             </h1>
             <p className="text-muted-foreground">
-              Complete order management and monitoring
+              Orders currently in progress (excluding completed/cancelled)
             </p>
           </div>
 
           <div className="space-y-4">
-            {allOrders.length === 0 ? (
+            {liveOrders.length === 0 ? (
               <Card className="p-8 text-center">
                 <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No orders found</h3>
-                <p className="text-muted-foreground">Orders will appear here when customers place them.</p>
+                <h3 className="text-lg font-medium mb-2">No live orders found</h3>
+                <p className="text-muted-foreground">Live orders will appear here when customers place them.</p>
               </Card>
             ) : (
-              allOrders.map((order) => (
+              liveOrders.map((order) => (
                 <Card key={order.id} className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div>
@@ -580,10 +593,14 @@ export function OwnerDashboard() {
                   className="w-full"
                   onClick={() => setCurrentView('live-orders')}
                 >
-                  Live Orders ({allOrders.length})
+                  Live Orders ({liveOrders.length})
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Order History
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {/* TODO: Add order history view */}}
+                >
+                  Order History ({completedOrders.length})
                 </Button>
               </div>
             </CardContent>
