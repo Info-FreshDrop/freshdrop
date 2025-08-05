@@ -163,6 +163,26 @@ export function OrderMessaging({
       }
 
       console.log('Message sent successfully:', data);
+      
+      // Send email notification if operator is the recipient
+      if (result.recipient_user_id && !result.sender_is_customer) {
+        try {
+          await supabase.functions.invoke('send-order-notifications', {
+            body: {
+              notification_type: 'message',
+              customer_id: result.recipient_user_id,
+              operator_id: user.id,
+              order_id: orderId,
+              subject: 'New message from your operator',
+              message: newMessage.trim(),
+              sender_name: result.sender_name
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to send notification:', notificationError);
+        }
+      }
+      
       setNewMessage("");
       toast({
         title: "Message Sent",
