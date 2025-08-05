@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '@/lib/stripe';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
+import { LaundryInstructionsModal } from '../orders/LaundryInstructionsModal';
 import { 
   ArrowLeft,
   ArrowRight,
@@ -60,6 +61,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
   const [selectedShopItems, setSelectedShopItems] = useState<ShopItem[]>([]);
   const [showShopModal, setShowShopModal] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
   const [clientSecret, setClientSecret] = useState('');
   const [orderId, setOrderId] = useState('');
   const [formData, setFormData] = useState({
@@ -362,6 +364,10 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
       default:
         return true;
     }
+  };
+
+  const handleContinueFromInstructions = () => {
+    setShowInstructions(false);
   };
 
   const handleNext = () => {
@@ -1184,6 +1190,13 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
             )}
           </div>
         </div>
+        
+        {/* Instructions Modal */}
+        <LaundryInstructionsModal
+          isOpen={showInstructions}
+          onClose={() => setShowInstructions(false)}
+          onContinue={handleContinueFromInstructions}
+        />
       </div>
     </div>
   );
