@@ -36,7 +36,7 @@ export function LaundryInstructionsModal({ isOpen, onClose, onContinue }: Laundr
               <div className="flex items-start gap-3">
                 <Package className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
                 <p className="text-gray-700">
-                  All laundry will need to be placed in a standard 13 gallon kitchen bag. 
+                  All laundry will need to be placed in a standard 13 gallon bag or a Fresh Drop bag. 
                   If you have more than one bag, please make sure to select the appropriate 
                   amount of bags for pickup when you place your order.
                 </p>
@@ -67,7 +67,7 @@ export function LaundryInstructionsModal({ isOpen, onClose, onContinue }: Laundr
               <div className="flex items-start gap-3">
                 <AlertTriangle className="h-5 w-5 text-amber-500 mt-1 flex-shrink-0" />
                 <p className="text-gray-700">
-                  All 13 gallon bags have a weight limit of 17 pounds. Otherwise it 
+                  All 13 gallon bags or Fresh Drop bags have a weight limit of 17 pounds. Otherwise it 
                   will be charged as two bags.
                 </p>
               </div>
