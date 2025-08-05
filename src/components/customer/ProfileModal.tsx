@@ -182,21 +182,21 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 py-2">
           {/* Avatar Section */}
-          <div className="flex flex-col items-center space-y-4">
+          <div className="flex flex-col items-center space-y-3">
             <div className="relative">
-              <Avatar className="h-20 w-20">
+              <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
                 <AvatarImage src={profile.avatar_url} />
-                <AvatarFallback className="text-lg">{getInitials()}</AvatarFallback>
+                <AvatarFallback className="text-base sm:text-lg">{getInitials()}</AvatarFallback>
               </Avatar>
-              <label htmlFor="avatar-upload" className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer hover:bg-primary/90 transition-colors">
-                <Camera className="h-4 w-4" />
+              <label htmlFor="avatar-upload" className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 bg-primary text-primary-foreground rounded-full p-1.5 sm:p-2 cursor-pointer hover:bg-primary/90 transition-colors">
+                <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
                 <input
                   id="avatar-upload"
                   type="file"
@@ -209,29 +209,31 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
           </div>
 
           {/* Form Fields */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="first_name">First Name</Label>
+              <Label htmlFor="first_name" className="text-sm">First Name</Label>
               <Input
                 id="first_name"
                 value={profile.first_name}
                 onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value }))}
                 placeholder="Enter first name"
+                className="h-10 sm:h-auto"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="last_name">Last Name</Label>
+              <Label htmlFor="last_name" className="text-sm">Last Name</Label>
               <Input
                 id="last_name"
                 value={profile.last_name}
                 onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value }))}
                 placeholder="Enter last name"
+                className="h-10 sm:h-auto"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email" className="text-sm">Email Address</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -240,23 +242,24 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
                 value={profile.email}
                 onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
                 placeholder="Enter email address"
-                className="pl-10"
+                className="pl-10 h-10 sm:h-auto"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone" className="text-sm">Phone Number</Label>
             <Input
               id="phone"
               value={profile.phone}
               onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
               placeholder="Enter phone number"
+              className="h-10 sm:h-auto"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="birthday">Birthday</Label>
+            <Label htmlFor="birthday" className="text-sm">Birthday</Label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -264,7 +267,7 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
                 type="date"
                 value={profile.birthday}
                 onChange={(e) => setProfile(prev => ({ ...prev, birthday: e.target.value }))}
-                className="pl-10"
+                className="pl-10 h-10 sm:h-auto"
               />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -273,53 +276,55 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
           </div>
 
           {/* Communication Preferences */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Settings className="h-4 w-4 text-muted-foreground" />
               <Label className="text-sm font-medium">Communication Preferences</Label>
             </div>
             
-            <div className="space-y-3 pl-6">
-              <div className="flex items-center space-x-2">
+            <div className="space-y-3 pl-0 sm:pl-6">
+              <div className="flex items-start space-x-3">
                 <Checkbox
                   id="opt-in-email"
                   checked={profile.opt_in_email}
                   onCheckedChange={(checked) => setProfile(prev => ({ ...prev, opt_in_email: checked as boolean }))}
+                  className="mt-0.5"
                 />
-                <Label htmlFor="opt-in-email" className="text-sm">
+                <Label htmlFor="opt-in-email" className="text-sm leading-5 cursor-pointer">
                   Send me promotional emails about special offers and new services
                 </Label>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-start space-x-3">
                 <Checkbox
                   id="opt-in-sms"
                   checked={profile.opt_in_sms}
                   onCheckedChange={(checked) => setProfile(prev => ({ ...prev, opt_in_sms: checked as boolean }))}
+                  className="mt-0.5"
                 />
-                <Label htmlFor="opt-in-sms" className="text-sm">
+                <Label htmlFor="opt-in-sms" className="text-sm leading-5 cursor-pointer">
                   Send me promotional SMS messages about deals and updates
                 </Label>
               </div>
             </div>
             
-            <p className="text-xs text-muted-foreground pl-6">
+            <p className="text-xs text-muted-foreground pl-0 sm:pl-6">
               You can change these preferences at any time. We respect your privacy and will never share your information.
             </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between pt-4">
-            <Button variant="outline" onClick={signOut} className="text-destructive hover:text-destructive">
+          <div className="flex flex-col sm:flex-row justify-between gap-3 pt-3">
+            <Button variant="outline" onClick={signOut} className="text-destructive hover:text-destructive order-2 sm:order-1">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={onClose}>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 order-1 sm:order-2">
+              <Button variant="outline" onClick={onClose} className="flex-1 sm:flex-none">
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={loading}>
+              <Button onClick={handleSave} disabled={loading} className="flex-1 sm:flex-none">
                 <Save className="h-4 w-4 mr-2" />
                 {loading ? 'Saving...' : 'Save Changes'}
               </Button>
