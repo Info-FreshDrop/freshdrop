@@ -42,6 +42,7 @@ import { OperatorZipCodeEditModal } from '../admin/OperatorZipCodeEditModal';
 import { OrderMessaging } from '../customer/OrderMessaging';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { OperatorProfileSettings } from './OperatorProfileSettings';
+import { ReviewsAndTips } from './ReviewsAndTips';
 
 // Simple map component for navigation
 function NavigationMap({ destination }: { destination?: string }) {
@@ -902,7 +903,7 @@ export function OperatorDashboard() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="live-orders" className="flex items-center gap-2">
               <Package className="h-4 w-4" />
               Live Orders ({availableOrders.length})
@@ -910,6 +911,10 @@ export function OperatorDashboard() {
             <TabsTrigger value="my-orders" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               My Orders ({myOrders.filter(order => !['completed', 'delivered'].includes(order.status)).length})
+            </TabsTrigger>
+            <TabsTrigger value="reviews-tips" className="flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              Reviews & Tips
             </TabsTrigger>
             <TabsTrigger value="account" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -1140,6 +1145,18 @@ export function OperatorDashboard() {
                   );
                 })()}
               </div>
+            )}
+          </TabsContent>
+
+          {/* Reviews & Tips Tab */}
+          <TabsContent value="reviews-tips" className="space-y-4">
+            <div className="text-center mb-4">
+              <h2 className="text-lg font-semibold">Reviews & Tips</h2>
+              <p className="text-sm text-muted-foreground">See customer feedback and tips you've received</p>
+            </div>
+            
+            {washerData && (
+              <ReviewsAndTips washerId={washerData.id} />
             )}
           </TabsContent>
 
