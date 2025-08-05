@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -92,14 +92,18 @@ export function ContentManagement() {
   };
 
   const loadOrderContent = async () => {
-    // Create order_content table if it doesn't exist
     const { data, error } = await supabase
       .from('order_content')
       .select('*')
       .order('content_key');
 
-    if (error && !error.message.includes('does not exist')) {
+    if (error) {
       console.error('Error loading order content:', error);
+      toast({
+        title: "Error loading order content",
+        description: "Failed to load order flow content",
+        variant: "destructive",
+      });
       return;
     }
 

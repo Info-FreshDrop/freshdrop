@@ -231,6 +231,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         return { valid: true, message: "" };
     }
     
+    // Check if the selected time is in the past
     if (selectedStartTime <= oneHourFromNow) {
       return { 
         valid: false, 
