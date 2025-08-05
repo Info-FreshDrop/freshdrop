@@ -60,6 +60,27 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    // Handle referral cash usage if applicable
+    if (orderData.referral_cash_used && orderData.referral_cash_used > 0) {
+      console.log("Processing referral cash usage:", orderData.referral_cash_used);
+      
+      // Record referral cash usage by creating a negative transaction
+      const { error: referralError } = await supabaseService
+        .from('referral_uses')
+        .insert({
+          referrer_user_id: user.id,
+          referred_user_id: user.id, // Same user for cash usage
+          referral_code_id: '00000000-0000-0000-0000-000000000000', // Placeholder for cash usage
+          reward_given_cents: -orderData.referral_cash_used, // Negative to deduct
+          order_id: null // Will update with order id after creation
+        });
+        
+      if (referralError) {
+        console.error("Error recording referral cash usage:", referralError);
+        throw new Error("Failed to apply referral cash");
+      }
+    }
+
     // Create the order first
     const orderRecord = {
       customer_id: user.id,
@@ -81,7 +102,7 @@ serve(async (req) => {
       items: orderData.items,
       status: orderData.total_amount_cents === 0 ? 'placed' : 'placed', // Set to 'placed' for both free and paid orders initially
       promo_code: orderData.promoCode,
-      discount_amount_cents: orderData.discount_amount_cents || 0,
+      discount_amount_cents: (orderData.discount_amount_cents || 0) + (orderData.referral_cash_used || 0),
       total_amount_cents: orderData.total_amount_cents,
       created_at: new Date().toISOString(),
     };
@@ -100,6 +121,16 @@ serve(async (req) => {
     }
 
     console.log("Order created successfully:", order.id);
+
+    // Update referral cash usage record with order ID if applicable
+    if (orderData.referral_cash_used && orderData.referral_cash_used > 0) {
+      await supabaseService
+        .from('referral_uses')
+        .update({ order_id: order.id })
+        .eq('referrer_user_id', user.id)
+        .eq('reward_given_cents', -orderData.referral_cash_used)
+        .is('order_id', null);
+    }
 
     // If total is 0, update status to unclaimed and return success
     if (orderData.total_amount_cents === 0) {

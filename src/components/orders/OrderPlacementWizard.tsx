@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useCapacitor } from "@/hooks/useCapacitor";
@@ -64,8 +65,10 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     soapPreference: '',
     washTempPreference: '',
     dryTempPreference: '',
-    promoCode: ''
+    promoCode: '',
+    useReferralCash: false
   });
+  const [availableReferralCash, setAvailableReferralCash] = useState(0);
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -80,7 +83,13 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
 
   useEffect(() => {
     loadData();
+    loadReferralCash();
   }, []);
+
+  const loadReferralCash = async () => {
+    const cash = await getAvailableReferralMoney();
+    setAvailableReferralCash(cash);
+  };
 
   const loadData = async () => {
     try {
@@ -253,14 +262,34 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
       total = Math.max(0, total - 5000); // $50 off for testing
     }
     
+    // Apply referral cash discount
+    if (formData.useReferralCash && availableReferralCash > 0) {
+      total = Math.max(0, total - availableReferralCash);
+    }
+    
     return total;
   };
 
   const getAvailableReferralMoney = async () => {
     if (!user) return 0;
     
-    // Return 0 since wallet functionality is removed
-    return 0;
+    try {
+      const { data, error } = await supabase
+        .from('referral_uses')
+        .select('reward_given_cents')
+        .eq('referrer_user_id', user.id);
+      
+      if (error) {
+        console.error('Error fetching referral cash:', error);
+        return 0;
+      }
+      
+      const totalReferralCash = data?.reduce((total, use) => total + (use.reward_given_cents || 0), 0) || 0;
+      return totalReferralCash;
+    } catch (error) {
+      console.error('Error calculating referral cash:', error);
+      return 0;
+    }
   };
 
   const canGoToNextStep = () => {
@@ -351,6 +380,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         bag_count: formData.bagCount,
         items: [{ time_window: formData.timeWindow, shop_items: selectedShopItems }],
         total_amount_cents: calculateTotal(),
+        referral_cash_used: formData.useReferralCash ? Math.min(availableReferralCash, calculateTotal() + availableReferralCash) : 0,
         soap_preference_id: formData.soapPreference,
         wash_temp_preference_id: formData.washTempPreference,
         dry_temp_preference_id: formData.dryTempPreference,
@@ -789,6 +819,27 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
           )}
         </div>
 
+        {/* Referral Cash */}
+        {availableReferralCash > 0 && (
+          <div className="space-y-3 p-4 border rounded-lg bg-green-50 dark:bg-green-900/20">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="use-referral-cash"
+                checked={formData.useReferralCash}
+                onCheckedChange={(checked) => handleInputChange('useReferralCash', checked)}
+              />
+              <Label htmlFor="use-referral-cash" className="text-sm font-medium">
+                Use Referral Cash (${(availableReferralCash / 100).toFixed(2)} available)
+              </Label>
+            </div>
+            {formData.useReferralCash && (
+              <p className="text-xs text-green-600">
+                ${(Math.min(availableReferralCash, calculateTotal() + availableReferralCash) / 100).toFixed(2)} will be applied to your order
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Special Instructions */}
         <div className="space-y-2">
           <Label htmlFor="instructions">Special Instructions (Optional)</Label>
@@ -802,9 +853,24 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         </div>
 
         <hr className="my-4" />
-        <div className="flex justify-between font-bold text-lg">
-          <span>Total:</span>
-          <span>${(calculateTotal() / 100).toFixed(2)}</span>
+        
+        {/* Order Total Breakdown */}
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <span>Subtotal:</span>
+            <span>${((calculateTotal() + (formData.useReferralCash ? availableReferralCash : 0)) / 100).toFixed(2)}</span>
+          </div>
+          {formData.useReferralCash && availableReferralCash > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span>Referral Cash:</span>
+              <span>-${(Math.min(availableReferralCash, calculateTotal() + availableReferralCash) / 100).toFixed(2)}</span>
+            </div>
+          )}
+          <hr className="my-2" />
+          <div className="flex justify-between font-bold text-lg">
+            <span>Total:</span>
+            <span>${(calculateTotal() / 100).toFixed(2)}</span>
+          </div>
         </div>
       </div>
     );
