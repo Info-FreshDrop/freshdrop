@@ -21,9 +21,11 @@ import {
   ArrowLeft,
   BarChart3,
   Users,
-  TrendingUp
+  TrendingUp,
+  FileText
 } from "lucide-react";
 import { ServiceAreasManagement } from "@/components/admin/ServiceAreasManagement";
+import { ContentManagement } from "@/components/admin/ContentManagement";
 
 export default function OwnerDashboard() {
   const [isLoading, setIsLoading] = useState(false);
@@ -177,7 +179,7 @@ export default function OwnerDashboard() {
         </div>
 
         <Tabs defaultValue="pricing" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="pricing">
               <DollarSign className="h-4 w-4 mr-2" />
               Pricing
@@ -189,6 +191,10 @@ export default function OwnerDashboard() {
             <TabsTrigger value="service-areas" onClick={() => setCurrentView('service-areas')}>
               <BarChart3 className="h-4 w-4 mr-2" />
               Service Areas
+            </TabsTrigger>
+            <TabsTrigger value="content">
+              <FileText className="h-4 w-4 mr-2" />
+              Content
             </TabsTrigger>
           </TabsList>
 
@@ -332,6 +338,10 @@ export default function OwnerDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="content">
+            <ContentManagement />
           </TabsContent>
 
         </Tabs>
