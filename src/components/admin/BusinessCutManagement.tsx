@@ -311,22 +311,165 @@ export function BusinessCutManagement() {
         </CardContent>
       </Card>
 
-      {/* Current Analytics */}
+      {/* Clothing Shop Revenue */}
+      <Card className="border-0 shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-purple-600" />
+            Clothing Shop Revenue
+          </CardTitle>
+          <CardDescription>
+            How clothing shop sales are distributed
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 border rounded-lg bg-muted/50">
+                <Label className="text-sm font-medium text-muted-foreground">Business Keeps</Label>
+                <p className="text-xl font-bold text-primary">100%</p>
+                <p className="text-xs text-muted-foreground mt-1">All clothing shop profits</p>
+              </div>
+              
+              <div className="p-4 border rounded-lg bg-muted/50">
+                <Label className="text-sm font-medium text-muted-foreground">Operator Commission</Label>
+                <p className="text-xl font-bold text-muted-foreground">0%</p>
+                <p className="text-xs text-muted-foreground mt-1">No commission on clothing sales</p>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Note:</strong> Clothing shop revenue goes entirely to the business. 
+                Operators earn from laundry services only.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tips Distribution */}
+      <Card className="border-0 shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-green-600" />
+            Tips Distribution
+          </CardTitle>
+          <CardDescription>
+            How customer tips are handled
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 border rounded-lg bg-green-50 dark:bg-green-950/20">
+                <Label className="text-sm font-medium text-muted-foreground">Operator Receives</Label>
+                <p className="text-xl font-bold text-green-600">100%</p>
+                <p className="text-xs text-muted-foreground mt-1">All customer tips</p>
+              </div>
+              
+              <div className="p-4 border rounded-lg bg-muted/50">
+                <Label className="text-sm font-medium text-muted-foreground">Business Share</Label>
+                <p className="text-xl font-bold text-muted-foreground">0%</p>
+                <p className="text-xs text-muted-foreground mt-1">No cut from tips</p>
+              </div>
+            </div>
+            
+            <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg">
+              <p className="text-sm text-green-800 dark:text-green-200">
+                <strong>Policy:</strong> All tips go directly to operators as a reward for excellent service. 
+                The business does not take any portion of tips.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Revenue Flow Summary */}
       <Card className="border-0 shadow-soft">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-success" />
-            Revenue Analytics
+            Complete Revenue Flow
           </CardTitle>
           <CardDescription>
-            Current business performance metrics
+            Summary of all revenue streams and their distribution
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground">
-              Analytics will be calculated based on completed orders with the current revenue split settings.
-            </p>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 border rounded-lg">
+                <h4 className="font-medium text-sm mb-2">Laundry Services</h4>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span>Business:</span>
+                    <span className="font-medium">{revenueSplit.business_percentage}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Operator:</span>
+                    <span className="font-medium">{revenueSplit.operator_percentage}%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center p-4 border rounded-lg">
+                <h4 className="font-medium text-sm mb-2">Clothing Shop</h4>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span>Business:</span>
+                    <span className="font-medium">100%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Operator:</span>
+                    <span className="font-medium text-muted-foreground">0%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center p-4 border rounded-lg">
+                <h4 className="font-medium text-sm mb-2">Customer Tips</h4>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span>Business:</span>
+                    <span className="font-medium text-muted-foreground">0%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Operator:</span>
+                    <span className="font-medium">100%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-muted p-4 rounded-lg">
+              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                <Calculator className="h-4 w-4" />
+                Example: $100 Order with $5 Tip
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-medium mb-2">Business Receives:</p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li>• Laundry: {formatCurrency(calculateSampleSplit(10000).businessCut)}</li>
+                    <li>• Tips: $0.00</li>
+                    <li className="font-medium text-foreground pt-1 border-t">
+                      Total: {formatCurrency(calculateSampleSplit(10000).businessCut)}
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium mb-2">Operator Receives:</p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li>• Laundry: {formatCurrency(calculateSampleSplit(10000).operatorCut)}</li>
+                    <li>• Tips: $5.00</li>
+                    <li className="font-medium text-foreground pt-1 border-t">
+                      Total: {formatCurrency(calculateSampleSplit(10000).operatorCut + 500)}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
