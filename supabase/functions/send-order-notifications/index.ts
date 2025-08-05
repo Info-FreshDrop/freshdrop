@@ -122,7 +122,7 @@ async function handleMessageNotification(data: NotificationRequest): Promise<Res
   console.log('Sending message notification email to:', recipientEmail);
   
   await resend.emails.send({
-    from: "FreshDrop <onboarding@resend.dev>",
+    from: "FreshDrop <messages@freshdroplaundry.com>",
     to: [recipientEmail],
     subject: subject || 'New Message',
     html: `
@@ -315,7 +315,7 @@ async function handleOrderStatusNotification(data: NotificationRequest): Promise
   if (email) {
     console.log('Sending email to:', email);
     const emailPromise = resend.emails.send({
-      from: "FreshDrop <onboarding@resend.dev>",
+      from: "FreshDrop <orders@freshdroplaundry.com>",
       to: [email],
       subject: notification.subject,
       html: `

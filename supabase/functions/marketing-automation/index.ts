@@ -113,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Send email notification
         const emailResult = await resend.emails.send({
-          from: 'FreshDrop <noreply@freshdrop.app>',
+          from: 'FreshDrop <noreply@freshdroplaundry.com>',
           to: [customer.email],
           subject: personalizedSubject,
           html: `
