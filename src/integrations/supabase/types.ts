@@ -122,6 +122,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_in_stock: boolean
           name: string
           price_cents: number
           updated_at: string
@@ -133,6 +134,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_in_stock?: boolean
           name: string
           price_cents: number
           updated_at?: string
@@ -144,6 +146,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_in_stock?: boolean
           name?: string
           price_cents?: number
           updated_at?: string

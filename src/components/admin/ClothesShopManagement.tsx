@@ -17,7 +17,9 @@ import {
   Trash2,
   ShoppingBag,
   Palette,
-  Ruler
+  Ruler,
+  AlertTriangle,
+  CheckCircle
 } from "lucide-react";
 
 interface ClothesShopManagementProps {
@@ -32,6 +34,7 @@ interface ClothesItem {
   description?: string;
   image_url?: string;
   is_active: boolean;
+  is_in_stock: boolean;
   product_options?: {
     colors?: string[];
     sizes?: string[];
@@ -59,6 +62,7 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
     description: '',
     image_url: '',
     is_active: true,
+    is_in_stock: true,
     colors: [''],
     sizes: [''],
     custom_options: [] as Array<{
@@ -113,6 +117,7 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
       description: '',
       image_url: '',
       is_active: true,
+      is_in_stock: true,
       colors: [''],
       sizes: [''],
       custom_options: []
@@ -130,6 +135,7 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
       description: item.description || '',
       image_url: item.image_url || '',
       is_active: item.is_active,
+      is_in_stock: item.is_in_stock,
       colors: item.product_options?.colors || [''],
       sizes: item.product_options?.sizes || [''],
       custom_options: item.product_options?.custom_options || []
@@ -162,6 +168,7 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
         description: formData.description.trim() || null,
         image_url: formData.image_url.trim() || null,
         is_active: formData.is_active,
+        is_in_stock: formData.is_in_stock,
         product_options: productOptions,
         updated_at: new Date().toISOString()
       };
@@ -227,6 +234,31 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
       toast({
         title: "Error",
         description: "Failed to delete item.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleStock = async (itemId: string, currentStock: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('clothes_items')
+        .update({ is_in_stock: !currentStock })
+        .eq('id', itemId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Stock Updated",
+        description: `Item ${!currentStock ? 'marked as in stock' : 'marked as out of stock'}.`,
+      });
+
+      loadItems();
+    } catch (error) {
+      console.error('Error updating stock:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update stock status.",
         variant: "destructive",
       });
     }
@@ -500,13 +532,23 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
               </div>
 
               {/* Status */}
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                />
-                <Label htmlFor="is_active">Active (visible in shop)</Label>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                  />
+                  <Label htmlFor="is_active">Active (visible in shop)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="is_in_stock"
+                    checked={formData.is_in_stock}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_in_stock: checked }))}
+                  />
+                  <Label htmlFor="is_in_stock">In Stock</Label>
+                </div>
               </div>
 
               {/* Form Actions */}
@@ -538,9 +580,22 @@ export function ClothesShopManagement({ onBack }: ClothesShopManagementProps) {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">{item.name}</h3>
-                    <Badge variant={item.is_active ? "default" : "secondary"}>
-                      {item.is_active ? "Active" : "Inactive"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={item.is_active ? "default" : "secondary"}>
+                        {item.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                      <Badge 
+                        variant={item.is_in_stock ? "default" : "destructive"}
+                        className="cursor-pointer"
+                        onClick={() => toggleStock(item.id, item.is_in_stock)}
+                      >
+                        {item.is_in_stock ? (
+                          <><CheckCircle className="h-3 w-3 mr-1" />In Stock</>
+                        ) : (
+                          <><AlertTriangle className="h-3 w-3 mr-1" />Out of Stock</>
+                        )}
+                      </Badge>
+                    </div>
                   </div>
                   
                   <p className="text-sm text-muted-foreground">{item.category}</p>
