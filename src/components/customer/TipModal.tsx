@@ -4,11 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Heart, DollarSign, MessageCircle } from "lucide-react";
+import { Heart, DollarSign } from "lucide-react";
 
 interface TipModalProps {
   isOpen: boolean;
@@ -27,7 +26,6 @@ export function TipModal({ isOpen, onClose, order, operatorName }: TipModalProps
   const [customAmount, setCustomAmount] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [useWallet, setUseWallet] = useState(false);
 
   const predefinedAmounts = [200, 500, 1000]; // $2, $5, $10 in cents
 
@@ -54,42 +52,8 @@ export function TipModal({ isOpen, onClose, order, operatorName }: TipModalProps
 
       if (tipError) throw tipError;
 
-      if (useWallet) {
-        // Deduct from wallet
-        const { data: walletData } = await supabase
-          .from('wallets')
-          .select('id, balance_cents')
-          .eq('user_id', user?.id)
-          .single();
-
-        if (walletData && walletData.balance_cents >= tipAmount) {
-          // Update wallet balance
-          await supabase
-            .from('wallets')
-            .update({ balance_cents: walletData.balance_cents - tipAmount })
-            .eq('id', walletData.id);
-
-          // Record transaction
-          await supabase
-            .from('wallet_transactions')
-            .insert({
-              wallet_id: walletData.id,
-              transaction_type: 'tip',
-              amount_cents: -tipAmount,
-              description: `Tip for ${operatorName || 'operator'}`,
-              order_id: order.id,
-              operator_id: order.washer_id
-            });
-
-          toast.success(`$${(tipAmount / 100).toFixed(2)} tip sent to ${operatorName || 'your operator'}!`);
-        } else {
-          toast.error('Insufficient wallet balance');
-          return;
-        }
-      } else {
-        // Process with saved payment method (Stripe integration would go here)
-        toast.success(`$${(tipAmount / 100).toFixed(2)} tip sent to ${operatorName || 'your operator'}!`);
-      }
+      // Process with saved payment method (Stripe integration would go here)
+      toast.success(`$${(tipAmount / 100).toFixed(2)} tip sent to ${operatorName || 'your operator'}!`);
 
       onClose();
       setSelectedAmount(null);
@@ -170,24 +134,6 @@ export function TipModal({ isOpen, onClose, order, operatorName }: TipModalProps
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
             />
-          </div>
-
-          {/* Payment method toggle */}
-          <div className="flex items-center gap-4">
-            <Button
-              variant={useWallet ? "default" : "outline"}
-              onClick={() => setUseWallet(true)}
-              className="flex-1"
-            >
-              Use Wallet
-            </Button>
-            <Button
-              variant={!useWallet ? "default" : "outline"}
-              onClick={() => setUseWallet(false)}
-              className="flex-1"
-            >
-              Credit Card
-            </Button>
           </div>
 
           {/* Total */}

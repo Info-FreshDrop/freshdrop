@@ -259,17 +259,8 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
   const getAvailableReferralMoney = async () => {
     if (!user) return 0;
     
-    try {
-      const { data: wallet } = await supabase
-        .from('wallets')
-        .select('balance_cents')
-        .eq('user_id', user.id)
-        .single();
-      
-      return wallet?.balance_cents || 0;
-    } catch (error) {
-      return 0;
-    }
+    // Return 0 since wallet functionality is removed
+    return 0;
   };
 
   const canGoToNextStep = () => {

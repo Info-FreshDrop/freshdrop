@@ -10,7 +10,7 @@ import { CouponsCarousel } from "@/components/customer/CouponsCarousel";
 import { OrderTracking } from "@/components/orders/OrderTracking";
 import { ClothesShop } from "@/components/customer/ClothesShop";
 import { ReferralInterface } from "@/components/customer/ReferralInterface";
-import { WalletInterface } from "@/components/customer/WalletInterface";
+import { PaymentMethods } from "@/components/customer/PaymentMethods";
 import { MobileOrderWizard } from "@/components/mobile/MobileOrderWizard";
 import { OrderHistory } from "@/components/orders/OrderHistory";
 import { ProfileModal } from "@/components/customer/ProfileModal";
@@ -26,7 +26,6 @@ import {
   Clock,
   MapPin,
   Plus,
-  Wallet,
   Share2,
   Star,
   Heart,
@@ -526,14 +525,14 @@ export function CustomerDashboard() {
                 </div>
                 <div className="relative">
                   <CreditCard className="h-8 w-8 mb-3" />
-                  <h2 className="text-xl font-bold mb-2">Wallet & Payments</h2>
+                  <h2 className="text-xl font-bold mb-2">Payment Methods</h2>
                   <p className="text-white/90 text-sm">
-                    Manage your payment methods and wallet balance
+                    Manage your saved payment methods
                   </p>
                 </div>
               </div>
               
-              <WalletInterface />
+              <PaymentMethods />
             </div>
           </TabsContent>
 
@@ -575,7 +574,7 @@ export function CustomerDashboard() {
                 className="flex flex-col items-center gap-1 py-3 px-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
               >
                 <CreditCard className="h-5 w-5" />
-                <span className="text-xs font-medium">Wallet</span>
+                <span className="text-xs font-medium">Payments</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="referrals"
