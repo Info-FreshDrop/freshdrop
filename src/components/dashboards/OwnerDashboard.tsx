@@ -35,7 +35,7 @@ import {
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'order-history' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [liveOrders, setLiveOrders] = useState<any[]>([]);
   const [completedOrders, setCompletedOrders] = useState<any[]>([]);
@@ -388,6 +388,79 @@ export function OwnerDashboard() {
     );
   }
 
+  if (currentView === 'order-history') {
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentView('dashboard')}
+              className="p-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Order History
+            </h1>
+            <p className="text-muted-foreground">
+              Completed and cancelled orders
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {completedOrders.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No completed orders found</h3>
+                <p className="text-muted-foreground">Completed orders will appear here.</p>
+              </Card>
+            ) : (
+              completedOrders.map((order) => (
+                <Card key={order.id} className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Status: <Badge variant={order.status === 'completed' ? 'default' : 'destructive'}>{order.status}</Badge>
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Zip: {order.zip_code} • {order.pickup_type}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-green-600">
+                        ${(order.total_amount_cents / 100).toFixed(2)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {order.completed_at ? new Date(order.completed_at).toLocaleDateString() : new Date(order.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p><strong>Service:</strong> {order.service_type}</p>
+                      <p><strong>Bags:</strong> {order.bag_count}</p>
+                    </div>
+                    <div>
+                      <p><strong>Express:</strong> {order.is_express ? 'Yes' : 'No'}</p>
+                      <p><strong>Washer ID:</strong> {order.washer_id || 'Unassigned'}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-wave">
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
@@ -598,7 +671,7 @@ export function OwnerDashboard() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => {/* TODO: Add order history view */}}
+                  onClick={() => setCurrentView('order-history')}
                 >
                   Order History ({completedOrders.length})
                 </Button>
