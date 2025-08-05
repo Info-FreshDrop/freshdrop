@@ -14,6 +14,7 @@ import { OrderIssueTracking } from "@/components/admin/OrderIssueTracking";
 import { OperatorWorkloadBalance } from "@/components/admin/OperatorWorkloadBalance";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { OperatorPaymentManagement } from "@/components/admin/OperatorPaymentManagement";
+import { BusinessCutManagement } from "@/components/admin/BusinessCutManagement";
 import { NotificationTesting } from "@/components/admin/NotificationTesting";
 import NotificationTemplateManagement from "@/components/admin/NotificationTemplateManagement";
 import { CustomerManagement } from "@/components/admin/CustomerManagement";
@@ -37,7 +38,7 @@ import {
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'order-history' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management' | 'operator-payments'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'order-history' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management' | 'operator-payments' | 'business-cut'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [liveOrders, setLiveOrders] = useState<any[]>([]);
   const [completedOrders, setCompletedOrders] = useState<any[]>([]);
@@ -338,6 +339,36 @@ export function OwnerDashboard() {
           </div>
 
           <OperatorPaymentManagement />
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'business-cut') {
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentView('dashboard')}
+              className="p-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Business Cut Management
+            </h1>
+            <p className="text-muted-foreground">
+              Configure revenue splits, pricing, and business analytics
+            </p>
+          </div>
+
+          <BusinessCutManagement />
         </div>
       </div>
     );
@@ -900,6 +931,33 @@ export function OwnerDashboard() {
                 </Button>
                 <Button variant="outline" className="w-full">
                   Payment Reports
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-success" />
+                Business Cut & Revenue
+              </CardTitle>
+              <CardDescription>
+                Manage revenue splits and pricing structure
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('business-cut')}
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Manage Business Cut
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Revenue Analytics
                 </Button>
               </div>
             </CardContent>
