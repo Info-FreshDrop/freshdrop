@@ -78,7 +78,11 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
   useEffect(() => {
     loadPromoCodes();
     loadClothesItems();
-  }, []);
+    // Auto-load analytics if starting in reports view
+    if (initialView === 'reports') {
+      loadUsageAnalytics();
+    }
+  }, [initialView]);
 
   const loadPromoCodes = async () => {
     try {
