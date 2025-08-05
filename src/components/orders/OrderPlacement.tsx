@@ -47,7 +47,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
   const [laundryPreferences, setLaundryPreferences] = useState<any[]>([]);
   const [selectedPickupDate, setSelectedPickupDate] = useState('');
   const [showPayment, setShowPayment] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
   const [clientSecret, setClientSecret] = useState('');
   const [orderId, setOrderId] = useState('');
   const [formData, setFormData] = useState({
@@ -383,19 +383,12 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     return total;
   };
 
-  const handleContinueToPayment = () => {
+  const handleContinueFromInstructions = () => {
     setShowInstructions(false);
-    proceedWithOrder();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Show instructions modal first
-    setShowInstructions(true);
-  };
-
-  const proceedWithOrder = async () => {
     setIsLoading(true);
 
     try {
@@ -1134,7 +1127,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
         <LaundryInstructionsModal
           isOpen={showInstructions}
           onClose={() => setShowInstructions(false)}
-          onContinue={handleContinueToPayment}
+          onContinue={handleContinueFromInstructions}
         />
       </div>
     </div>
