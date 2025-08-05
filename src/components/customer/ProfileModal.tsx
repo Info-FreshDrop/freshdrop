@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Save, X, LogOut } from "lucide-react";
+import { Camera, Save, X, LogOut, Mail, Calendar, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +25,11 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
     first_name: '',
     last_name: '',
     phone: '',
-    avatar_url: ''
+    avatar_url: '',
+    email: '',
+    birthday: '',
+    opt_in_sms: false,
+    opt_in_email: false
   });
 
   useEffect(() => {
@@ -51,7 +56,11 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
           first_name: data.first_name || '',
           last_name: data.last_name || '',
           phone: data.phone || '',
-          avatar_url: data.avatar_url || ''
+          avatar_url: data.avatar_url || '',
+          email: data.email || '',
+          birthday: data.birthday || '',
+          opt_in_sms: data.opt_in_sms || false,
+          opt_in_email: data.opt_in_email || false
         });
       } else {
         // No profile exists yet, initialize with user metadata
@@ -59,7 +68,11 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
           first_name: user?.user_metadata?.first_name || '',
           last_name: user?.user_metadata?.last_name || '',
           phone: user?.user_metadata?.phone || '',
-          avatar_url: ''
+          avatar_url: '',
+          email: '',
+          birthday: '',
+          opt_in_sms: false,
+          opt_in_email: false
         });
       }
     } catch (error) {
@@ -218,23 +231,81 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              value={user?.email || ''}
-              disabled
-              className="bg-muted"
-            />
+            <Label htmlFor="email">Email Address</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                id="email"
+                type="email"
+                value={profile.email}
+                onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Enter email address"
+                className="pl-10"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone">Phone Number</Label>
             <Input
               id="phone"
               value={profile.phone}
               onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
               placeholder="Enter phone number"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="birthday">Birthday</Label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                id="birthday"
+                type="date"
+                value={profile.birthday}
+                onChange={(e) => setProfile(prev => ({ ...prev, birthday: e.target.value }))}
+                className="pl-10"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              We use your birthday for special promotions and offers
+            </p>
+          </div>
+
+          {/* Communication Preferences */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Settings className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Communication Preferences</Label>
+            </div>
+            
+            <div className="space-y-3 pl-6">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="opt-in-email"
+                  checked={profile.opt_in_email}
+                  onCheckedChange={(checked) => setProfile(prev => ({ ...prev, opt_in_email: checked as boolean }))}
+                />
+                <Label htmlFor="opt-in-email" className="text-sm">
+                  Send me promotional emails about special offers and new services
+                </Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="opt-in-sms"
+                  checked={profile.opt_in_sms}
+                  onCheckedChange={(checked) => setProfile(prev => ({ ...prev, opt_in_sms: checked as boolean }))}
+                />
+                <Label htmlFor="opt-in-sms" className="text-sm">
+                  Send me promotional SMS messages about deals and updates
+                </Label>
+              </div>
+            </div>
+            
+            <p className="text-xs text-muted-foreground pl-6">
+              You can change these preferences at any time. We respect your privacy and will never share your information.
+            </p>
           </div>
 
           {/* Action Buttons */}
