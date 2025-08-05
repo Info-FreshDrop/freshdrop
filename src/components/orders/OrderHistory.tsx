@@ -317,10 +317,10 @@ export function OrderHistory({ onBack }: OrderHistoryProps) {
                             const stepNumber = step.replace('step_', '');
                             const getStepLabel = (stepNum: string) => {
                               switch (stepNum) {
-                                case '1': return 'Pickup Photo';
+                                case '1': return 'Initial Photo';
                                 case '2': return 'Pre-wash Photo';
                                 case '3': return 'Washing Photo';
-                                case '4': return 'Drying Photo';
+                                case '4': return 'Pickup Photo';
                                 case '5': return 'Folding Photo';
                                 case '6': return 'Quality Check';
                                 case '7': return 'Packaging Photo';
@@ -328,6 +328,7 @@ export function OrderHistory({ onBack }: OrderHistoryProps) {
                                 case '9': return 'In Transit';
                                 case '10': return 'Delivery Prep';
                                 case '11': return 'Final Check';
+                                case '13': return 'Delivery Photo';
                                 default: return `Step ${stepNum}`;
                               }
                             };
