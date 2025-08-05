@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '@/lib/stripe';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
+import { LaundryInstructionsModal } from './LaundryInstructionsModal';
 import { ClothesShop } from "@/components/customer/ClothesShop";
 import { 
   ArrowLeft,
@@ -53,6 +54,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
   const [selectedShopItems, setSelectedShopItems] = useState<any[]>([]);
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [showInstructions, setShowInstructions] = useState(true);
   const [formData, setFormData] = useState({
     pickupAddress: '',
     deliveryAddress: '',
@@ -307,6 +309,10 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
       default:
         return true;
     }
+  };
+
+  const handleContinueFromInstructions = () => {
+    setShowInstructions(false);
   };
 
   const handleNext = () => {
@@ -953,6 +959,13 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
             </Button>
           )}
         </div>
+        
+        {/* Instructions Modal */}
+        <LaundryInstructionsModal
+          isOpen={showInstructions}
+          onClose={() => setShowInstructions(false)}
+          onContinue={handleContinueFromInstructions}
+        />
       </div>
     </div>
   );
