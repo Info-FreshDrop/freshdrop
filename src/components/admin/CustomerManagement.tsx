@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Search, Users, Mail, Phone, Calendar } from "lucide-react";
+import { ArrowLeft, Search, Users, Mail, Phone, Calendar, Gift, MessageSquare } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 interface Customer {
@@ -14,6 +14,10 @@ interface Customer {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
+  email: string | null;
+  birthday: string | null;
+  opt_in_email: boolean;
+  opt_in_sms: boolean;
   created_at: string;
   total_orders: number;
   last_order_date: string | null;
@@ -31,6 +35,23 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
 
   useEffect(() => {
     loadCustomers();
+    
+    // Set up real-time subscription for profile updates
+    const channel = supabase
+      .channel('customer-profiles')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'profiles' },
+        () => loadCustomers()
+      )
+      .on('postgres_changes', 
+        { event: 'UPDATE', schema: 'public', table: 'profiles' },
+        () => loadCustomers()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadCustomers = async () => {
@@ -46,6 +67,10 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
           first_name,
           last_name,
           phone,
+          email,
+          birthday,
+          opt_in_email,
+          opt_in_sms,
           created_at
         `)
         .order('created_at', { ascending: false });
@@ -82,6 +107,10 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
           first_name: customer.first_name,
           last_name: customer.last_name,
           phone: customer.phone,
+          email: customer.email,
+          birthday: customer.birthday,
+          opt_in_email: customer.opt_in_email || false,
+          opt_in_sms: customer.opt_in_sms || false,
           created_at: customer.created_at,
           total_orders: customerOrders.length,
           last_order_date: lastOrder?.created_at || null,
@@ -104,9 +133,10 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
   const filteredCustomers = customers.filter(customer => {
     const fullName = `${customer.first_name || ''} ${customer.last_name || ''}`.toLowerCase();
     const phone = customer.phone?.toLowerCase() || '';
+    const email = customer.email?.toLowerCase() || '';
     const search = searchTerm.toLowerCase();
     
-    return fullName.includes(search) || phone.includes(search);
+    return fullName.includes(search) || phone.includes(search) || email.includes(search);
   });
 
   const formatDate = (dateString: string) => {
@@ -142,7 +172,7 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4" />
               <Input
-                placeholder="Search by name or phone..."
+                placeholder="Search by name, phone, or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-64"
@@ -158,6 +188,8 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
                 <TableHead>Customer ID</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>Birthday</TableHead>
+                <TableHead>Preferences</TableHead>
                 <TableHead>Registration Date</TableHead>
                 <TableHead>Total Orders</TableHead>
                 <TableHead>Last Order</TableHead>
@@ -173,10 +205,14 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
                     {customer.user_id}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="h-3 w-3" />
-                      <span className="text-xs">Email not accessible (Auth protected)</span>
-                    </div>
+                    {customer.email ? (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3 w-3" />
+                        <span className="text-sm">{customer.email}</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">No email</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {customer.phone ? (
@@ -187,6 +223,35 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
                     ) : (
                       <span className="text-muted-foreground">No phone</span>
                     )}
+                  </TableCell>
+                  <TableCell>
+                    {customer.birthday ? (
+                      <div className="flex items-center gap-2">
+                        <Gift className="h-3 w-3" />
+                        {formatDate(customer.birthday)}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">No birthday</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {customer.opt_in_email && (
+                        <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                          <Mail className="h-3 w-3" />
+                          Email
+                        </div>
+                      )}
+                      {customer.opt_in_sms && (
+                        <div className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                          <MessageSquare className="h-3 w-3" />
+                          SMS
+                        </div>
+                      )}
+                      {!customer.opt_in_email && !customer.opt_in_sms && (
+                        <span className="text-muted-foreground text-xs">None</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -210,7 +275,7 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
               ))}
               {filteredCustomers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     {searchTerm ? 'No customers found matching your search.' : 'No customers found.'}
                   </TableCell>
                 </TableRow>
