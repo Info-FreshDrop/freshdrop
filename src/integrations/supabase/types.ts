@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       campaign_analytics: {
         Row: {
           bounce_count: number | null
@@ -1755,6 +1785,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_order_splits: {
+        Args: { order_total_cents: number }
+        Returns: {
+          business_cut_cents: number
+          operator_payout_cents: number
+        }[]
+      }
       change_user_role: {
         Args: {
           target_user_id: string
