@@ -75,10 +75,10 @@ serve(async (req) => {
     // Update order status to unclaimed (ready for operator pickup)
     const { data: updatedOrder, error: updateError } = await supabaseService
       .from("orders")
-      .update({ 
-        status: 'unclaimed',
-        updated_at: new Date().toISOString()
-      })
+        .update({ 
+          status: 'unclaimed',
+          updated_at: new Date().toISOString()
+        })
       .eq('id', orderId)
       .eq('stripe_payment_intent_id', paymentIntentId)
       .select()
