@@ -44,10 +44,21 @@ interface ClothesItem {
   price_cents: number;
 }
 
+interface PromoUsageStats {
+  promo_code_id: string;
+  code: string;
+  total_uses: number;
+  total_discount_given: number;
+  total_revenue: number;
+  unique_users: number;
+}
+
 export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack, initialView = 'list' }) => {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [clothesItems, setClothesItems] = useState<ClothesItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [usageStats, setUsageStats] = useState<PromoUsageStats[]>([]);
   const [currentView, setCurrentView] = useState<'list' | 'create' | 'reports'>(initialView);
   const [editingCode, setEditingCode] = useState<PromoCode | null>(null);
   const [formData, setFormData] = useState({
@@ -102,6 +113,74 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
       setClothesItems(data || []);
     } catch (error) {
       console.error('Error loading clothes items:', error);
+    }
+  };
+
+  const loadUsageAnalytics = async () => {
+    setAnalyticsLoading(true);
+    try {
+      // Get promo code usage data with analytics
+      const { data: usageData, error } = await supabase
+        .from('promo_code_usage')
+        .select(`
+          promo_code_id,
+          promo_codes!inner(code),
+          order_id,
+          orders!inner(total_amount_cents, discount_amount_cents)
+        `);
+
+      if (error) throw error;
+
+      // Aggregate the data
+      const statsMap = new Map<string, PromoUsageStats>();
+      
+      usageData?.forEach((usage: any) => {
+        const promoId = usage.promo_code_id;
+        const code = usage.promo_codes.code;
+        const discountAmount = usage.orders.discount_amount_cents || 0;
+        const totalAmount = usage.orders.total_amount_cents || 0;
+
+        if (!statsMap.has(promoId)) {
+          statsMap.set(promoId, {
+            promo_code_id: promoId,
+            code: code,
+            total_uses: 0,
+            total_discount_given: 0,
+            total_revenue: 0,
+            unique_users: 0
+          });
+        }
+
+        const stats = statsMap.get(promoId)!;
+        stats.total_uses += 1;
+        stats.total_discount_given += discountAmount;
+        stats.total_revenue += totalAmount;
+      });
+
+      // Get unique user counts for each promo code
+      for (const [promoId, stats] of statsMap.entries()) {
+        const { data: uniqueUsers, error: userError } = await supabase
+          .from('promo_code_usage')
+          .select('user_id', { count: 'estimated' })
+          .eq('promo_code_id', promoId);
+
+        if (!userError && uniqueUsers) {
+          // Count unique user_ids
+          const uniqueUserIds = new Set(uniqueUsers.map((u: any) => u.user_id));
+          stats.unique_users = uniqueUserIds.size;
+        }
+      }
+
+      setUsageStats(Array.from(statsMap.values()));
+    } catch (error) {
+      console.error('Error loading usage analytics:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load usage analytics",
+        variant: "destructive"
+      });
+    } finally {
+      setAnalyticsLoading(false);
     }
   };
 
@@ -519,15 +598,125 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
             <h1 className="text-3xl font-bold">Promo Code Reports</h1>
             <p className="text-muted-foreground">Track redemption analytics and performance</p>
           </div>
+          <Button onClick={loadUsageAnalytics} disabled={analyticsLoading}>
+            {analyticsLoading ? 'Loading...' : 'Refresh Data'}
+          </Button>
         </div>
 
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Percent className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Total Redemptions</span>
+              </div>
+              <p className="text-2xl font-bold">
+                {usageStats.reduce((sum, stat) => sum + stat.total_uses, 0)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium">Total Discounts</span>
+              </div>
+              <p className="text-2xl font-bold">
+                ${(usageStats.reduce((sum, stat) => sum + stat.total_discount_given, 0) / 100).toFixed(2)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Total Revenue</span>
+              </div>
+              <p className="text-2xl font-bold">
+                ${(usageStats.reduce((sum, stat) => sum + stat.total_revenue, 0) / 100).toFixed(2)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium">Unique Customers</span>
+              </div>
+              <p className="text-2xl font-bold">
+                {usageStats.reduce((sum, stat) => sum + stat.unique_users, 0)}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Individual Promo Code Performance */}
         <Card>
-          <CardContent className="p-6">
-            <div className="text-center py-8">
-              <Percent className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">Reports Coming Soon</h3>
-              <p className="text-muted-foreground">Detailed analytics and redemption reports will be available here.</p>
-            </div>
+          <CardHeader>
+            <CardTitle>Promo Code Performance</CardTitle>
+            <CardDescription>Individual performance metrics for each promo code</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {analyticsLoading ? (
+              <div className="text-center py-8">
+                <Percent className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+                <p className="text-muted-foreground">Loading analytics...</p>
+              </div>
+            ) : usageStats.length === 0 ? (
+              <div className="text-center py-8">
+                <Percent className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No usage data yet</h3>
+                <p className="text-muted-foreground">Promo code usage data will appear here once customers start using your codes.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {usageStats.map((stat) => (
+                  <div key={stat.promo_code_id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default">{stat.code}</Badge>
+                        <span className="text-sm text-muted-foreground">Performance metrics</span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Uses</p>
+                        <p className="text-xl font-semibold">{stat.total_uses}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Discount Given</p>
+                        <p className="text-xl font-semibold text-red-600">
+                          -${(stat.total_discount_given / 100).toFixed(2)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Revenue Generated</p>
+                        <p className="text-xl font-semibold text-green-600">
+                          ${(stat.total_revenue / 100).toFixed(2)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Unique Customers</p>
+                        <p className="text-xl font-semibold text-blue-600">{stat.unique_users}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 pt-4 border-t">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Avg. discount per use: ${stat.total_uses > 0 ? (stat.total_discount_given / stat.total_uses / 100).toFixed(2) : '0.00'}
+                        </span>
+                        <span className="text-muted-foreground">
+                          Avg. revenue per use: ${stat.total_uses > 0 ? (stat.total_revenue / stat.total_uses / 100).toFixed(2) : '0.00'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -559,7 +748,10 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
       <div className="flex gap-4">
         <Button 
           variant="outline" 
-          onClick={() => setCurrentView('reports')}
+          onClick={() => {
+            setCurrentView('reports');
+            loadUsageAnalytics();
+          }}
           className="flex items-center gap-2"
         >
           <Percent className="h-4 w-4" />
