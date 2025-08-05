@@ -176,3 +176,14 @@ All colors MUST be HSL.
 .error-state {
   @apply text-destructive border-destructive bg-destructive/5;
 }
+
+/* Mobile-friendly utilities */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (max-width: 768px) {
+  .mobile-spacing {
+    padding: 0.75rem;
+  }
+}

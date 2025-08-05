@@ -102,11 +102,11 @@ export function Homepage() {
       <HeroSection />
       
       {/* Login Section */}
-      <section id="auth-section" className="py-16 bg-background">
-        <div className="max-w-md mx-auto px-6">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2">Sign in to Order</h2>
-            <p className="text-muted-foreground">Create an account or sign in to place your laundry order</p>
+      <section id="auth-section" className="py-8 sm:py-16 bg-background">
+        <div className="max-w-md mx-auto px-4 sm:px-6">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">Sign in to Order</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">Create an account or sign in to place your laundry order</p>
           </div>
           <Card className="shadow-glow">
             {showOperatorLogin ? (
@@ -125,14 +125,14 @@ export function Homepage() {
       <OperatorApplication />
       
       {/* Support Section - Moved to bottom */}
-      <section className="py-12 px-6 bg-muted/20">
+      <section className="py-8 sm:py-12 px-4 sm:px-6 bg-muted/20">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="p-6 bg-gradient-wave rounded-xl border">
-            <h3 className="text-xl font-bold mb-3 text-primary">Still have questions?</h3>
-            <p className="text-muted-foreground mb-4">
+          <div className="p-4 sm:p-6 bg-gradient-wave rounded-xl border">
+            <h3 className="text-lg sm:text-xl font-bold mb-3 text-primary">Still have questions?</h3>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4">
               Our support team is here to help you get the most out of FreshDrop's services.
             </p>
-            <div className="flex flex-col gap-2 justify-center text-sm">
+            <div className="flex flex-col gap-2 justify-center text-xs sm:text-sm">
               <div className="text-center">
                 <strong>Email:</strong> support@freshdrop.com
               </div>
@@ -148,23 +148,23 @@ export function Homepage() {
       </section>
       
       {/* Footer */}
-      <footer className="bg-primary text-primary-foreground py-12">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
+      <footer className="bg-primary text-primary-foreground py-8 sm:py-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             <div className="col-span-1 md:col-span-2">
-              <h3 className="text-2xl font-bold mb-4">FreshDrop</h3>
-              <p className="text-primary-foreground/80 mb-4">
+              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">FreshDrop</h3>
+              <p className="text-sm sm:text-base text-primary-foreground/80 mb-3 sm:mb-4">
                 Professional laundry service made simple. 
                 Drop off at lockers or schedule pickup & delivery.
               </p>
-              <div className="text-sm text-primary-foreground/60">
+              <div className="text-xs sm:text-sm text-primary-foreground/60">
                 © 2024 FreshDrop. All rights reserved.
               </div>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Services</h4>
-              <ul className="space-y-2 text-sm text-primary-foreground/80">
+              <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Services</h4>
+              <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-primary-foreground/80">
                 <li>Wash & Fold</li>
                 <li>Express Service</li>
                 <li>Locker Pickup</li>
@@ -173,8 +173,8 @@ export function Homepage() {
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm text-primary-foreground/80">
+              <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Support</h4>
+              <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-primary-foreground/80">
                 <li>Help Center</li>
                 <li>Contact Us</li>
                 <li>Track Order</li>
@@ -183,7 +183,7 @@ export function Homepage() {
             </div>
           </div>
           
-          <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center text-sm text-primary-foreground/60">
+          <div className="border-t border-primary-foreground/20 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-xs sm:text-sm text-primary-foreground/60">
             <p>Available in select cities. Download our app for the best experience.</p>
           </div>
         </div>

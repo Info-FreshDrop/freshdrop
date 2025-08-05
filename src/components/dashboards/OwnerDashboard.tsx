@@ -377,125 +377,125 @@ export function OwnerDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-wave">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        <div className="mb-4 sm:mb-6">
           <Button
             variant="ghost"
             onClick={signOut}
-            className="p-0 h-auto text-muted-foreground hover:text-foreground"
+            className="p-0 h-auto text-muted-foreground hover:text-foreground text-sm"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Exit Dashboard
           </Button>
         </div>
         
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 gap-3">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Owner Dashboard
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Complete system management and control
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <Badge variant="secondary" className="px-3 py-1">
-              <Shield className="h-3 w-3 mr-1" />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Badge variant="secondary" className="px-2 sm:px-3 py-1 text-xs sm:text-sm">
+              <Shield className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
               Owner Access
             </Badge>
           </div>
         </div>
 
         {/* Financial Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-xs text-muted-foreground">All customer payments</p>
-                  <p className="text-2xl font-bold">${(stats.totalRevenue / 100).toFixed(2)}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Revenue</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block">All customer payments</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">${(stats.totalRevenue / 100).toFixed(2)}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-success" />
+                <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-success" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">FreshDrop Pay</p>
-                  <p className="text-xs text-muted-foreground">Business cut (50%)</p>
-                  <p className="text-2xl font-bold text-primary">${(stats.freshDropPay / 100).toFixed(2)}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">FreshDrop Pay</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block">Business cut (50%)</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-primary">${(stats.freshDropPay / 100).toFixed(2)}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-primary" />
+                <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
+          <Card className="border-0 shadow-soft sm:col-span-2 lg:col-span-1">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Operator Pay</p>
-                  <p className="text-xs text-muted-foreground">Washer payouts (50%)</p>
-                  <p className="text-2xl font-bold text-accent">${(stats.operatorPay / 100).toFixed(2)}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Operator Pay</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block">Washer payouts (50%)</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-accent">${(stats.operatorPay / 100).toFixed(2)}</p>
                 </div>
-                <Users className="h-8 w-8 text-accent" />
+                <Users className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-accent" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Operational Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
           <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Orders</p>
-                  <p className="text-2xl font-bold">{stats.totalOrders}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Orders</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.totalOrders}</p>
                 </div>
-                <Package className="h-8 w-8 text-primary" />
+                <Package className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Operators</p>
-                  <p className="text-2xl font-bold">{stats.activeOperators}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Active Operators</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.activeOperators}</p>
                   {(stats.pendingApprovals > 0 || stats.pendingApplications > 0) && (
                     <p className="text-xs text-yellow-600 font-medium">
-                      {stats.pendingApplications > 0 && `${stats.pendingApplications} new applications`}
+                      {stats.pendingApplications > 0 && `${stats.pendingApplications} new apps`}
                       {stats.pendingApplications > 0 && stats.pendingApprovals > 0 && ', '}
-                      {stats.pendingApprovals > 0 && `${stats.pendingApprovals} pending approval`}
+                      {stats.pendingApprovals > 0 && `${stats.pendingApprovals} pending`}
                     </p>
                   )}
                 </div>
-                <Users className="h-8 w-8 text-accent" />
+                <Users className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-accent" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-soft">
-            <CardContent className="p-6">
+          <Card className="border-0 shadow-soft sm:col-span-2 lg:col-span-1">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Lockers Online</p>
-                  <p className="text-2xl font-bold">{stats.activeLockers}/{stats.totalLockers}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Lockers Online</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.activeLockers}/{stats.totalLockers}</p>
                 </div>
-                <MapPin className="h-8 w-8 text-secondary" />
+                <MapPin className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-secondary" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Management Sections */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           <Card className="border-0 shadow-soft">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

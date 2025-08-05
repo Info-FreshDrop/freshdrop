@@ -31,10 +31,10 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-wave relative">
       {/* Owner Dashboard Link */}
       {user && userRole === 'owner' && (
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10">
           <Link to="/owner-dashboard">
-            <button className="bg-white/90 backdrop-blur-sm text-primary px-4 py-2 rounded-lg shadow-lg hover:bg-white transition-colors">
-              Owner Dashboard
+            <button className="bg-white/90 backdrop-blur-sm text-primary px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg hover:bg-white transition-colors">
+              Dashboard
             </button>
           </Link>
         </div>
