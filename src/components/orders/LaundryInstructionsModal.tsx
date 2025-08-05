@@ -72,6 +72,16 @@ export function LaundryInstructionsModal({ isOpen, onClose, onContinue }: Laundr
                   will be charged as two bags.
                 </p>
               </div>
+
+              <div className="flex items-start gap-3">
+                <Package className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                <p className="text-gray-700">
+                  <strong>Important:</strong> One bag is processed as one single load, regardless of the contents. 
+                  If you need to separate your laundry into different loads (e.g., whites and darks, or items 
+                  requiring different washing instructions), you would need to use multiple bags and place an 
+                  order for the correct amount of bags.
+                </p>
+              </div>
             </div>
           </div>
 
