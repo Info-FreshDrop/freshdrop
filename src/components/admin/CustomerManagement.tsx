@@ -51,6 +51,7 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('CustomerManagement component mounted');
     loadData();
     
     // Set up real-time subscription for profile updates
@@ -73,6 +74,7 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
 
   const loadData = async () => {
     try {
+      console.log('Loading customer management data...');
       setLoading(true);
       
       // Query profiles for customers with order counts
@@ -137,6 +139,7 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
       setCustomers(processedCustomers);
 
       // Load support tickets
+      console.log('Loading support tickets...');
       const { data: ticketsData, error: ticketsError } = await supabase
         .from('support_tickets')
         .select(`
@@ -150,6 +153,9 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
         `)
         .order('created_at', { ascending: false })
         .limit(100);
+
+      console.log('Support tickets data:', ticketsData);
+      console.log('Support tickets error:', ticketsError);
 
       if (ticketsError) {
         console.error("Error loading support tickets:", ticketsError);
@@ -231,13 +237,24 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={(value) => {
+        console.log('Tab clicked:', value);
+        setActiveTab(value);
+      }} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="customers" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="customers" 
+            className="flex items-center gap-2"
+            onClick={() => console.log('Customers tab clicked')}
+          >
             <Users className="h-4 w-4" />
             Customers ({customers.length})
           </TabsTrigger>
-          <TabsTrigger value="support" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="support" 
+            className="flex items-center gap-2"
+            onClick={() => console.log('Support tab clicked')}
+          >
             <MessageSquare className="h-4 w-4" />
             Support Tickets ({supportTickets.length})
           </TabsTrigger>
