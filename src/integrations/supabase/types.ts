@@ -1683,12 +1683,18 @@ export type Database = {
           approval_status: string | null
           availability_schedule: Json | null
           available_time_slots: string[] | null
+          base_pay_per_order_cents: number | null
+          bonus_pay_per_order_cents: number | null
           created_at: string
+          hourly_rate_cents: number | null
           id: string
           is_active: boolean | null
           is_online: boolean | null
           locker_access: string[] | null
           max_orders_per_day: number | null
+          pay_updated_at: string | null
+          pay_updated_by: string | null
+          payment_notes: string | null
           service_radius_miles: number | null
           signup_expires_at: string | null
           signup_token: string | null
@@ -1700,12 +1706,18 @@ export type Database = {
           approval_status?: string | null
           availability_schedule?: Json | null
           available_time_slots?: string[] | null
+          base_pay_per_order_cents?: number | null
+          bonus_pay_per_order_cents?: number | null
           created_at?: string
+          hourly_rate_cents?: number | null
           id?: string
           is_active?: boolean | null
           is_online?: boolean | null
           locker_access?: string[] | null
           max_orders_per_day?: number | null
+          pay_updated_at?: string | null
+          pay_updated_by?: string | null
+          payment_notes?: string | null
           service_radius_miles?: number | null
           signup_expires_at?: string | null
           signup_token?: string | null
@@ -1717,12 +1729,18 @@ export type Database = {
           approval_status?: string | null
           availability_schedule?: Json | null
           available_time_slots?: string[] | null
+          base_pay_per_order_cents?: number | null
+          bonus_pay_per_order_cents?: number | null
           created_at?: string
+          hourly_rate_cents?: number | null
           id?: string
           is_active?: boolean | null
           is_online?: boolean | null
           locker_access?: string[] | null
           max_orders_per_day?: number | null
+          pay_updated_at?: string | null
+          pay_updated_by?: string | null
+          payment_notes?: string | null
           service_radius_miles?: number | null
           signup_expires_at?: string | null
           signup_token?: string | null

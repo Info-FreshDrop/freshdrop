@@ -13,6 +13,7 @@ import { LiveOrderManagement } from "@/components/admin/LiveOrderManagement";
 import { OrderIssueTracking } from "@/components/admin/OrderIssueTracking";
 import { OperatorWorkloadBalance } from "@/components/admin/OperatorWorkloadBalance";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { OperatorPaymentManagement } from "@/components/admin/OperatorPaymentManagement";
 import { NotificationTesting } from "@/components/admin/NotificationTesting";
 import NotificationTemplateManagement from "@/components/admin/NotificationTemplateManagement";
 import { CustomerManagement } from "@/components/admin/CustomerManagement";
@@ -30,12 +31,13 @@ import {
   ArrowLeft,
   UserPlus,
   Bell,
-  MessageSquare
+  MessageSquare,
+  DollarSign
 } from "lucide-react";
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'order-history' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'order-history' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management' | 'operator-payments'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [liveOrders, setLiveOrders] = useState<any[]>([]);
   const [completedOrders, setCompletedOrders] = useState<any[]>([]);
@@ -309,6 +311,36 @@ export function OwnerDashboard() {
 
   if (currentView === 'notification-templates') {
     return <NotificationTemplateManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'operator-payments') {
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentView('dashboard')}
+              className="p-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Operator Payment Management
+            </h1>
+            <p className="text-muted-foreground">
+              Manage hourly rates and per-order compensation for all operators
+            </p>
+          </div>
+
+          <OperatorPaymentManagement />
+        </div>
+      </div>
+    );
   }
 
   if (currentView === 'customer-management') {
@@ -841,6 +873,33 @@ export function OwnerDashboard() {
                 </Button>
                 <Button variant="outline" className="w-full">
                   Preview Messages
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                Operator Payments
+              </CardTitle>
+              <CardDescription>
+                Manage hourly rates and per-order compensation
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('operator-payments')}
+                >
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Manage Payments
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Payment Reports
                 </Button>
               </div>
             </CardContent>
