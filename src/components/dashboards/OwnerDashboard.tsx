@@ -35,7 +35,7 @@ import {
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -216,6 +216,10 @@ export function OwnerDashboard() {
 
   if (currentView === 'promo-codes') {
     return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'promo-analytics') {
+    return <PromoCodeManagement onBack={() => setCurrentView('dashboard')} initialView="reports" />;
   }
 
   if (currentView === 'live-order-management') {
@@ -660,7 +664,11 @@ export function OwnerDashboard() {
                 >
                   Manage Codes
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('promo-analytics')}
+                >
                   Usage Analytics
                 </Button>
               </div>
