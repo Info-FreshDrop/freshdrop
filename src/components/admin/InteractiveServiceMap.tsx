@@ -249,60 +249,57 @@ export function InteractiveServiceMap({ onBack }: InteractiveServiceMapProps) {
     };
   }, [mapboxToken, serviceAreas, loading]);
 
-  // Function to get non-overlapping zip code boundaries
+  // Function to get truly non-overlapping zip code boundaries
   // In production, you'd use a geocoding service or zip code database
   const getZipCodeBounds = async (zipCode: string): Promise<any> => {
-    // For demo, create non-overlapping polygon boundaries based on zip code
-    // In production, you'd call a geocoding API or use a zip code boundaries dataset
-    const centerCoords = getMockCoordinatesForZip(zipCode);
+    // Create a systematic grid layout to ensure NO overlap
+    const position = getGridPosition(zipCode);
+    const centerCoords = position.coords;
     
-    // Create unique polygon size and offset to prevent overlapping
-    const zipNumber = parseInt(zipCode.replace(/\D/g, '')) || 0;
-    const baseOffset = 0.015; // Smaller base size
-    const uniqueOffset = baseOffset + (zipNumber % 5) * 0.003; // Vary size by zip code
+    // Use much smaller, consistent boundaries that guarantee no overlap
+    const cellSize = 0.008; // Small cell size to prevent overlap
+    const padding = 0.001; // Small padding between cells
+    const actualSize = cellSize - padding;
     
-    // Create unique shape rotation to minimize overlap
-    const rotation = (zipNumber % 8) * 45; // Rotate by 0, 45, 90, 135, 180, 225, 270, 315 degrees
-    const radians = (rotation * Math.PI) / 180;
-    
-    // Create a more unique polygon shape (hexagon with rotation)
-    const points = [];
-    const sides = 6; // Hexagon
-    for (let i = 0; i < sides; i++) {
-      const angle = (i * 2 * Math.PI) / sides + radians;
-      const x = centerCoords[0] + uniqueOffset * Math.cos(angle);
-      const y = centerCoords[1] + uniqueOffset * Math.sin(angle);
-      points.push([x, y]);
-    }
-    // Close the polygon
-    points.push(points[0]);
-    
+    // Create a simple square boundary that fits within the grid cell
     return {
       type: 'Polygon',
-      coordinates: [points]
+      coordinates: [[
+        [centerCoords[0] - actualSize/2, centerCoords[1] - actualSize/2], // SW
+        [centerCoords[0] + actualSize/2, centerCoords[1] - actualSize/2], // SE
+        [centerCoords[0] + actualSize/2, centerCoords[1] + actualSize/2], // NE
+        [centerCoords[0] - actualSize/2, centerCoords[1] + actualSize/2], // NW
+        [centerCoords[0] - actualSize/2, centerCoords[1] - actualSize/2]  // Close polygon
+      ]]
     };
   };
 
-  // Mock function to get coordinates for zip codes with better distribution
-  // In a real app, you'd use a geocoding service
-  const getMockCoordinatesForZip = (zipCode: string): [number, number] => {
-    // Springfield, MO area with better distribution to prevent overlapping
-    const baseCoords: [number, number] = [-93.26, 37.21];
+  // Function to assign each zip code to a unique grid position
+  const getGridPosition = (zipCode: string) => {
     const zipNumber = parseInt(zipCode.replace(/\D/g, '')) || 0;
+    const baseCoords: [number, number] = [-93.26, 37.21];
     
-    // Create a grid-like distribution to minimize overlap
-    const gridSize = 0.05; // Distance between grid points
-    const gridX = (zipNumber % 10) - 5; // -5 to 4
-    const gridY = (Math.floor(zipNumber / 10) % 10) - 5; // -5 to 4
+    // Create a systematic grid with guaranteed spacing
+    const gridCols = 8; // 8 columns
+    const cellSize = 0.008; // Size of each grid cell
+    const gridSpacing = 0.012; // Guaranteed spacing between centers
     
-    // Add some randomness but keep it within grid bounds
-    const randomOffsetX = (zipNumber % 7 - 3) * 0.005;
-    const randomOffsetY = ((zipNumber * 3) % 7 - 3) * 0.005;
+    // Calculate grid position (ensures each zip gets unique position)
+    const sortedAreas = [...serviceAreas].sort((a, b) => a.zip_code.localeCompare(b.zip_code));
+    const index = sortedAreas.findIndex(area => area.zip_code === zipCode);
     
-    return [
-      baseCoords[0] + gridX * gridSize + randomOffsetX,
-      baseCoords[1] + gridY * gridSize + randomOffsetY
-    ];
+    const col = index % gridCols;
+    const row = Math.floor(index / gridCols);
+    
+    // Calculate actual coordinates with guaranteed spacing
+    const x = baseCoords[0] + (col - gridCols/2) * gridSpacing;
+    const y = baseCoords[1] + (row - 2) * gridSpacing; // Center around base coords
+    
+    return {
+      coords: [x, y] as [number, number],
+      gridCol: col,
+      gridRow: row
+    };
   };
   
   const activeAreas = serviceAreas.filter(area => area.is_active);
