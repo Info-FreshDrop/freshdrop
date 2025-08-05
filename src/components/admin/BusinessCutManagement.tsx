@@ -35,6 +35,16 @@ interface RevenueSplitSettings {
   minimum_operator_cut_cents: number;
 }
 
+interface ClothingShopSettings {
+  business_percentage: number;
+  operator_percentage: number;
+}
+
+interface TipsSettings {
+  business_percentage: number;
+  operator_percentage: number;
+}
+
 interface PricingSettings {
   base_price_cents: number;
   per_bag_cents: number;
@@ -49,6 +59,8 @@ export function BusinessCutManagement() {
   const [loading, setLoading] = useState(false);
   const [editingRevenue, setEditingRevenue] = useState(false);
   const [editingPricing, setEditingPricing] = useState(false);
+  const [editingClothingShop, setEditingClothingShop] = useState(false);
+  const [editingTips, setEditingTips] = useState(false);
   
   const [revenueSplit, setRevenueSplit] = useState<RevenueSplitSettings>({
     business_percentage: 50,
@@ -56,6 +68,16 @@ export function BusinessCutManagement() {
     split_type: 'percentage',
     minimum_business_cut_cents: 0,
     minimum_operator_cut_cents: 0
+  });
+
+  const [clothingShopSplit, setClothingShopSplit] = useState<ClothingShopSettings>({
+    business_percentage: 100,
+    operator_percentage: 0
+  });
+
+  const [tipsSplit, setTipsSplit] = useState<TipsSettings>({
+    business_percentage: 0,
+    operator_percentage: 100
   });
 
   const [pricing, setPricing] = useState<PricingSettings>({
@@ -90,6 +112,16 @@ export function BusinessCutManagement() {
       const pricingSettings = data?.find(s => s.setting_key === 'pricing_structure');
       if (pricingSettings) {
         setPricing(pricingSettings.setting_value as unknown as PricingSettings);
+      }
+
+      const clothingShopSettings = data?.find(s => s.setting_key === 'clothing_shop_split');
+      if (clothingShopSettings) {
+        setClothingShopSplit(clothingShopSettings.setting_value as unknown as ClothingShopSettings);
+      }
+
+      const tipsSettings = data?.find(s => s.setting_key === 'tips_split');
+      if (tipsSettings) {
+        setTipsSplit(tipsSettings.setting_value as unknown as TipsSettings);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -165,6 +197,98 @@ export function BusinessCutManagement() {
         variant: "destructive"
       });
     }
+  };
+
+  const saveClothingShopSettings = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('business_settings')
+        .update({
+          setting_value: clothingShopSplit as any,
+          updated_by: user.id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('setting_key', 'clothing_shop_split');
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Clothing shop settings updated successfully"
+      });
+
+      setEditingClothingShop(false);
+      loadSettings();
+    } catch (error) {
+      console.error('Error updating clothing shop settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update clothing shop settings",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const saveTipsSettings = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('business_settings')
+        .update({
+          setting_value: tipsSplit as any,
+          updated_by: user.id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('setting_key', 'tips_split');
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Tips settings updated successfully"
+      });
+
+      setEditingTips(false);
+      loadSettings();
+    } catch (error) {
+      console.error('Error updating tips settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update tips settings",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleClothingShopPercentageChange = (field: 'business_percentage' | 'operator_percentage', value: number) => {
+    const newSplit = { ...clothingShopSplit };
+    newSplit[field] = value;
+    
+    // Auto-adjust the other percentage to maintain 100% total
+    if (field === 'business_percentage') {
+      newSplit.operator_percentage = 100 - value;
+    } else {
+      newSplit.business_percentage = 100 - value;
+    }
+    
+    setClothingShopSplit(newSplit);
+  };
+
+  const handleTipsPercentageChange = (field: 'business_percentage' | 'operator_percentage', value: number) => {
+    const newSplit = { ...tipsSplit };
+    newSplit[field] = value;
+    
+    // Auto-adjust the other percentage to maintain 100% total
+    if (field === 'business_percentage') {
+      newSplit.operator_percentage = 100 - value;
+    } else {
+      newSplit.business_percentage = 100 - value;
+    }
+    
+    setTipsSplit(newSplit);
   };
 
   const handleRevenuePercentageChange = (field: 'business_percentage' | 'operator_percentage', value: number) => {
@@ -327,23 +451,25 @@ export function BusinessCutManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg bg-muted/50">
                 <Label className="text-sm font-medium text-muted-foreground">Business Keeps</Label>
-                <p className="text-xl font-bold text-primary">100%</p>
-                <p className="text-xs text-muted-foreground mt-1">All clothing shop profits</p>
+                <p className="text-xl font-bold text-primary">{clothingShopSplit.business_percentage}%</p>
+                <p className="text-xs text-muted-foreground mt-1">Clothing shop revenue</p>
               </div>
               
               <div className="p-4 border rounded-lg bg-muted/50">
                 <Label className="text-sm font-medium text-muted-foreground">Operator Commission</Label>
-                <p className="text-xl font-bold text-muted-foreground">0%</p>
-                <p className="text-xs text-muted-foreground mt-1">No commission on clothing sales</p>
+                <p className="text-xl font-bold text-accent">{clothingShopSplit.operator_percentage}%</p>
+                <p className="text-xs text-muted-foreground mt-1">Commission on clothing sales</p>
               </div>
             </div>
             
-            <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>Note:</strong> Clothing shop revenue goes entirely to the business. 
-                Operators earn from laundry services only.
-              </p>
-            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setEditingClothingShop(true)}
+              className="w-full"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Clothing Shop Split
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -364,23 +490,25 @@ export function BusinessCutManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg bg-green-50 dark:bg-green-950/20">
                 <Label className="text-sm font-medium text-muted-foreground">Operator Receives</Label>
-                <p className="text-xl font-bold text-green-600">100%</p>
-                <p className="text-xs text-muted-foreground mt-1">All customer tips</p>
+                <p className="text-xl font-bold text-green-600">{tipsSplit.operator_percentage}%</p>
+                <p className="text-xs text-muted-foreground mt-1">Customer tips</p>
               </div>
               
               <div className="p-4 border rounded-lg bg-muted/50">
                 <Label className="text-sm font-medium text-muted-foreground">Business Share</Label>
-                <p className="text-xl font-bold text-muted-foreground">0%</p>
-                <p className="text-xs text-muted-foreground mt-1">No cut from tips</p>
+                <p className="text-xl font-bold text-primary">{tipsSplit.business_percentage}%</p>
+                <p className="text-xs text-muted-foreground mt-1">Cut from tips</p>
               </div>
             </div>
             
-            <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg">
-              <p className="text-sm text-green-800 dark:text-green-200">
-                <strong>Policy:</strong> All tips go directly to operators as a reward for excellent service. 
-                The business does not take any portion of tips.
-              </p>
-            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setEditingTips(true)}
+              className="w-full"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Tips Distribution
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -418,11 +546,11 @@ export function BusinessCutManagement() {
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span>Business:</span>
-                    <span className="font-medium">100%</span>
+                    <span className="font-medium">{clothingShopSplit.business_percentage}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Operator:</span>
-                    <span className="font-medium text-muted-foreground">0%</span>
+                    <span className="font-medium">{clothingShopSplit.operator_percentage}%</span>
                   </div>
                 </div>
               </div>
@@ -432,11 +560,11 @@ export function BusinessCutManagement() {
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span>Business:</span>
-                    <span className="font-medium text-muted-foreground">0%</span>
+                    <span className="font-medium">{tipsSplit.business_percentage}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Operator:</span>
-                    <span className="font-medium">100%</span>
+                    <span className="font-medium">{tipsSplit.operator_percentage}%</span>
                   </div>
                 </div>
               </div>
@@ -641,6 +769,174 @@ export function BusinessCutManagement() {
               Cancel
             </Button>
             <Button onClick={savePricingSettings}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Clothing Shop Edit Dialog */}
+      <Dialog open={editingClothingShop} onOpenChange={setEditingClothingShop}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Clothing Shop Revenue Split</DialogTitle>
+            <DialogDescription>
+              Configure how clothing shop sales revenue is distributed
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="clothing_business_percentage">Business Percentage</Label>
+                <div className="relative">
+                  <Input
+                    id="clothing_business_percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={clothingShopSplit.business_percentage}
+                    onChange={(e) => 
+                      handleClothingShopPercentageChange('business_percentage', parseInt(e.target.value) || 0)
+                    }
+                    className="pr-8"
+                  />
+                  <Percent className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="clothing_operator_percentage">Operator Percentage</Label>
+                <div className="relative">
+                  <Input
+                    id="clothing_operator_percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={clothingShopSplit.operator_percentage}
+                    onChange={(e) => 
+                      handleClothingShopPercentageChange('operator_percentage', parseInt(e.target.value) || 0)
+                    }
+                    className="pr-8"
+                  />
+                  <Percent className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-muted p-4 rounded-lg">
+              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                <Calculator className="h-4 w-4" />
+                Sample Clothing Sale
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>$50.00 clothing sale:</span>
+                  <span>
+                    Business: ${((50 * clothingShopSplit.business_percentage) / 100).toFixed(2)} | 
+                    Operator: ${((50 * clothingShopSplit.operator_percentage) / 100).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>$100.00 clothing sale:</span>
+                  <span>
+                    Business: ${((100 * clothingShopSplit.business_percentage) / 100).toFixed(2)} | 
+                    Operator: ${((100 * clothingShopSplit.operator_percentage) / 100).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingClothingShop(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveClothingShopSettings}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tips Edit Dialog */}
+      <Dialog open={editingTips} onOpenChange={setEditingTips}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Tips Distribution</DialogTitle>
+            <DialogDescription>
+              Configure how customer tips are distributed
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="tips_business_percentage">Business Percentage</Label>
+                <div className="relative">
+                  <Input
+                    id="tips_business_percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={tipsSplit.business_percentage}
+                    onChange={(e) => 
+                      handleTipsPercentageChange('business_percentage', parseInt(e.target.value) || 0)
+                    }
+                    className="pr-8"
+                  />
+                  <Percent className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="tips_operator_percentage">Operator Percentage</Label>
+                <div className="relative">
+                  <Input
+                    id="tips_operator_percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={tipsSplit.operator_percentage}
+                    onChange={(e) => 
+                      handleTipsPercentageChange('operator_percentage', parseInt(e.target.value) || 0)
+                    }
+                    className="pr-8"
+                  />
+                  <Percent className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-muted p-4 rounded-lg">
+              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                <Calculator className="h-4 w-4" />
+                Sample Tips Distribution
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>$5.00 tip:</span>
+                  <span>
+                    Business: ${((5 * tipsSplit.business_percentage) / 100).toFixed(2)} | 
+                    Operator: ${((5 * tipsSplit.operator_percentage) / 100).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>$10.00 tip:</span>
+                  <span>
+                    Business: ${((10 * tipsSplit.business_percentage) / 100).toFixed(2)} | 
+                    Operator: ${((10 * tipsSplit.operator_percentage) / 100).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingTips(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveTipsSettings}>
               Save Changes
             </Button>
           </DialogFooter>
