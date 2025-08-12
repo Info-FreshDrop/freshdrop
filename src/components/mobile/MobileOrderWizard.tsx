@@ -14,6 +14,10 @@ import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '@/lib/stripe';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
 import { LaundryInstructionsModal } from '../orders/LaundryInstructionsModal';
+import { IOSHeader } from '@/components/ui/ios-navigation';
+import { IOSPrimaryButton, IOSSecondaryButton, HapticButton } from '@/components/ui/haptic-button';
+import { IOSInput, IOSSelect, IOSTextarea, IOSFormSection } from '@/components/ui/ios-form';
+import { IOSScreen, IOSContent, IOSScrollView } from '@/components/ui/ios-layout';
 import { 
   ArrowLeft,
   ArrowRight,

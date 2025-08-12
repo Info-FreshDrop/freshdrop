@@ -18,6 +18,8 @@ import { TipModal } from "@/components/customer/TipModal";
 import { OrderMessaging } from "@/components/customer/OrderMessaging";
 import { ChatWidget } from "@/components/customer/ChatWidget";
 import { NotificationCenter } from "@/components/customer/NotificationCenter";
+import { HapticButton, IOSPrimaryButton } from "@/components/ui/haptic-button";
+import { NativeCapabilitiesStatus } from "@/components/mobile/NativeFeatures";
 import { 
   Package, 
   User, 
@@ -311,8 +313,11 @@ export function CustomerDashboard() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <TabsContent value="orders" className="flex-1 px-4 py-4 mt-0 pb-20">
             <div className="space-y-6">
+              {/* Native Features Status */}
+              <NativeCapabilitiesStatus />
+              
               {/* Quick Action Hero */}
-              <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-primary p-4 sm:p-6 text-white">
+              <div className="relative overflow-hidden rounded-xl bg-gradient-primary p-6 text-white">
                 <div className="absolute inset-0 opacity-20">
                   <img 
                     src={laundryServiceImg} 
@@ -321,25 +326,23 @@ export function CustomerDashboard() {
                   />
                 </div>
                 <div className="relative">
-                  <h2 className="text-lg sm:text-xl font-bold mb-2">Ready for fresh laundry?</h2>
-                  <p className="text-white/90 mb-3 sm:mb-4 text-sm">
+                  <h2 className="ios-title2 mb-2">Ready for fresh laundry?</h2>
+                  <p className="ios-subhead text-white/90 mb-4">
                     24-hour turnaround • Pickup & delivery
                   </p>
-                  <Button 
-                    variant="secondary"
-                    size="mobile"
-                    className="bg-white text-primary hover:bg-white/90 ios-button-primary"
+                  <IOSPrimaryButton 
                     onClick={() => setShowOrderPlacement(true)}
+                    className="bg-white text-primary hover:bg-white/90"
                   >
                     <Plus className="h-5 w-5 mr-2" />
                     Place New Order
-                  </Button>
+                  </IOSPrimaryButton>
                 </div>
               </div>
 
               {/* Active Orders */}
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Your Orders</h3>
+                <h3 className="ios-title3 text-foreground mb-4">Your Orders</h3>
                 {isLoadingOrders ? (
                   <Card className="p-6 text-center border-0 shadow-sm bg-white">
                     <p>Loading orders...</p>
@@ -358,14 +361,14 @@ export function CustomerDashboard() {
                     <p className="text-sm text-slate-600 mb-4">
                       Place your first order and experience our amazing service!
                     </p>
-                    <Button 
+                    <HapticButton 
                       variant="outline"
                       size="mobile"
                       onClick={() => setShowOrderPlacement(true)}
                       className="ios-button-secondary"
                     >
                       Get Started
-                    </Button>
+                    </HapticButton>
                   </Card>
                 ) : (
                   <div className="space-y-3">
