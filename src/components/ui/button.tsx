@@ -23,11 +23,13 @@ const buttonVariants = cva(
         operator: "border-2 border-primary text-primary bg-background hover:bg-primary hover:text-primary-foreground",
       },
       size: {
-        default: "h-9 md:h-10 px-3 md:px-4 py-2 text-sm",
-        sm: "h-8 md:h-9 px-2 md:px-3 text-xs md:text-sm",
-        lg: "h-10 md:h-11 px-4 md:px-8 text-sm md:text-base",
-        xl: "h-11 md:h-14 px-6 md:px-10 text-sm md:text-base font-semibold",
-        icon: "h-9 w-9 md:h-10 md:w-10",
+        default: "h-11 px-4 py-2 text-base", // iOS minimum 44pt (11 tailwind units = 44px)
+        sm: "h-10 px-3 text-sm", // 40px for secondary actions
+        lg: "h-12 px-6 text-base", // 48px for primary actions
+        xl: "h-14 px-8 text-lg font-semibold", // 56px for hero actions
+        icon: "h-11 w-11", // 44pt square for icon buttons
+        mobile: "h-12 px-6 py-3 text-base font-medium", // iOS-optimized mobile size
+        tab: "h-12 px-4 text-base", // iOS tab bar height
       },
     },
     defaultVariants: {

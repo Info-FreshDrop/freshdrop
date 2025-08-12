@@ -18,6 +18,20 @@ export default {
 			}
 		},
 		extend: {
+			spacing: {
+				'safe-top': 'env(safe-area-inset-top)',
+				'safe-bottom': 'env(safe-area-inset-bottom)',
+				'safe-left': 'env(safe-area-inset-left)',
+				'safe-right': 'env(safe-area-inset-right)',
+				'ios-header': '44px',
+				'ios-tab': '49px',
+			},
+			minHeight: {
+				'touch': '44px', // iOS minimum touch target
+			},
+			minWidth: {
+				'touch': '44px', // iOS minimum touch target
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

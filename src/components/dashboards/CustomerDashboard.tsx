@@ -52,17 +52,17 @@ function MessageButton({ order }: { order: any }) {
     <>
       <Button
         variant="outline"
-        size="sm"
-        className="flex-1 text-xs relative"
+        size="default"
+        className="flex-1 ios-touch relative"
         onClick={() => {
           setSelectedOrderForMessaging(order);
           setShowMessaging(true);
         }}
       >
-        <MessageCircle className="h-3 w-3 mr-1" />
+        <MessageCircle className="h-4 w-4 mr-2" />
         Message
         {unreadCount > 0 && (
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
             {unreadCount}
           </div>
         )}
@@ -270,36 +270,36 @@ export function CustomerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
-      {/* Professional Header */}
-      <div className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-md mx-auto px-3 sm:px-4 py-4 sm:py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <Avatar className="h-10 w-10 sm:h-12 sm:w-12 ring-2 ring-primary/10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col safe-area-full">
+      {/* iOS-Style Header */}
+      <div className="bg-background/95 backdrop-blur-sm border-b border-border safe-area-top">
+        <div className="max-w-md mx-auto px-4 py-3">
+          <div className="flex items-center justify-between min-h-[44px]">
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-12 w-12 ring-2 ring-primary/10">
                 <AvatarImage src={userProfile?.avatar_url} />
-                <AvatarFallback className="bg-gradient-primary text-white font-semibold text-sm sm:text-base">
+                <AvatarFallback className="bg-gradient-primary text-white font-semibold">
                   {getUserInitials()}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h1 className="text-lg sm:text-xl font-bold text-slate-900">
+                <h1 className="ios-title3 text-foreground">
                   Welcome back,
                 </h1>
-                <p className="text-base sm:text-lg text-primary font-medium">
+                <p className="ios-body text-primary font-medium">
                   {getUserDisplayName()}!
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-1 sm:space-x-2">
+            <div className="flex items-center space-x-2">
               <NotificationCenter />
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => setShowProfileModal(true)}
-                className="h-8 w-8 sm:h-10 sm:w-10 rounded-full p-0"
+                className="ios-touch"
               >
-                <Settings className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
+                <Settings className="h-5 w-5 text-muted-foreground" />
               </Button>
             </div>
           </div>
@@ -309,7 +309,7 @@ export function CustomerDashboard() {
       {/* Main Content */}
       <div className="flex-1 max-w-md mx-auto w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <TabsContent value="orders" className="flex-1 px-3 sm:px-4 py-4 sm:py-6 mt-0">
+          <TabsContent value="orders" className="flex-1 px-4 py-4 mt-0 pb-20">
             <div className="space-y-6">
               {/* Quick Action Hero */}
               <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-primary p-4 sm:p-6 text-white">
@@ -327,11 +327,11 @@ export function CustomerDashboard() {
                   </p>
                   <Button 
                     variant="secondary"
-                    size="default"
-                    className="bg-white text-primary hover:bg-white/90 font-semibold text-sm sm:text-base"
+                    size="mobile"
+                    className="bg-white text-primary hover:bg-white/90 ios-button-primary"
                     onClick={() => setShowOrderPlacement(true)}
                   >
-                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                    <Plus className="h-5 w-5 mr-2" />
                     Place New Order
                   </Button>
                 </div>
@@ -360,7 +360,9 @@ export function CustomerDashboard() {
                     </p>
                     <Button 
                       variant="outline"
+                      size="mobile"
                       onClick={() => setShowOrderPlacement(true)}
+                      className="ios-button-secondary"
                     >
                       Get Started
                     </Button>
@@ -406,15 +408,15 @@ export function CustomerDashboard() {
                           <div className="flex gap-2 mt-3">
                             <Button
                               variant="outline"
-                              size="sm"
-                              className="flex-1 text-xs"
+                              size="default"
+                              className="flex-1 ios-touch"
                               onClick={() => {
                                 console.log('Track Order clicked for order:', order.id);
                                 setSelectedOrderForTracking(order);
                                 setShowOrderTracking(true);
                               }}
                             >
-                              <Package className="h-3 w-3 mr-1" />
+                              <Package className="h-4 w-4 mr-2" />
                               Track Order
                             </Button>
                             {order.washer_id && <MessageButton order={order} />}
@@ -422,26 +424,26 @@ export function CustomerDashboard() {
                               <>
                                 <Button
                                   variant="outline"
-                                  size="sm"
-                                  className="flex-1 text-xs"
+                                  size="default"
+                                  className="flex-1 ios-touch"
                                   onClick={() => {
                                     setSelectedOrder(order);
                                     setShowTipModal(true);
                                   }}
                                 >
-                                  <Heart className="h-3 w-3 mr-1" />
+                                  <Heart className="h-4 w-4 mr-2" />
                                   Tip
                                 </Button>
                                 <Button
                                   variant="outline"
-                                  size="sm"
-                                  className="flex-1 text-xs"
+                                  size="default"
+                                  className="flex-1 ios-touch"
                                   onClick={() => {
                                     setSelectedOrder(order);
                                     setShowRatingModal(true);
                                   }}
                                 >
-                                  <Star className="h-3 w-3 mr-1" />
+                                  <Star className="h-4 w-4 mr-2" />
                                   Rate
                                 </Button>
                               </>
@@ -489,22 +491,22 @@ export function CustomerDashboard() {
                <div>
                  <h3 className="text-lg font-semibold text-slate-900 mb-3">Quick Actions</h3>
                  <div className="grid grid-cols-2 gap-3">
-                   <Button
-                     variant="outline"
-                     className="flex items-center justify-center gap-2 h-16 border-dashed"
-                     onClick={() => setShowClothesShop(true)}
-                   >
-                     <ShoppingBag className="h-5 w-5" />
-                     <span className="text-sm font-medium">Shop</span>
-                   </Button>
-                   <Button
-                     variant="outline"
-                     className="flex items-center justify-center gap-2 h-16 border-dashed"
-                     onClick={() => setShowOrderHistory(true)}
-                   >
-                     <History className="h-5 w-5" />
-                     <span className="text-sm font-medium">History</span>
-                   </Button>
+                    <Button
+                      variant="outline"
+                      className="flex items-center justify-center gap-2 h-16 border-dashed ios-touch"
+                      onClick={() => setShowClothesShop(true)}
+                    >
+                      <ShoppingBag className="h-5 w-5" />
+                      <span className="ios-callout">Shop</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex items-center justify-center gap-2 h-16 border-dashed ios-touch"
+                      onClick={() => setShowOrderHistory(true)}
+                    >
+                      <History className="h-5 w-5" />
+                      <span className="ios-callout">History</span>
+                    </Button>
                  </div>
                </div>
 
@@ -559,29 +561,29 @@ export function CustomerDashboard() {
             </div>
           </TabsContent>
 
-          {/* Bottom Navigation */}
-          <div className="border-t border-slate-200 bg-white safe-area-bottom">
-            <TabsList className="grid w-full grid-cols-3 h-auto p-1 sm:p-2 bg-transparent">
+          {/* iOS-Style Bottom Navigation */}
+          <div className="ios-tab-bar border-t border-border bg-background/95 backdrop-blur-sm safe-area-bottom">
+            <TabsList className="grid w-full grid-cols-3 h-full bg-transparent">
               <TabsTrigger 
                 value="orders" 
-                className="flex flex-col items-center gap-1 py-2 sm:py-3 px-1 sm:px-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+                className="ios-touch flex flex-col items-center justify-center gap-1 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
               >
-                <Package className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-xs font-medium">Orders</span>
+                <Package className="h-5 w-5" />
+                <span className="ios-caption font-medium">Orders</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="payments"
-                className="flex flex-col items-center gap-1 py-2 sm:py-3 px-1 sm:px-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+                className="ios-touch flex flex-col items-center justify-center gap-1 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
               >
-                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-xs font-medium">Payments</span>
+                <CreditCard className="h-5 w-5" />
+                <span className="ios-caption font-medium">Payments</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="referrals"
-                className="flex flex-col items-center gap-1 py-2 sm:py-3 px-1 sm:px-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+                className="ios-touch flex flex-col items-center justify-center gap-1 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
               >
-                <Gift className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-xs font-medium">Referrals</span>
+                <Gift className="h-5 w-5" />
+                <span className="ios-caption font-medium">Referrals</span>
               </TabsTrigger>
             </TabsList>
           </div>

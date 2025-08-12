@@ -177,13 +177,69 @@ All colors MUST be HSL.
   @apply text-destructive border-destructive bg-destructive/5;
 }
 
-/* Mobile-friendly utilities */
+/* iOS Safe Area Support */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-@media (max-width: 768px) {
-  .mobile-spacing {
-    padding: 0.75rem;
-  }
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+.safe-area-full {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* iOS Typography Scale */
+.ios-title1 { @apply text-2xl font-bold leading-tight; }
+.ios-title2 { @apply text-xl font-semibold leading-tight; }
+.ios-title3 { @apply text-lg font-semibold leading-tight; }
+.ios-headline { @apply text-base font-semibold leading-tight; }
+.ios-body { @apply text-base leading-relaxed; }
+.ios-callout { @apply text-sm font-medium leading-relaxed; }
+.ios-subhead { @apply text-sm leading-relaxed; }
+.ios-footnote { @apply text-xs leading-relaxed; }
+.ios-caption { @apply text-xs leading-tight; }
+
+/* iOS Touch Targets */
+.ios-touch {
+  min-height: 44px;
+  min-width: 44px;
+  @apply flex items-center justify-center;
+}
+
+/* iOS Navigation */
+.ios-nav-header {
+  height: 44px;
+  @apply bg-background border-b border-border;
+}
+
+.ios-tab-bar {
+  height: 49px;
+  @apply bg-background border-t border-border;
+}
+
+/* Mobile-friendly utilities */
+.mobile-spacing {
+  @apply px-4 py-3 sm:px-6 sm:py-4;
+}
+
+/* iOS Button Styles */
+.ios-button-primary {
+  @apply h-11 px-6 rounded-lg bg-primary text-primary-foreground font-medium text-base;
+}
+
+.ios-button-secondary {
+  @apply h-11 px-6 rounded-lg bg-secondary text-secondary-foreground font-medium text-base;
 }
