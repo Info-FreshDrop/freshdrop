@@ -416,6 +416,14 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         setPaymentClientSecret(data.clientSecret);
         setOrderId(data.orderId);
         setIsLoading(false);
+      } else if (data?.isFreeOrder) {
+        console.log('Free order placed successfully');
+        toast({
+          title: "Order Placed Successfully!",
+          description: "Your order has been placed successfully - no payment required!",
+        });
+        onBack(); // Go back to dashboard
+        setIsLoading(false);
       } else {
         console.error('No client secret received:', data);
         throw new Error("Failed to create payment intent");

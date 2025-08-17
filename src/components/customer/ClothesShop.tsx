@@ -14,7 +14,8 @@ import {
   ArrowLeft,
   Plus,
   Minus,
-  Heart
+  Heart,
+  Loader2
 } from "lucide-react";
 
 interface ClothesShopProps {
@@ -169,6 +170,83 @@ export function ClothesShop({ onBack }: ClothesShopProps) {
 
   const getCartTotal = () => {
     return cart.reduce((total, item) => total + (item.price_cents * item.quantity), 0);
+  };
+
+  const handleCheckout = async () => {
+    if (cart.length === 0) {
+      toast({
+        title: "Cart Empty",
+        description: "Please add items to your cart before checking out.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const orderData = {
+        pickup_type: 'pickup_delivery' as const,
+        service_type: 'wash_fold' as const,
+        zip_code: '65804', // Default zip - should be from user profile/form
+        is_express: false,
+        pickup_address: '123 Main St, Springfield, MO 65804', // Should be from user profile/form
+        delivery_address: '123 Main St, Springfield, MO 65804', // Should be from user profile/form
+        special_instructions: 'Shop items only - no regular laundry',
+        bag_count: 0, // No laundry bags for shop-only orders
+        items: [{ shop_items: cart }],
+        total_amount_cents: getCartTotal(),
+        shop_items: cart,
+        pickup_window_start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+        pickup_window_end: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(), // Tomorrow +2h
+        delivery_window_start: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), // Day after
+        delivery_window_end: new Date(Date.now() + 50 * 60 * 60 * 1000).toISOString(), // Day after +2h
+      };
+
+      const { data, error } = await supabase.functions.invoke('create-order-with-payment', {
+        body: { orderData }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.clientSecret) {
+        // For now, just redirect to a simple success - in a real app you'd integrate Stripe payment
+        toast({
+          title: "Order Created!",
+          description: "Your shop order has been created. Redirecting to payment...",
+        });
+        
+        // Clear cart after successful order creation
+        setCart([]);
+        
+        // In a real implementation, you'd redirect to Stripe payment or show payment modal
+        // For now, just show success
+        setTimeout(() => {
+          toast({
+            title: "Payment Integration Required",
+            description: "This demo shows order creation. Full Stripe payment integration would happen here.",
+          });
+        }, 2000);
+      } else if (data?.isFreeOrder) {
+        toast({
+          title: "Order Placed Successfully!",
+          description: "Your order has been placed successfully - no payment required!",
+        });
+        setCart([]);
+      } else {
+        throw new Error("Unexpected response from payment service");
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast({
+        title: "Checkout Failed",
+        description: "Failed to process your order. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const categories = Array.from(new Set(items.map(item => item.category)));
@@ -407,8 +485,20 @@ export function ClothesShop({ onBack }: ClothesShopProps) {
                     <span>${(getCartTotal() / 100).toFixed(2)}</span>
                   </div>
                 </div>
-                <Button variant="hero" className="w-full mt-3">
-                  Checkout
+                <Button 
+                  variant="hero" 
+                  className="w-full mt-3"
+                  onClick={handleCheckout}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Checkout'
+                  )}
                 </Button>
               </CardContent>
             </Card>
