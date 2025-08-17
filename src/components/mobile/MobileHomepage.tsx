@@ -17,6 +17,7 @@ import { WasherDashboard } from '@/components/washers/WasherDashboard';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Clock, Shield, Star, Smartphone, Droplets, Timer, Users } from 'lucide-react';
+import freshDropLogo from '@/assets/freshdrop-logo-transparent.png';
 
 interface Service {
   id: string;
@@ -201,6 +202,13 @@ export function MobileHomepage() {
             <IOSSection>
               <div className="text-center py-8">
                 <div className="mb-6">
+                  <div className="flex justify-center mb-6">
+                    <img 
+                      src={freshDropLogo} 
+                      alt="FreshDrop Logo" 
+                      className="h-16 w-auto"
+                    />
+                  </div>
                   <h1 className="ios-title1 mb-4">Fresh Laundry, Delivered</h1>
                   <p className="ios-body text-muted-foreground mb-6">
                     Professional laundry service with smart locker pickup and door-to-door delivery

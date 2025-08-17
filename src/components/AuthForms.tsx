@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import freshDropLogo from "@/assets/freshdrop-logo-transparent.png";
 
 interface AuthFormsProps {
   onOperatorLogin: () => void;
@@ -188,6 +189,13 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
 
   return (
     <div className="w-full max-w-md mx-auto">
+      <div className="text-center mb-6">
+        <img 
+          src={freshDropLogo} 
+          alt="FreshDrop Logo" 
+          className="h-12 w-auto mx-auto mb-4"
+        />
+      </div>
       <Tabs defaultValue="signin" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger value="signin">Sign In</TabsTrigger>
