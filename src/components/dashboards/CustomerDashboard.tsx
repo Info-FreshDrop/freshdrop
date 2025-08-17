@@ -1,51 +1,5 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RatingModal } from "@/components/customer/RatingModal";
-import { OrderStatusProgress } from "@/components/customer/OrderStatusProgress"; 
-import { CouponsCarousel } from "@/components/customer/CouponsCarousel";
-import { OrderTracking } from "@/components/orders/OrderTracking";
-import { ClothesShop } from "@/components/customer/ClothesShop";
-import { ReferralInterface } from "@/components/customer/ReferralInterface";
-import { PaymentMethods } from "@/components/customer/PaymentMethods";
-import { MobileOrderWizard } from "@/components/mobile/MobileOrderWizard";
-import { OrderHistory } from "@/components/orders/OrderHistory";
-import { ProfileModal } from "@/components/customer/ProfileModal";
-import { TipModal } from "@/components/customer/TipModal";
-import { OrderMessaging } from "@/components/customer/OrderMessaging";
-import { ChatWidget } from "@/components/customer/ChatWidget";
-import { NotificationCenter } from "@/components/customer/NotificationCenter";
-import { HapticButton, IOSPrimaryButton } from "@/components/ui/haptic-button";
-import { NativeCapabilitiesStatus } from "@/components/mobile/NativeFeatures";
-import { 
-  Package, 
-  User, 
-  Settings, 
-  ArrowLeft, 
-  Clock,
-  MapPin,
-  Plus,
-  Share2,
-  Star,
-  Heart,
-  CreditCard,
-  Gift,
-  LogOut,
-  ShoppingBag,
-  History,
-  MessageCircle
-} from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import laundryServiceImg from "@/assets/laundry-service.jpg";
-import cleanLaundryImg from "@/assets/clean-laundry.jpg";
-import laundryDeliveryImg from "@/assets/laundry-delivery.jpg";
-
-function MessageButton({ order }: { order: any }) {
+// Re-export the iOS version for complete transformation
+export { CustomerDashboard } from './CustomerDashboardiOS';
   const unreadCount = useUnreadMessages(order.id);
   const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<any>(null);
   const [showMessaging, setShowMessaging] = useState(false);
