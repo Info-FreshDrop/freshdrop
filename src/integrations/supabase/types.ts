@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1571,6 +1571,51 @@ export type Database = {
         }
         Relationships: []
       }
+      services: {
+        Row: {
+          base_price_cents: number
+          created_at: string
+          description: string
+          display_order: number
+          duration_hours: number
+          icon_name: string
+          id: string
+          is_active: boolean
+          name: string
+          price_display: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          base_price_cents?: number
+          created_at?: string
+          description: string
+          display_order?: number
+          duration_hours?: number
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price_display?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          base_price_cents?: number
+          created_at?: string
+          description?: string
+          display_order?: number
+          duration_hours?: number
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_display?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -1908,9 +1953,9 @@ export type Database = {
       }
       change_user_role: {
         Args: {
-          target_user_id: string
           new_role: Database["public"]["Enums"]["app_role"]
           reason?: string
+          target_user_id: string
         }
         Returns: boolean
       }
@@ -1920,16 +1965,16 @@ export type Database = {
       }
       has_role: {
         Args: {
-          user_uuid: string
           check_role: Database["public"]["Enums"]["app_role"]
+          user_uuid: string
         }
         Returns: boolean
       }
       insert_order_message: {
         Args: {
+          p_message: string
           p_order_id: string
           p_recipient_washer_id: string
-          p_message: string
         }
         Returns: Json
       }
@@ -1939,26 +1984,26 @@ export type Database = {
       }
       send_order_notification: {
         Args: {
-          p_notification_type: string
           p_customer_id: string
+          p_message: string
+          p_notification_type: string
           p_operator_id: string
           p_order_id: string
-          p_subject: string
-          p_message: string
           p_sender_name: string
+          p_subject: string
         }
         Returns: undefined
       }
       validate_promo_code_usage: {
         Args: {
           code_to_check: string
-          user_id_to_check: string
           order_total_cents: number
+          user_id_to_check: string
         }
         Returns: {
-          is_valid: boolean
           discount_amount_cents: number
           error_message: string
+          is_valid: boolean
         }[]
       }
     }
