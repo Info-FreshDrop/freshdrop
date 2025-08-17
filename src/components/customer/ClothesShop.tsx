@@ -186,19 +186,59 @@ export function ClothesShop({ onBack }: ClothesShopProps) {
     try {
       console.log('Creating shop checkout with cart:', cart);
 
-      const { data, error } = await supabase.functions.invoke('create-shop-checkout', {
-        body: { cartItems: cart }
+      // Get default laundry preferences for shop-only orders
+      const { data: defaultPrefs } = await supabase
+        .from('laundry_preferences')
+        .select('*')
+        .eq('is_default', true)
+        .eq('is_active', true);
+
+      const soapPref = defaultPrefs?.find(p => p.category === 'soap');
+      const washTempPref = defaultPrefs?.find(p => p.category === 'wash_temp');
+      const dryTempPref = defaultPrefs?.find(p => p.category === 'dry_temp');
+
+      // Create order data for shop items - mark it as shop-only order
+      const orderData = {
+        pickup_type: 'pickup_delivery' as const,
+        service_type: 'wash_fold' as const,
+        zip_code: '65804',
+        is_express: false,
+        pickup_address: '123 Main St, Springfield, MO 65804',
+        delivery_address: '123 Main St, Springfield, MO 65804',
+        special_instructions: 'Shop items only - no regular laundry',
+        bag_count: 0,
+        items: [{ shop_items: cart }],
+        total_amount_cents: getCartTotal(),
+        discount_amount_cents: 0,
+        soap_preference_id: soapPref?.id || null,
+        wash_temp_preference_id: washTempPref?.id || null,
+        dry_temp_preference_id: dryTempPref?.id || null,
+        pickup_window_start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        pickup_window_end: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(),
+        delivery_window_start: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+        delivery_window_end: new Date(Date.now() + 50 * 60 * 60 * 1000).toISOString(),
+        promoCode: null,
+        // Mark this as a shop order for special handling
+        order_type: 'shop'
+      };
+
+      const { data, error } = await supabase.functions.invoke('create-order-with-payment', {
+        body: { orderData }
       });
 
       if (error) {
         throw error;
       }
 
-      if (data?.success && data?.checkout_url) {
-        // Redirect to Stripe Checkout
-        window.location.href = data.checkout_url;
+      if (data?.success && data?.clientSecret) {
+        // Clear cart immediately since order creation was successful
+        setCart([]);
+        
+        // Redirect to payment success page with the payment intent for Stripe payment
+        const paymentUrl = `/payment-success?payment_intent=${data.paymentIntentId}&order_id=${data.orderId}&client_secret=${data.clientSecret}`;
+        window.location.href = paymentUrl;
       } else {
-        throw new Error("Failed to create checkout session");
+        throw new Error("Failed to create order");
       }
     } catch (error) {
       console.error('Shop checkout error:', error);
