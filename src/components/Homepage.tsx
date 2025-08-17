@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileHomepage } from "./mobile/MobileHomepage";
 import { HeroSection } from "./HeroSection";
 import { AuthForms } from "./AuthForms";
 import { OperatorLogin } from "./OperatorLogin";
@@ -20,6 +22,12 @@ export function Homepage() {
   const [showOperatorLogin, setShowOperatorLogin] = useState(false);
   const [timeoutReached, setTimeoutReached] = useState(false);
   const { user, userRole, loading } = useAuth();
+  const isMobile = useIsMobile();
+
+  // Use mobile-first design for all screen sizes to meet App Store requirements
+  if (isMobile || window.innerWidth <= 768) {
+    return <MobileHomepage />;
+  }
   
   useEffect(() => {
     // Increase timeout to 10 seconds and add more detailed logging
