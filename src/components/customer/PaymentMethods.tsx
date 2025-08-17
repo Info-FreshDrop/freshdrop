@@ -16,25 +16,10 @@ import {
   Loader2
 } from "lucide-react";
 
-let stripePromise: Promise<any> | null = null;
+// Use your actual Stripe publishable key directly for now to test
+const stripePromise = loadStripe("pk_test_51QIJ7mBfJbF8BXgVFFyNaZEYmGgJY5t8QNe6o8KuFeCeJ25KKU6y3R1uXL7x8x7EFOmnNLVLPECnyHOKDhbotd5W00jRoNZqSo");
 
-const getStripePromise = async () => {
-  if (!stripePromise) {
-    try {
-      const { data } = await supabase.functions.invoke('get-stripe-publishable-key');
-      if (data?.publishableKey) {
-        stripePromise = loadStripe(data.publishableKey);
-      } else {
-        console.error('No publishable key received from function');
-        throw new Error('Failed to get Stripe publishable key');
-      }
-    } catch (error) {
-      console.error('Error getting Stripe key:', error);
-      throw error;
-    }
-  }
-  return stripePromise;
-};
+console.log('Stripe promise created:', stripePromise);
 
 interface PaymentMethod {
   id: string;
@@ -54,24 +39,12 @@ export function PaymentMethods() {
   const [loading, setLoading] = useState(false);
   const [showAddCard, setShowAddCard] = useState(false);
   const [deletingMethod, setDeletingMethod] = useState<string | null>(null);
-  const [stripeReady, setStripeReady] = useState(false);
 
-  useEffect(() => {
-    // Initialize Stripe
-    getStripePromise().then(() => {
-      setStripeReady(true);
-    }).catch(error => {
-      console.error('Failed to initialize Stripe:', error);
-      toast({
-        title: "Error",
-        description: "Failed to initialize payment system",
-        variant: "destructive"
-      });
-    });
-  }, []);
+  console.log('PaymentMethods component mounted, user:', user?.id);
 
   useEffect(() => {
     if (user) {
+      console.log('Loading payment methods for user:', user.id);
       loadPaymentMethods();
     }
   }, [user]);
@@ -364,7 +337,7 @@ export function PaymentMethods() {
             </DialogDescription>
           </DialogHeader>
           
-          <Elements stripe={stripeReady ? getStripePromise() : null}>
+          <Elements stripe={stripePromise}>
             <AddCardForm 
               onSuccess={addPaymentMethod}
               onCancel={() => setShowAddCard(false)}
@@ -376,15 +349,16 @@ export function PaymentMethods() {
   );
 }
 
-// Component for adding a new card
 function AddCardForm({ onSuccess, onCancel }: { 
-  onSuccess: (paymentMethodId: string, cardInfo: any) => void;
+  onSuccess: (paymentMethodId: string, cardInfo: any) => Promise<void>;
   onCancel: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  console.log('AddCardForm mounted, stripe loaded:', !!stripe, 'elements loaded:', !!elements);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
