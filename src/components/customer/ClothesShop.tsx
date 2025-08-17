@@ -184,8 +184,6 @@ export function ClothesShop({ onBack }: ClothesShopProps) {
 
     setIsLoading(true);
     try {
-      console.log('Creating shop checkout with cart:', cart);
-
       // Get default laundry preferences for shop-only orders
       const { data: defaultPrefs } = await supabase
         .from('laundry_preferences')
@@ -197,29 +195,26 @@ export function ClothesShop({ onBack }: ClothesShopProps) {
       const washTempPref = defaultPrefs?.find(p => p.category === 'wash_temp');
       const dryTempPref = defaultPrefs?.find(p => p.category === 'dry_temp');
 
-      // Create order data for shop items - mark it as shop-only order
       const orderData = {
         pickup_type: 'pickup_delivery' as const,
         service_type: 'wash_fold' as const,
-        zip_code: '65804',
+        zip_code: '65804', // Default zip - should be from user profile/form
         is_express: false,
-        pickup_address: '123 Main St, Springfield, MO 65804',
-        delivery_address: '123 Main St, Springfield, MO 65804',
+        pickup_address: '123 Main St, Springfield, MO 65804', // Should be from user profile/form
+        delivery_address: '123 Main St, Springfield, MO 65804', // Should be from user profile/form
         special_instructions: 'Shop items only - no regular laundry',
-        bag_count: 0,
+        bag_count: 0, // No laundry bags for shop-only orders
         items: [{ shop_items: cart }],
         total_amount_cents: getCartTotal(),
         discount_amount_cents: 0,
         soap_preference_id: soapPref?.id || null,
         wash_temp_preference_id: washTempPref?.id || null,
         dry_temp_preference_id: dryTempPref?.id || null,
-        pickup_window_start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        pickup_window_end: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(),
-        delivery_window_start: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-        delivery_window_end: new Date(Date.now() + 50 * 60 * 60 * 1000).toISOString(),
-        promoCode: null,
-        // Mark this as a shop order for special handling
-        order_type: 'shop'
+        pickup_window_start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+        pickup_window_end: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(), // Tomorrow +2h
+        delivery_window_start: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), // Day after
+        delivery_window_end: new Date(Date.now() + 50 * 60 * 60 * 1000).toISOString(), // Day after +2h
+        promoCode: null
       };
 
       const { data, error } = await supabase.functions.invoke('create-order-with-payment', {
@@ -230,21 +225,32 @@ export function ClothesShop({ onBack }: ClothesShopProps) {
         throw error;
       }
 
-      if (data?.success && data?.clientSecret) {
-        // Clear cart immediately since order creation was successful
-        setCart([]);
-        
-        // Redirect to payment success page with the payment intent for Stripe payment
-        const paymentUrl = `/payment-success?payment_intent=${data.paymentIntentId}&order_id=${data.orderId}&client_secret=${data.clientSecret}`;
+      if (data?.clientSecret) {
+        // Redirect to payment success page with the client secret for Stripe payment
+        const paymentUrl = `/payment-success?payment_intent=${data.paymentIntentId}&order_id=${data.orderId}`;
         window.location.href = paymentUrl;
+        
+        toast({
+          title: "Redirecting to Payment...",
+          description: "Your order has been created. Processing payment...",
+        });
+        
+        // Clear cart after successful order creation
+        setCart([]);
+      } else if (data?.isFreeOrder) {
+        toast({
+          title: "Order Placed Successfully!",
+          description: "Your order has been placed successfully - no payment required!",
+        });
+        setCart([]);
       } else {
-        throw new Error("Failed to create order");
+        throw new Error("Unexpected response from payment service");
       }
     } catch (error) {
-      console.error('Shop checkout error:', error);
+      console.error('Checkout error:', error);
       toast({
         title: "Checkout Failed",
-        description: error instanceof Error ? error.message : "Failed to process your order. Please try again.",
+        description: "Failed to process your order. Please try again.",
         variant: "destructive",
       });
     } finally {

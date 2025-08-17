@@ -55,11 +55,15 @@ serve(async (req) => {
       );
     }
 
-    // Get metadata from payment intent
+    // Get order ID from payment intent metadata
     const orderId = paymentIntent.metadata.order_id;
     const userId = paymentIntent.metadata.user_id;
     
-    console.log("Payment Intent metadata:", { orderId, userId });
+    if (!orderId || !userId) {
+      throw new Error("Order ID not found in payment intent metadata");
+    }
+
+    console.log("Order ID from metadata:", orderId);
 
     // Create Supabase service client
     const supabaseService = createClient(
@@ -68,155 +72,53 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    let finalOrderId = orderId;
-
-    // If no order exists (new flow), look for pending order data
-    if (!orderId && userId) {
-      console.log("Looking for pending order data for payment intent:", paymentIntentId);
-      
-      // Retrieve order data from pending_orders table
-      const { data: pendingOrder, error: pendingError } = await supabaseService
-        .from("pending_orders")
-        .select("order_data")
-        .eq("payment_intent_id", paymentIntentId)
-        .eq("user_id", userId)
-        .single();
-
-      if (pendingError || !pendingOrder) {
-        console.error("Error retrieving pending order:", pendingError);
-        throw new Error("No pending order found for this payment");
-      }
-
-      const orderData = pendingOrder.order_data;
-      console.log("Creating order after payment confirmation (secure flow)");
-      
-      // Create the order record
-      const orderRecord = {
-        customer_id: userId,
-        pickup_type: orderData.pickup_type,
-        service_type: orderData.service_type,
-        pickup_address: orderData.pickup_address,
-        delivery_address: orderData.delivery_address,
-        zip_code: orderData.zip_code,
-        is_express: orderData.is_express,
-        pickup_window_start: orderData.pickup_window_start,
-        pickup_window_end: orderData.pickup_window_end,
-        delivery_window_start: orderData.delivery_window_start,
-        delivery_window_end: orderData.delivery_window_end,
-        bag_count: orderData.bag_count,
-        soap_preference_id: orderData.soap_preference_id,
-        wash_temp_preference_id: orderData.wash_temp_preference_id,
-        dry_temp_preference_id: orderData.dry_temp_preference_id,
-        special_instructions: orderData.special_instructions,
-        items: orderData.items,
-        status: 'unclaimed',
-        promo_code: orderData.promoCode,
-        discount_amount_cents: orderData.discount_amount_cents || 0,
-        total_amount_cents: paymentIntent.amount,
-        stripe_payment_intent_id: paymentIntentId,
-        created_at: new Date().toISOString(),
-      };
-
-      const { data: newOrder, error: createError } = await supabaseService
-        .from("orders")
-        .insert(orderRecord)
-        .select()
-        .single();
-
-      if (createError) {
-        console.error("Error creating order after payment:", createError);
-        throw new Error("Failed to create order after payment confirmation");
-      }
-
-      finalOrderId = newOrder.id;
-      console.log("Order created successfully after payment:", finalOrderId);
-
-      // Record promo code usage if applicable
-      if (orderData.promoCode) {
-        try {
-          const { data: promoCode } = await supabaseService
-            .from('promo_codes')
-            .select('id')
-            .eq('code', orderData.promoCode)
-            .single();
-
-          if (promoCode) {
-            await supabaseService
-              .from('promo_code_usage')
-              .insert({
-                promo_code_id: promoCode.id,
-                user_id: userId,
-                order_id: finalOrderId,
-                discount_amount_cents: orderData.discount_amount_cents || 0
-              });
-          }
-        } catch (promoError) {
-          console.error("Error recording promo code usage:", promoError);
-        }
-      }
-
-      // Clean up the pending order record
-      await supabaseService
-        .from("pending_orders")
-        .delete()
-        .eq("payment_intent_id", paymentIntentId)
-        .eq("user_id", userId);
-
-      console.log("Cleaned up pending order record");
-
-    } else if (orderId) {
-      // Existing flow - update existing order
-      console.log("Updating existing order status:", orderId);
-      
-      const { data: updatedOrder, error: updateError } = await supabaseService
-        .from("orders")
+    // Update order status to unclaimed (ready for operator pickup)
+    const { data: updatedOrder, error: updateError } = await supabaseService
+      .from("orders")
         .update({ 
           status: 'unclaimed',
           updated_at: new Date().toISOString()
         })
-        .eq('id', orderId)
-        .eq('stripe_payment_intent_id', paymentIntentId)
-        .select()
-        .single();
+      .eq('id', orderId)
+      .eq('stripe_payment_intent_id', paymentIntentId)
+      .select()
+      .single();
 
-      if (updateError) {
-        console.error("Error updating order:", updateError);
-        throw new Error("Failed to update order status");
-      }
-
-      // Record promo code usage if applicable
-      if (updatedOrder.promo_code) {
-        try {
-          const { data: promoCode } = await supabaseService
-            .from('promo_codes')
-            .select('id')
-            .eq('code', updatedOrder.promo_code)
-            .single();
-
-          if (promoCode) {
-            await supabaseService
-              .from('promo_code_usage')
-              .insert({
-                promo_code_id: promoCode.id,
-                user_id: userId,
-                order_id: orderId,
-                discount_amount_cents: updatedOrder.discount_amount_cents || 0
-              });
-          }
-        } catch (promoError) {
-          console.error("Error recording promo code usage:", promoError);
-        }
-      }
-    } else {
-      throw new Error("No order ID or pending order data found");
+    if (updateError) {
+      console.error("Error updating order:", updateError);
+      throw new Error("Failed to update order status");
     }
 
-    console.log("Order confirmed successfully:", finalOrderId);
+    console.log("Order confirmed successfully:", orderId);
+
+    // Record promo code usage if applicable
+    if (updatedOrder.promo_code) {
+      try {
+        const { data: promoCode } = await supabaseService
+          .from('promo_codes')
+          .select('id')
+          .eq('code', updatedOrder.promo_code)
+          .single();
+
+        if (promoCode) {
+          await supabaseService
+            .from('promo_code_usage')
+            .insert({
+              promo_code_id: promoCode.id,
+              user_id: userId,
+              order_id: orderId,
+              discount_amount_cents: updatedOrder.discount_amount_cents || 0
+            });
+        }
+      } catch (promoError) {
+        console.error("Error recording promo code usage:", promoError);
+      }
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        orderId: finalOrderId,
+        orderId: orderId,
         message: "Payment confirmed and order is ready for pickup"
       }),
       {
