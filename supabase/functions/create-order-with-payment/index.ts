@@ -203,7 +203,7 @@ serve(async (req) => {
       throw new Error("Failed to create or retrieve Stripe customer");
     }
 
-    // Create payment intent with order data in metadata (NO ORDER CREATED YET)
+    // Create payment intent with minimal metadata (stay under 500 char limit)
     console.log("Creating Payment Intent for paid order - order will be created after payment confirmation");
     
     const paymentIntent = await stripe.paymentIntents.create({
@@ -212,7 +212,10 @@ serve(async (req) => {
       customer: customerId,
       metadata: {
         user_id: user.id,
-        order_data: JSON.stringify(orderData), // Store full order data for later creation
+        order_type: orderData.order_type || 'regular',
+        total: orderData.total_amount_cents.toString(),
+        // Store a reference ID to retrieve full order data later
+        temp_order_id: `temp_${Date.now()}_${user.id}`,
       },
     });
 
