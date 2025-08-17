@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCapacitor } from '@/hooks/useCapacitor';
+import { supabase } from '@/integrations/supabase/client';
 import { IOSScreen, IOSContent, IOSScrollView, IOSSection } from '@/components/ui/ios-layout';
 import { IOSHeader, IOSTabBar } from '@/components/ui/ios-navigation';
 import { IOSPrimaryButton, IOSSecondaryButton, HapticButton } from '@/components/ui/haptic-button';
@@ -17,7 +18,31 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Clock, Shield, Star, Smartphone, Droplets, Timer, Users } from 'lucide-react';
 
-const services = [
+interface Service {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  price_display: string;
+  duration_hours: number;
+  icon_name: string;
+  display_order: number;
+}
+
+// Icon mapping for database icon names
+const iconMap: Record<string, any> = {
+  droplets: Droplets,
+  timer: Timer,
+  'map-pin': MapPin,
+  users: Users,
+  smartphone: Smartphone,
+  clock: Clock,
+  shield: Shield,
+  star: Star
+};
+
+// Fallback services (for when database is loading)
+const fallbackServices = [
   {
     icon: Droplets,
     title: "Wash & Fold",
@@ -98,8 +123,36 @@ export function MobileHomepage() {
   const [currentTab, setCurrentTab] = useState('account'); // Default to sign in
   const [showOperatorLogin, setShowOperatorLogin] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-  const { user, userRole, loading } = useAuth();
+  const [dbServices, setDbServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, userRole, loading: authLoading } = useAuth();
   const { isNative } = useCapacitor();
+
+  // Load services from database
+  useEffect(() => {
+    loadServices();
+  }, []);
+
+  const loadServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (error) {
+        console.error('Error loading services:', error);
+        return;
+      }
+
+      setDbServices(data || []);
+    } catch (error) {
+      console.error('Error loading services:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Route authenticated users to their dashboards
   if (user && userRole) {
@@ -119,7 +172,7 @@ export function MobileHomepage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <IOSScreen>
         <IOSHeader title="FreshDrop" />
@@ -230,7 +283,32 @@ export function MobileHomepage() {
           <IOSScrollView>
             <IOSSection title="Our Services">
               <div className="space-y-4">
-                {services.map((service, index) => {
+                {dbServices.length > 0 ? dbServices.map((service) => {
+                  const Icon = iconMap[service.icon_name] || Droplets;
+                  const durationText = service.duration_hours < 24 
+                    ? `${service.duration_hours} hours`
+                    : `${Math.round(service.duration_hours / 24)} days`;
+                  
+                  return (
+                    <IOSCard key={service.id}>
+                      <div className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <Icon className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <h3 className="ios-headline">{service.title}</h3>
+                              <p className="ios-caption text-muted-foreground">{durationText}</p>
+                            </div>
+                          </div>
+                          <Badge variant="secondary">{service.price_display}</Badge>
+                        </div>
+                        <p className="ios-subhead text-muted-foreground">{service.description}</p>
+                      </div>
+                    </IOSCard>
+                  );
+                }) : fallbackServices.map((service, index) => {
                   const Icon = service.icon;
                   return (
                     <IOSCard key={index}>
