@@ -95,7 +95,7 @@ const steps = [
 ];
 
 export function MobileHomepage() {
-  const [currentTab, setCurrentTab] = useState('home');
+  const [currentTab, setCurrentTab] = useState('account'); // Default to sign in
   const [showOperatorLogin, setShowOperatorLogin] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const { user, userRole, loading } = useAuth();
