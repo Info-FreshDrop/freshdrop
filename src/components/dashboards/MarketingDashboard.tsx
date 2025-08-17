@@ -186,7 +186,7 @@ export function MarketingDashboard() {
   return (
     <div className="min-h-screen bg-gradient-wave">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+        <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Marketing Dashboard
@@ -195,21 +195,20 @@ export function MarketingDashboard() {
               Manage campaigns, promotions, and communications
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-4">
             <Button 
               variant="outline" 
               onClick={() => navigate('/owner-dashboard')}
-              className="flex items-center justify-center gap-2 w-full sm:w-auto"
+              className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back to Owner Dashboard</span>
-              <span className="sm:hidden">Back</span>
+              Back to Owner Dashboard
             </Button>
-            <Badge variant="secondary" className="px-3 py-1 justify-center">
+            <Badge variant="secondary" className="px-3 py-1">
               <Megaphone className="h-3 w-3 mr-1" />
               Marketing Access
             </Badge>
-            <Button variant="outline" onClick={signOut} className="w-full sm:w-auto">
+            <Button variant="outline" onClick={signOut}>
               Sign Out
             </Button>
           </div>
@@ -306,25 +305,25 @@ export function MarketingDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('campaigns')}
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  <span className="truncate">Manage Campaigns</span>
+                  Manage Campaigns
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('triggers')}
                 >
-                  <span className="truncate">Behavioral Triggers</span>
+                  Behavioral Triggers
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('email-analytics')}
                 >
-                  <span className="truncate">Email Analytics</span>
+                  Email Analytics
                 </Button>
               </div>
             </CardContent>
@@ -344,25 +343,25 @@ export function MarketingDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('promos-create')}
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  <span className="truncate">Create Promo Code</span>
+                  Create Promo Code
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('promos')}
                 >
-                  <span className="truncate">Active Promotions</span>
+                  Active Promotions
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('promos-reports')}
                 >
-                  <span className="truncate">Redemption Reports</span>
+                  Redemption Reports
                 </Button>
               </div>
             </CardContent>
@@ -382,16 +381,16 @@ export function MarketingDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('notifications')}
                 >
-                  <span className="truncate">Send Notification</span>
+                  Send Notification
                 </Button>
-                <Button variant="outline" className="w-full text-sm sm:text-base h-10 sm:h-11">
-                  <span className="truncate">Scheduled Messages</span>
+                <Button variant="outline" className="w-full">
+                  Scheduled Messages
                 </Button>
-                <Button variant="outline" className="w-full text-sm sm:text-base h-10 sm:h-11">
-                  <span className="truncate">Notification History</span>
+                <Button variant="outline" className="w-full">
+                  Notification History
                 </Button>
               </div>
             </CardContent>
@@ -411,24 +410,24 @@ export function MarketingDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('campaign-performance')}
                 >
-                  <span className="truncate">Campaign Performance</span>
+                  Campaign Performance
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('customer-engagement')}
                 >
-                  <span className="truncate">Customer Engagement</span>
+                  Customer Engagement
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('revenue-attribution')}
                 >
-                  <span className="truncate">Revenue Attribution</span>
+                  Revenue Attribution
                 </Button>
               </div>
             </CardContent>
@@ -448,25 +447,25 @@ export function MarketingDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('media-library')}
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  <span className="truncate">Media Library</span>
+                  Media Library
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('content-calendar')}
                 >
-                  <span className="truncate">View Calendar</span>
+                  View Calendar
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('content-schedule')}
                 >
-                  <span className="truncate">Schedule Content</span>
+                  Schedule Content
                 </Button>
               </div>
             </CardContent>
@@ -486,24 +485,24 @@ export function MarketingDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('segments-create')}
                 >
-                  <span className="truncate">Create Segment</span>
+                  Create Segment
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('customer-segments')}
                 >
-                  <span className="truncate">Active Segments</span>
+                  Active Segments
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full text-sm sm:text-base h-10 sm:h-11"
+                  className="w-full"
                   onClick={() => setCurrentView('segments-analytics')}
                 >
-                  <span className="truncate">Segment Analytics</span>
+                  Segment Analytics
                 </Button>
               </div>
             </CardContent>

@@ -1,5 +1,4 @@
 // Security utility functions for input validation and sanitization
-// DEPRECATED: Use enhancedInputValidation.ts for new implementations
 
 export const sanitizeInput = (input: string): string => {
   if (!input) return '';

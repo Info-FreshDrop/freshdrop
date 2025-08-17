@@ -7,9 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Enhanced security: Get webhook secret from environment
-const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -29,61 +26,25 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Enhanced security: Verify the webhook signature
     const signature = req.headers.get("stripe-signature");
     const body = await req.text();
     
-    // Validate that we have the webhook secret
-    if (!STRIPE_WEBHOOK_SECRET) {
-      console.error('STRIPE_WEBHOOK_SECRET is not configured')
-      await supabaseService
-        .from('security_audit_log')
-        .insert({
-          user_id: null,
-          action: 'webhook_secret_missing',
-          details: { event_type: 'stripe_webhook' },
-          ip_address: req.headers.get('cf-connecting-ip') || 'unknown'
-        })
-      return new Response('Webhook secret not configured', { status: 500, headers: corsHeaders })
-    }
-    
     if (!signature) {
-      console.error('Missing stripe-signature header')
-      await supabaseService
-        .from('security_audit_log')
-        .insert({
-          user_id: null,
-          action: 'webhook_signature_missing',
-          details: { event_type: 'stripe_webhook' },
-          ip_address: req.headers.get('cf-connecting-ip') || 'unknown'
-        })
-      return new Response('Missing signature', { status: 400, headers: corsHeaders })
+      throw new Error("No Stripe signature found");
+    }
+
+    // Verify webhook signature
+    const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    if (!endpointSecret) {
+      throw new Error("Stripe webhook secret not configured");
     }
 
     let event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET);
-      
-      // Log successful webhook verification
-      console.log(`Webhook verified successfully: ${event.type}`)
-      
+      event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
     } catch (err) {
-      console.error('Webhook signature verification failed:', err)
-      
-      // Log failed webhook attempts for security monitoring
-      await supabaseService
-        .from('security_audit_log')
-        .insert({
-          user_id: null,
-          action: 'webhook_signature_failed',
-          details: { 
-            error: err.message,
-            event_type: 'stripe_webhook'
-          },
-          ip_address: req.headers.get('cf-connecting-ip') || 'unknown'
-        })
-        
-      return new Response('Webhook signature verification failed', { status: 400, headers: corsHeaders })
+      console.error("Webhook signature verification failed:", err);
+      return new Response("Webhook signature verification failed", { status: 400 });
     }
 
     console.log("Processing event:", event.type);
