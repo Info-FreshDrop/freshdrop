@@ -226,23 +226,17 @@ export function ClothesShop({ onBack }: ClothesShopProps) {
       }
 
       if (data?.clientSecret) {
-        // For now, just redirect to a simple success - in a real app you'd integrate Stripe payment
+        // Redirect to payment success page with the client secret for Stripe payment
+        const paymentUrl = `/payment-success?payment_intent=${data.paymentIntentId}&order_id=${data.orderId}`;
+        window.location.href = paymentUrl;
+        
         toast({
-          title: "Order Created!",
-          description: "Your shop order has been created. Redirecting to payment...",
+          title: "Redirecting to Payment...",
+          description: "Your order has been created. Processing payment...",
         });
         
         // Clear cart after successful order creation
         setCart([]);
-        
-        // In a real implementation, you'd redirect to Stripe payment or show payment modal
-        // For now, just show success
-        setTimeout(() => {
-          toast({
-            title: "Payment Integration Required",
-            description: "This demo shows order creation. Full Stripe payment integration would happen here.",
-          });
-        }, 2000);
       } else if (data?.isFreeOrder) {
         toast({
           title: "Order Placed Successfully!",
