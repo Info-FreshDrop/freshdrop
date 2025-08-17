@@ -226,17 +226,17 @@ export function ClothesShop({ onBack }: ClothesShopProps) {
       }
 
       if (data?.clientSecret) {
-        // Redirect to payment success page with the client secret for Stripe payment
-        const paymentUrl = `/payment-success?payment_intent=${data.paymentIntentId}&order_id=${data.orderId}`;
-        window.location.href = paymentUrl;
-        
         toast({
-          title: "Redirecting to Payment...",
-          description: "Your order has been created. Processing payment...",
+          title: "Order Created Successfully!",
+          description: "Your shop order has been created. In a real implementation, this would redirect to Stripe for payment.",
         });
         
         // Clear cart after successful order creation
         setCart([]);
+        
+        // In a real app, you would use the clientSecret to confirm payment with Stripe Elements
+        console.log('Payment Intent created:', data.paymentIntentId);
+        console.log('Client Secret for Stripe:', data.clientSecret);
       } else if (data?.isFreeOrder) {
         toast({
           title: "Order Placed Successfully!",
