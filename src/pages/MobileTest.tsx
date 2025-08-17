@@ -12,11 +12,11 @@ export default function MobileTest() {
   const [currentTab, setCurrentTab] = useState('homepage');
 
   const tabs = [
-    { id: 'homepage', label: 'Homepage', icon: 'Home' },
-    { id: 'compliance', label: 'Compliance', icon: 'Shield' },
-    { id: 'native', label: 'Native', icon: 'Smartphone' },
-    { id: 'offline', label: 'Offline', icon: 'Download' },
-    { id: 'privacy', label: 'Privacy', icon: 'Lock' }
+    { id: 'homepage', label: 'Homepage', icon: <div>🏠</div>, onClick: () => setCurrentTab('homepage') },
+    { id: 'compliance', label: 'Compliance', icon: <div>🛡️</div>, onClick: () => setCurrentTab('compliance') },
+    { id: 'native', label: 'Native', icon: <div>📱</div>, onClick: () => setCurrentTab('native') },
+    { id: 'offline', label: 'Offline', icon: <div>⬇️</div>, onClick: () => setCurrentTab('offline') },
+    { id: 'privacy', label: 'Privacy', icon: <div>🔒</div>, onClick: () => setCurrentTab('privacy') }
   ];
 
   const renderContent = () => {
@@ -45,7 +45,6 @@ export default function MobileTest() {
       <IOSTabBar
         tabs={tabs}
         activeTab={currentTab}
-        onTabChange={setCurrentTab}
       />
     </IOSScreen>
   );

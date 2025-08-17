@@ -133,10 +133,10 @@ export function MobileHomepage() {
   }
 
   const tabs = [
-    { id: 'home', label: 'Home', icon: 'Home', onClick: () => setCurrentTab('home') },
-    { id: 'services', label: 'Services', icon: 'Package', onClick: () => setCurrentTab('services') },
-    { id: 'how-it-works', label: 'How It Works', icon: 'Info', onClick: () => setCurrentTab('how-it-works') },
-    { id: 'account', label: 'Sign In', icon: 'User', onClick: () => setCurrentTab('account') }
+    { id: 'home', label: 'Home', icon: <div>🏠</div>, onClick: () => setCurrentTab('home') },
+    { id: 'services', label: 'Services', icon: <div>📦</div>, onClick: () => setCurrentTab('services') },
+    { id: 'how-it-works', label: 'How It Works', icon: <div>ℹ️</div>, onClick: () => setCurrentTab('how-it-works') },
+    { id: 'account', label: 'Sign In', icon: <div>👤</div>, onClick: () => setCurrentTab('account') }
   ];
 
   const renderTabContent = () => {
@@ -339,7 +339,9 @@ export function MobileHomepage() {
             >
               Help
             </HapticButton>
-          ) : undefined
+          ) : (
+            <button onClick={() => setShowAlert(true)}>Help</button>
+          )
         }
       />
       
@@ -350,7 +352,6 @@ export function MobileHomepage() {
       <IOSTabBar
         tabs={tabs}
         activeTab={currentTab}
-        onTabChange={setCurrentTab}
       />
 
       {showAlert && (

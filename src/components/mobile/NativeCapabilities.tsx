@@ -49,7 +49,7 @@ export function NativeCapabilities() {
       description: 'Take photos for profile pictures and damage reports',
       icon: Camera,
       isAvailable: isNative,
-      hasPermission: permissions.camera === 'granted',
+      hasPermission: permissions.camera,
       testAction: async () => {
         try {
           const result = await takePicture();
@@ -72,7 +72,7 @@ export function NativeCapabilities() {
       description: 'Find nearby lockers and enable delivery tracking',
       icon: MapPin,
       isAvailable: isNative,
-      hasPermission: permissions.location === 'granted',
+      hasPermission: permissions.location,
       testAction: async () => {
         try {
           const location = await getCurrentLocation();
@@ -95,7 +95,7 @@ export function NativeCapabilities() {
       description: 'Receive updates about your laundry orders',
       icon: Bell,
       isAvailable: isNative,
-      hasPermission: permissions.notifications === 'granted',
+      hasPermission: permissions.notifications,
       testAction: async () => {
         try {
           await sendLocalNotification(
@@ -288,21 +288,17 @@ export function NativeCapabilities() {
       {/* Test All Action Sheet */}
       {showActionSheet && (
         <IOSActionSheet
+          isOpen={showActionSheet}
+          onClose={() => setShowActionSheet(false)}
           title="Test Native Capabilities"
           description="This will test all available native features on your device"
           actions={[
             {
               label: 'Run All Tests',
-              onPress: runAllTests,
-              style: 'default'
-            },
-            {
-              label: 'Cancel',
-              onPress: () => setShowActionSheet(false),
-              style: 'cancel'
+              onClick: runAllTests,
+              destructive: false
             }
           ]}
-          onDismiss={() => setShowActionSheet(false)}
         />
       )}
 

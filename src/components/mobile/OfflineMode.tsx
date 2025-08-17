@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { IOSScreen, IOSContent, IOSScrollView, IOSSection, IOSList, IOSListItem } from '@/components/ui/ios-layout';
 import { IOSHeader } from '@/components/ui/ios-navigation';
 import { IOSAlert } from '@/components/ui/ios-components';
@@ -70,19 +70,6 @@ export function OfflineMode() {
       isAvailable: true
     }
   ]);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   const formatTimeAgo = (date: Date | null) => {
     if (!date) return 'Never';

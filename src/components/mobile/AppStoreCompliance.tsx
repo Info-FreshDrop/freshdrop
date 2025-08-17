@@ -28,7 +28,6 @@ interface ComplianceCheck {
 }
 
 const complianceChecks: ComplianceCheck[] = [
-  // Safety Requirements
   {
     id: 'user-generated-content',
     title: 'User-Generated Content Moderation',
@@ -38,24 +37,6 @@ const complianceChecks: ComplianceCheck[] = [
     details: 'Chat and review systems include content filtering and reporting mechanisms'
   },
   {
-    id: 'personal-info-protection',
-    title: 'Personal Information Protection',
-    description: 'User data is properly protected and encrypted',
-    status: 'pass',
-    category: 'safety',
-    details: 'All user data stored in Supabase with RLS policies and encryption'
-  },
-  {
-    id: 'kids-category',
-    title: 'Kids Category Compliance',
-    description: 'App does not target children under 13',
-    status: 'pass',
-    category: 'safety',
-    details: 'Service is designed for adults 18+ only'
-  },
-
-  // Performance Requirements
-  {
     id: 'minimum-functionality',
     title: 'Minimum Functionality Requirements',
     description: 'App provides substantial utility beyond a mobile website',
@@ -63,24 +44,6 @@ const complianceChecks: ComplianceCheck[] = [
     category: 'performance',
     details: 'Native features: camera, GPS, push notifications, haptic feedback, offline caching'
   },
-  {
-    id: 'app-completeness',
-    title: 'App Completeness',
-    description: 'All features are fully implemented and functional',
-    status: 'pass',
-    category: 'performance',
-    details: 'Complete laundry service workflow from ordering to delivery tracking'
-  },
-  {
-    id: 'beta-testing',
-    title: 'Beta Testing Compliance',
-    description: 'App is production-ready, not beta software',
-    status: 'pass',
-    category: 'performance',
-    details: 'Full production version with comprehensive testing'
-  },
-
-  // Business Requirements
   {
     id: 'payment-compliance',
     title: 'In-App Purchase Compliance',
@@ -90,24 +53,6 @@ const complianceChecks: ComplianceCheck[] = [
     details: 'Uses Stripe for external payment processing (compliant for physical services)'
   },
   {
-    id: 'subscription-management',
-    title: 'Subscription Management',
-    description: 'Clear pricing and subscription terms',
-    status: 'pass',
-    category: 'business',
-    details: 'Transparent pricing with clear service terms and cancellation policies'
-  },
-  {
-    id: 'spam-guidelines',
-    title: 'Spam Prevention',
-    description: 'App does not send unwanted communications',
-    status: 'pass',
-    category: 'business',
-    details: 'All notifications are opt-in with granular control settings'
-  },
-
-  // Design Requirements
-  {
     id: 'human-interface',
     title: 'Human Interface Guidelines',
     description: 'App follows iOS design patterns and conventions',
@@ -116,46 +61,12 @@ const complianceChecks: ComplianceCheck[] = [
     details: 'Native iOS navigation, typography, touch targets, and interaction patterns'
   },
   {
-    id: 'accessibility',
-    title: 'Accessibility Compliance',
-    description: 'App is accessible to users with disabilities',
-    status: 'pass',
-    category: 'design',
-    details: 'VoiceOver support, high contrast colors, minimum touch targets'
-  },
-  {
-    id: 'device-compatibility',
-    title: 'Device Compatibility',
-    description: 'App works across all supported iOS devices',
-    status: 'pass',
-    category: 'design',
-    details: 'Responsive design for all iPhone and iPad screen sizes'
-  },
-
-  // Legal Requirements
-  {
     id: 'privacy-policy',
     title: 'Privacy Policy',
     description: 'Comprehensive privacy policy is accessible',
     status: 'pass',
     category: 'legal',
     details: 'Detailed privacy policy covering all data collection and usage'
-  },
-  {
-    id: 'terms-of-service',
-    title: 'Terms of Service',
-    description: 'Clear terms of service are provided',
-    status: 'pass',
-    category: 'legal',
-    details: 'Comprehensive terms covering service usage and user responsibilities'
-  },
-  {
-    id: 'age-rating',
-    title: 'Age Rating Accuracy',
-    description: 'App content rating matches actual content',
-    status: 'pass',
-    category: 'legal',
-    details: 'Rated 4+ (suitable for all ages) - matches laundry service content'
   }
 ];
 
@@ -212,7 +123,11 @@ export function AppStoreCompliance() {
       <IOSHeader 
         title="App Store Compliance"
         leftButton={
-          <HapticButton variant="ghost" size="sm">
+          <HapticButton 
+            variant="ghost" 
+            size="sm"
+            onClick={() => window.history.back()}
+          >
             Back
           </HapticButton>
         }

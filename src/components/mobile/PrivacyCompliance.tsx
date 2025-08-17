@@ -121,24 +121,6 @@ export function PrivacyCompliance() {
       retention: '7 years for tax purposes',
       thirdParty: true,
       required: true
-    },
-    {
-      id: 'usage-analytics',
-      title: 'App Usage Analytics',
-      description: 'Feature usage, session duration, crash reports',
-      purpose: 'App improvement and bug fixes',
-      retention: '2 years',
-      thirdParty: true,
-      required: false
-    },
-    {
-      id: 'communication-logs',
-      title: 'Communication Logs',
-      description: 'Chat messages, support tickets, call logs',
-      purpose: 'Customer support and service quality',
-      retention: '3 years',
-      thirdParty: false,
-      required: false
     }
   ];
 
@@ -336,47 +318,39 @@ export function PrivacyCompliance() {
       {/* Data Management Action Sheet */}
       {showActionSheet && (
         <IOSActionSheet
+          isOpen={showActionSheet}
+          onClose={() => setShowActionSheet(false)}
           title="Data Management"
           description="Manage your personal data and privacy settings"
           actions={[
             {
               label: 'Export My Data',
-              onPress: handleExportData,
-              style: 'default'
+              onClick: handleExportData,
+              destructive: false
             },
             {
               label: 'Delete My Data',
-              onPress: handleDeleteData,
-              style: 'destructive'
-            },
-            {
-              label: 'Cancel',
-              onPress: () => setShowActionSheet(false),
-              style: 'cancel'
+              onClick: handleDeleteData,
+              destructive: true
             }
           ]}
-          onDismiss={() => setShowActionSheet(false)}
         />
       )}
 
       {/* Data Categories Sheet */}
       {showDataSheet && (
         <IOSActionSheet
+          isOpen={showDataSheet}
+          onClose={() => setShowDataSheet(false)}
           title="Data Collection Details"
           description="Complete list of data we collect and why"
           actions={[
             {
               label: 'View Full Privacy Policy',
-              onPress: () => setShowDataSheet(false),
-              style: 'default'
-            },
-            {
-              label: 'Close',
-              onPress: () => setShowDataSheet(false),
-              style: 'cancel'
+              onClick: () => setShowDataSheet(false),
+              destructive: false
             }
           ]}
-          onDismiss={() => setShowDataSheet(false)}
         />
       )}
 
