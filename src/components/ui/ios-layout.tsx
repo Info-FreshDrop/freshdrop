@@ -28,7 +28,7 @@ interface IOSContentProps {
 export function IOSContent({ children, className, scrollable = true }: IOSContentProps) {
   return (
     <div className={cn(
-      "flex-1 w-full max-w-md mx-auto",
+      "flex-1 w-full responsive-container",
       scrollable ? "overflow-y-auto" : "overflow-hidden",
       className
     )}>
@@ -46,7 +46,7 @@ interface IOSScrollViewProps {
 export function IOSScrollView({ children, className, contentClassName }: IOSScrollViewProps) {
   return (
     <div className={cn("flex-1 overflow-y-auto", className)}>
-      <div className={cn("px-4 py-4 space-y-6", contentClassName)}>
+      <div className={cn("mobile-spacing responsive-padding responsive-gap", contentClassName)}>
         {children}
       </div>
     </div>

@@ -201,16 +201,17 @@ All colors MUST be HSL.
   padding-right: env(safe-area-inset-right);
 }
 
-/* iOS Typography Scale */
-.ios-title1 { @apply text-2xl font-bold leading-tight; }
-.ios-title2 { @apply text-xl font-semibold leading-tight; }
-.ios-title3 { @apply text-lg font-semibold leading-tight; }
-.ios-headline { @apply text-base font-semibold leading-tight; }
-.ios-body { @apply text-base leading-relaxed; }
-.ios-callout { @apply text-sm font-medium leading-relaxed; }
-.ios-subhead { @apply text-sm leading-relaxed; }
-.ios-footnote { @apply text-xs leading-relaxed; }
-.ios-caption { @apply text-xs leading-tight; }
+/* Responsive Typography Scale */
+.ios-title1 { @apply text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight; }
+.ios-title2 { @apply text-xl sm:text-2xl lg:text-3xl font-semibold leading-tight; }
+.ios-title3 { @apply text-lg sm:text-xl lg:text-2xl font-semibold leading-tight; }
+.ios-headline { @apply text-base sm:text-lg font-semibold leading-tight; }
+.ios-body { @apply text-base sm:text-lg leading-relaxed; }
+.ios-callout { @apply text-sm sm:text-base font-medium leading-relaxed; }
+.ios-subhead { @apply text-sm sm:text-base leading-relaxed; }
+.ios-footnote { @apply text-xs sm:text-sm leading-relaxed; }
+.ios-caption { @apply text-xs sm:text-sm leading-tight; }
+.ios-caption2 { @apply text-xs sm:text-sm leading-tight; }
 
 /* iOS Touch Targets */
 .ios-touch {
@@ -230,9 +231,25 @@ All colors MUST be HSL.
   @apply bg-background border-t border-border;
 }
 
-/* Mobile-friendly utilities */
+/* Responsive utilities */
 .mobile-spacing {
-  @apply px-4 py-3 sm:px-6 sm:py-4;
+  @apply px-4 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-6;
+}
+
+.responsive-container {
+  @apply w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto;
+}
+
+.responsive-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8;
+}
+
+.responsive-padding {
+  @apply p-4 sm:p-6 lg:p-8;
+}
+
+.responsive-gap {
+  @apply space-y-4 sm:space-y-6 lg:space-y-8;
 }
 
 /* iOS Button Styles */

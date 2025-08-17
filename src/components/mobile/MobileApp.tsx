@@ -30,16 +30,16 @@ export function MobileApp() {
     switch (activeTab) {
       case 'auth':
         return (
-          <div className="px-4 py-6 space-y-6">
+          <div className="mobile-spacing responsive-padding responsive-gap">
             {/* Logo Section */}
-            <div className="text-center mb-8">
+            <div className="text-center mb-6 sm:mb-8 lg:mb-12">
               <img 
                 src="/lovable-uploads/400d5514-59e3-4714-8281-fc739cf00f88.png" 
                 alt="FreshDrop" 
-                className="h-20 w-auto mx-auto mb-4"
+                className="h-16 sm:h-20 lg:h-24 xl:h-28 w-auto mx-auto mb-4 sm:mb-6"
               />
-              <h1 className="ios-title1 text-foreground mb-2">Laundry made easy</h1>
-              <p className="ios-body text-muted-foreground">
+              <h1 className="ios-title1 text-foreground mb-2 sm:mb-4">Laundry made easy</h1>
+              <p className="ios-body text-muted-foreground max-w-lg mx-auto leading-relaxed">
                 Professional laundry service with 24-hour turnaround. 
                 Drop off at any locker or schedule pickup & delivery. 
                 Eco-friendly, secure, and contactless.
@@ -47,7 +47,7 @@ export function MobileApp() {
             </div>
 
             {/* Auth Forms */}
-            <Card className="border-border bg-card rounded-xl overflow-hidden">
+            <Card className="border-border bg-card rounded-xl overflow-hidden max-w-md mx-auto w-full">
               {showOperatorLogin ? (
                 <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
               ) : (
@@ -59,47 +59,51 @@ export function MobileApp() {
 
       case 'learn':
         return (
-          <div className="px-4 py-6 space-y-4">
-            <h2 className="ios-title2 text-foreground mb-6">Learn More</h2>
+          <div className="mobile-spacing responsive-padding responsive-gap">
+            <h2 className="ios-title2 text-foreground mb-6 sm:mb-8 text-center">Learn More</h2>
             
-            <Card className="p-4 border-border bg-card rounded-xl">
-              <h3 className="ios-headline mb-2">How It Works</h3>
-              <p className="ios-body text-muted-foreground mb-4">
-                Discover our simple 3-step process for fresh, clean laundry
-              </p>
-              <IOSPrimaryButton 
-                onClick={() => setShowHowItWorks(true)}
-                className="w-full"
-              >
-                Learn How It Works
-              </IOSPrimaryButton>
-            </Card>
+            <div className="responsive-grid max-w-4xl mx-auto">
+              <Card className="responsive-padding border-border bg-card rounded-xl">
+                <h3 className="ios-headline mb-2 sm:mb-4">How It Works</h3>
+                <p className="ios-body text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Discover our simple 3-step process for fresh, clean laundry
+                </p>
+                <IOSPrimaryButton 
+                  onClick={() => setShowHowItWorks(true)}
+                  className="w-full"
+                >
+                  Learn How It Works
+                </IOSPrimaryButton>
+              </Card>
 
-            <Card className="p-4 border-border bg-card rounded-xl">
-              <h3 className="ios-headline mb-2">Our Services</h3>
-              <p className="ios-body text-muted-foreground mb-4">
-                Explore our wash & fold, express, and pickup services
-              </p>
-              <IOSPrimaryButton 
-                onClick={() => setShowServices(true)}
-                className="w-full"
-              >
-                View Services
-              </IOSPrimaryButton>
-            </Card>
+              <Card className="responsive-padding border-border bg-card rounded-xl">
+                <h3 className="ios-headline mb-2 sm:mb-4">Our Services</h3>
+                <p className="ios-body text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Explore our wash & fold, express, and pickup services
+                </p>
+                <IOSPrimaryButton 
+                  onClick={() => setShowServices(true)}
+                  className="w-full"
+                >
+                  View Services
+                </IOSPrimaryButton>
+              </Card>
+            </div>
           </div>
         );
 
       case 'contact':
         return (
-          <div className="px-4 py-6 space-y-4">
-            <h2 className="ios-title2 text-foreground mb-6">Contact Us</h2>
-            <IOSPrimaryButton 
-              onClick={() => setShowContact(true)}
-              className="w-full"
-            >
-              Get Support
-            </IOSPrimaryButton>
+          <div className="mobile-spacing responsive-padding responsive-gap">
+            <h2 className="ios-title2 text-foreground mb-6 sm:mb-8 text-center">Contact Us</h2>
+            <div className="max-w-md mx-auto">
+              <IOSPrimaryButton 
+                onClick={() => setShowContact(true)}
+                className="w-full"
+              >
+                Get Support
+              </IOSPrimaryButton>
+            </div>
           </div>
         );
 
@@ -110,13 +114,13 @@ export function MobileApp() {
 
   return (
     <IOSScreen className="bg-gradient-to-b from-primary/20 to-primary/5">
-      <IOSContent className="pb-20">
+      <IOSContent className="pb-20 sm:pb-24">
         {renderContent()}
       </IOSContent>
 
-      {/* Bottom Tab Bar */}
+      {/* Responsive Bottom Tab Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-bottom">
-        <div className="flex items-center justify-around h-16 max-w-md mx-auto px-2">
+        <div className="flex items-center justify-around h-16 sm:h-20 responsive-container px-2 sm:px-4">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -125,11 +129,11 @@ export function MobileApp() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center justify-center flex-1 py-2 ios-touch ${
-                  isActive ? 'text-primary' : 'text-muted-foreground'
+                className={`flex flex-col items-center justify-center flex-1 py-2 sm:py-3 ios-touch transition-colors ${
+                  isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Icon className="h-5 w-5 mb-1" />
+                <Icon className="h-5 w-5 sm:h-6 sm:w-6 mb-1" />
                 <span className="ios-caption2 font-medium">{tab.label}</span>
               </button>
             );
