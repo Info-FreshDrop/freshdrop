@@ -183,15 +183,10 @@ export function NativeCapabilities() {
     <IOSScreen>
       <IOSHeader 
         title="Native Capabilities"
-        rightButton={
-          <HapticButton
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowActionSheet(true)}
-          >
-            Test All
-          </HapticButton>
-        }
+        rightButton={{
+          text: "Test All",
+          onClick: () => setShowActionSheet(true)
+        }}
       />
       
       <IOSContent>

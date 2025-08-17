@@ -143,20 +143,10 @@ export function OfflineMode() {
     <IOSScreen>
       <IOSHeader 
         title="Offline Mode"
-        rightButton={
-          <HapticButton
-            variant="ghost"
-            size="sm"
-            onClick={handleSyncData}
-            disabled={syncStatus === 'syncing'}
-          >
-            {syncStatus === 'syncing' ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <Sync className="w-4 h-4" />
-            )}
-          </HapticButton>
-        }
+        rightButton={{
+          text: "Sync",
+          onClick: handleSyncData
+        }}
       />
       
       <IOSContent>

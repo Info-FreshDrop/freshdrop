@@ -330,19 +330,10 @@ export function MobileHomepage() {
     <IOSScreen>
       <IOSHeader 
         title="FreshDrop"
-        rightButton={
-          isNative ? (
-            <HapticButton
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAlert(true)}
-            >
-              Help
-            </HapticButton>
-          ) : (
-            <button onClick={() => setShowAlert(true)}>Help</button>
-          )
-        }
+        rightButton={{
+          text: "Help",
+          onClick: () => setShowAlert(true)
+        }}
       />
       
       <IOSContent>

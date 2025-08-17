@@ -122,15 +122,10 @@ export function AppStoreCompliance() {
     <IOSScreen>
       <IOSHeader 
         title="App Store Compliance"
-        leftButton={
-          <HapticButton 
-            variant="ghost" 
-            size="sm"
-            onClick={() => window.history.back()}
-          >
-            Back
-          </HapticButton>
-        }
+        leftButton={{
+          text: "Back",
+          onClick: () => window.history.back()
+        }}
       />
       
       <IOSContent>

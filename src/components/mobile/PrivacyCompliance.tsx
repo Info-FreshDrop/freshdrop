@@ -170,15 +170,10 @@ export function PrivacyCompliance() {
     <IOSScreen>
       <IOSHeader 
         title="Privacy & Data"
-        rightButton={
-          <HapticButton
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowActionSheet(true)}
-          >
-            More
-          </HapticButton>
-        }
+        rightButton={{
+          text: "More",
+          onClick: () => setShowActionSheet(true)
+        }}
       />
       
       <IOSContent>
