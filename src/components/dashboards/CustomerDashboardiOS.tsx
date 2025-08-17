@@ -485,8 +485,8 @@ export function CustomerDashboard() {
           onClose={() => {
             setShowRatingModal(false);
             setSelectedOrder(null);
+            loadOrders(); // Reload orders after rating
           }}
-          onOrderUpdate={loadOrders}
         />
       )}
 
