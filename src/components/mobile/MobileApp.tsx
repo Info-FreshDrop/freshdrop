@@ -34,7 +34,7 @@ export function MobileApp() {
             {/* Logo Section */}
             <div className="text-center mb-8">
               <img 
-                src="/lovable-uploads/ed71a504-99b3-469e-99f7-d014c7d75c86.png" 
+                src="/lovable-uploads/400d5514-59e3-4714-8281-fc739cf00f88.png" 
                 alt="FreshDrop" 
                 className="h-20 w-auto mx-auto mb-4"
               />
