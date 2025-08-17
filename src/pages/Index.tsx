@@ -1,12 +1,15 @@
 import { Homepage } from "@/components/Homepage";
+import { MobileApp } from "@/components/mobile/MobileApp";
 import { AppStoreAssets } from "@/components/mobile/AppStoreAssets";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { OperatorDashboard } from "@/components/dashboards/OperatorDashboard";
 
 const Index = () => {
   const { user, userRole } = useAuth();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -25,6 +28,11 @@ const Index = () => {
   // Show operator dashboard if user is an operator
   if (userRole === 'operator') {
     return <OperatorDashboard />;
+  }
+
+  // For unauthenticated users, show mobile-first app on mobile devices
+  if (!user && isMobile) {
+    return <MobileApp />;
   }
 
   return (
