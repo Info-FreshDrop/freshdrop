@@ -491,23 +491,15 @@ export function CustomerDashboard() {
                {/* Quick Actions */}
                <div>
                  <h3 className="text-lg font-semibold text-slate-900 mb-3">Quick Actions</h3>
-                 <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex items-center justify-center gap-2 h-16 border-dashed ios-touch"
-                      onClick={() => setShowClothesShop(true)}
-                    >
-                      <ShoppingBag className="h-5 w-5" />
-                      <span className="ios-callout">Shop</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex items-center justify-center gap-2 h-16 border-dashed ios-touch"
-                      onClick={() => setShowOrderHistory(true)}
-                    >
-                      <History className="h-5 w-5" />
-                      <span className="ios-callout">History</span>
-                    </Button>
+                  <div className="grid grid-cols-1 gap-3">
+                     <Button
+                       variant="outline"
+                       className="flex items-center justify-center gap-2 h-16 border-dashed ios-touch"
+                       onClick={() => setShowOrderHistory(true)}
+                     >
+                       <History className="h-5 w-5" />
+                       <span className="ios-callout">History</span>
+                     </Button>
                  </div>
                </div>
 
