@@ -8,10 +8,10 @@ import { IOSActionSheet } from '@/components/ui/ios-components';
 import { HowItWorksModal } from './HowItWorksModal';
 import { ServicesModal } from './ServicesModal';
 import { ContactModal } from './ContactModal';
-import { LogIn, Info, Phone, Users } from 'lucide-react';
+import { LogIn, Info, Phone } from 'lucide-react';
 import freshDropLogo from '@/assets/freshdrop-logo-transparent.png';
 
-type BottomTab = 'auth' | 'learn' | 'contact' | 'operator';
+type BottomTab = 'auth' | 'learn' | 'contact';
 
 export function MobileApp() {
   const [activeTab, setActiveTab] = useState<BottomTab>('auth');
@@ -24,7 +24,6 @@ export function MobileApp() {
     { id: 'auth' as const, label: 'Sign In', icon: LogIn },
     { id: 'learn' as const, label: 'Learn More', icon: Info },
     { id: 'contact' as const, label: 'Contact', icon: Phone },
-    { id: 'operator' as const, label: 'Operators', icon: Users },
   ];
 
   const renderContent = () => {
@@ -37,11 +36,13 @@ export function MobileApp() {
               <img 
                 src={freshDropLogo} 
                 alt="FreshDrop" 
-                className="h-16 w-auto mx-auto mb-4"
+                className="h-20 w-auto mx-auto mb-4"
               />
-              <h1 className="ios-title1 text-foreground mb-2">Welcome to FreshDrop</h1>
+              <h1 className="ios-title1 text-foreground mb-2">Laundry made easy</h1>
               <p className="ios-body text-muted-foreground">
-                Professional laundry service made simple
+                Professional laundry service with 24-hour turnaround. 
+                Drop off at any locker or schedule pickup & delivery. 
+                Eco-friendly, secure, and contactless.
               </p>
             </div>
 
@@ -102,36 +103,13 @@ export function MobileApp() {
           </div>
         );
 
-      case 'operator':
-        return (
-          <div className="px-4 py-6 space-y-4">
-            <h2 className="ios-title2 text-foreground mb-6">For Operators</h2>
-            
-            <Card className="p-4 border-border bg-card rounded-xl">
-              <h3 className="ios-headline mb-2">Join Our Team</h3>
-              <p className="ios-body text-muted-foreground mb-4">
-                Become a FreshDrop operator and start earning
-              </p>
-              <IOSPrimaryButton 
-                onClick={() => {
-                  setActiveTab('auth');
-                  setShowOperatorLogin(true);
-                }}
-                className="w-full"
-              >
-                Operator Login
-              </IOSPrimaryButton>
-            </Card>
-          </div>
-        );
-
       default:
         return null;
     }
   };
 
   return (
-    <IOSScreen className="bg-background">
+    <IOSScreen className="bg-gradient-to-b from-primary/20 to-primary/5">
       <IOSContent className="pb-20">
         {renderContent()}
       </IOSContent>
