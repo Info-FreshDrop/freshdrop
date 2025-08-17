@@ -58,9 +58,8 @@ serve(async (req) => {
     // Get metadata from payment intent
     const orderId = paymentIntent.metadata.order_id;
     const userId = paymentIntent.metadata.user_id;
-    const orderDataStr = paymentIntent.metadata.order_data;
     
-    console.log("Payment Intent metadata:", { orderId, userId, hasOrderData: !!orderDataStr });
+    console.log("Payment Intent metadata:", { orderId, userId });
 
     // Create Supabase service client
     const supabaseService = createClient(
@@ -71,11 +70,25 @@ serve(async (req) => {
 
     let finalOrderId = orderId;
 
-    // If no order exists (new flow), create it now after payment confirmation
-    if (!orderId && orderDataStr && userId) {
-      console.log("Creating order after payment confirmation (new secure flow)");
+    // If no order exists (new flow), look for pending order data
+    if (!orderId && userId) {
+      console.log("Looking for pending order data for payment intent:", paymentIntentId);
       
-      const orderData = JSON.parse(orderDataStr);
+      // Retrieve order data from pending_orders table
+      const { data: pendingOrder, error: pendingError } = await supabaseService
+        .from("pending_orders")
+        .select("order_data")
+        .eq("payment_intent_id", paymentIntentId)
+        .eq("user_id", userId)
+        .single();
+
+      if (pendingError || !pendingOrder) {
+        console.error("Error retrieving pending order:", pendingError);
+        throw new Error("No pending order found for this payment");
+      }
+
+      const orderData = pendingOrder.order_data;
+      console.log("Creating order after payment confirmation (secure flow)");
       
       // Create the order record
       const orderRecord = {
@@ -142,6 +155,15 @@ serve(async (req) => {
         }
       }
 
+      // Clean up the pending order record
+      await supabaseService
+        .from("pending_orders")
+        .delete()
+        .eq("payment_intent_id", paymentIntentId)
+        .eq("user_id", userId);
+
+      console.log("Cleaned up pending order record");
+
     } else if (orderId) {
       // Existing flow - update existing order
       console.log("Updating existing order status:", orderId);
@@ -186,7 +208,7 @@ serve(async (req) => {
         }
       }
     } else {
-      throw new Error("No order ID or order data found in payment intent metadata");
+      throw new Error("No order ID or pending order data found");
     }
 
     console.log("Order confirmed successfully:", finalOrderId);

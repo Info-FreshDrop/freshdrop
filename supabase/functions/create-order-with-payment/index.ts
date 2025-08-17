@@ -174,7 +174,7 @@ serve(async (req) => {
       );
     }
 
-    // For paid orders, create payment intent
+    // For paid orders, store order data temporarily and create payment intent
     console.log('=== CHECKING STRIPE CUSTOMER ===');
     
     let customerId;
@@ -203,7 +203,7 @@ serve(async (req) => {
       throw new Error("Failed to create or retrieve Stripe customer");
     }
 
-    // Create payment intent with minimal metadata (stay under 500 char limit)
+    // Create payment intent with minimal metadata
     console.log("Creating Payment Intent for paid order - order will be created after payment confirmation");
     
     const paymentIntent = await stripe.paymentIntents.create({
@@ -214,12 +214,28 @@ serve(async (req) => {
         user_id: user.id,
         order_type: orderData.order_type || 'regular',
         total: orderData.total_amount_cents.toString(),
-        // Store a reference ID to retrieve full order data later
-        temp_order_id: `temp_${Date.now()}_${user.id}`,
       },
     });
 
     console.log("Payment Intent created:", paymentIntent.id);
+
+    // Store order data in pending_orders table
+    const { error: pendingError } = await supabaseService
+      .from("pending_orders")
+      .insert({
+        user_id: user.id,
+        payment_intent_id: paymentIntent.id,
+        order_data: orderData,
+      });
+
+    if (pendingError) {
+      console.error("Error storing pending order:", pendingError);
+      // Cancel the payment intent since we couldn't store the order data
+      await stripe.paymentIntents.cancel(paymentIntent.id);
+      throw new Error("Failed to store order data");
+    }
+
+    console.log("Order data stored in pending_orders table");
 
     return new Response(
       JSON.stringify({
