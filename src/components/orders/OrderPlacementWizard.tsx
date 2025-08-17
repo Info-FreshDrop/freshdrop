@@ -155,16 +155,45 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         });
       }
       
-      // Mock address for demo - in real app, use reverse geocoding
-      const mockAddress = "123 Main St, Springfield, MO 65804";
-      handleInputChange('pickupAddress', mockAddress);
-      handleInputChange('deliveryAddress', mockAddress);
-      handleInputChange('zipCode', '65804');
-      
-      toast({
-        title: "Location Detected",
-        description: "Your address has been automatically filled in.",
-      });
+      // Use reverse geocoding to get actual address
+      try {
+        const response = await supabase.functions.invoke('geocoding', {
+          body: { 
+            query: `${location.longitude},${location.latitude}`,
+            type: 'reverse'
+          }
+        });
+
+        if (response.data?.suggestions?.[0]) {
+          const address = response.data.suggestions[0].display_name;
+          const zipMatch = address.match(/\b\d{5}\b/);
+          
+          handleInputChange('pickupAddress', address);
+          handleInputChange('deliveryAddress', address);
+          if (zipMatch) {
+            handleInputChange('zipCode', zipMatch[0]);
+          }
+          
+          toast({
+            title: "Location Detected",
+            description: "Your address has been automatically filled in.",
+          });
+        } else {
+          throw new Error('No address found');
+        }
+      } catch (geocodingError) {
+        console.error('Reverse geocoding failed:', geocodingError);
+        // Fallback to mock address
+        const mockAddress = "123 Main St, Springfield, MO 65804";
+        handleInputChange('pickupAddress', mockAddress);
+        handleInputChange('deliveryAddress', mockAddress);
+        handleInputChange('zipCode', '65804');
+        
+        toast({
+          title: "Location Detected",
+          description: "Your address has been automatically filled in.",
+        });
+      }
     } catch (error) {
       toast({
         title: "Location Error",
@@ -174,6 +203,49 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     } finally {
       setIsDetectingLocation(false);
     }
+  };
+
+  // Address autocomplete function
+  const searchAddresses = async (query: string) => {
+    if (!query || query.length < 3) {
+      setAddressSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await supabase.functions.invoke('geocoding', {
+        body: { query, type: 'search' }
+      });
+
+      if (response.error) {
+        console.error('Geocoding error:', response.error);
+        setAddressSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      const suggestions = response.data?.suggestions || [];
+      setAddressSuggestions(suggestions);
+      setShowSuggestions(suggestions.length > 0);
+    } catch (error) {
+      console.error('Address search error:', error);
+      setAddressSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  // Handle address suggestion selection
+  const handleAddressSelect = (suggestion: any) => {
+    const zipMatch = suggestion.display_name.match(/\b\d{5}\b/);
+    if (zipMatch) {
+      handleInputChange('zipCode', zipMatch[0]);
+    }
+    
+    handleInputChange('pickupAddress', suggestion.display_name);
+    handleInputChange('deliveryAddress', suggestion.display_name);
+    setShowSuggestions(false);
+    setAddressSuggestions([]);
   };
 
   const validateServiceArea = () => {
@@ -538,21 +610,52 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
             )}
           </Button>
         </div>
-        <Input
-          id="service-address"
-          placeholder="Enter your full address (street, city, state)"
-          value={formData.pickupAddress}
-          onChange={(e) => {
-            handleInputChange('pickupAddress', e.target.value);
-            handleInputChange('deliveryAddress', e.target.value);
-            // Auto-extract zip code from address
-            const zipMatch = e.target.value.match(/\b\d{5}\b/);
-            if (zipMatch) {
-              handleInputChange('zipCode', zipMatch[0]);
-            }
-          }}
-          required={orderType === 'pickup_delivery'}
-        />
+        <div className="relative">
+          <Input
+            id="service-address"
+            placeholder="Enter your full address (street, city, state)"
+            value={formData.pickupAddress}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleInputChange('pickupAddress', value);
+              handleInputChange('deliveryAddress', value);
+              
+              // Auto-extract zip code from address
+              const zipMatch = value.match(/\b\d{5}\b/);
+              if (zipMatch) {
+                handleInputChange('zipCode', zipMatch[0]);
+              }
+              
+              // Trigger address search for autocomplete
+              searchAddresses(value);
+            }}
+            onFocus={() => {
+              if (formData.pickupAddress) {
+                searchAddresses(formData.pickupAddress);
+              }
+            }}
+            onBlur={() => {
+              // Delay hiding suggestions to allow clicking
+              setTimeout(() => setShowSuggestions(false), 200);
+            }}
+            required={orderType === 'pickup_delivery'}
+          />
+          
+          {/* Address Suggestions Dropdown */}
+          {showSuggestions && addressSuggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+              {addressSuggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  className="px-3 py-2 hover:bg-muted cursor-pointer text-sm border-b border-border last:border-b-0"
+                  onClick={() => handleAddressSelect(suggestion)}
+                >
+                  {suggestion.display_name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Zip Code */}
