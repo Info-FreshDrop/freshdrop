@@ -16,10 +16,32 @@ import {
   Loader2
 } from "lucide-react";
 
-// Use your actual Stripe publishable key directly for now to test
-const stripePromise = loadStripe("pk_test_51QIJ7mBfJbF8BXgVFFyNaZEYmGgJY5t8QNe6o8KuFeCeJ25KKU6y3R1uXL7x8x7EFOmnNLVLPECnyHOKDhbotd5W00jRoNZqSo");
+let stripePromise: Promise<any> | null = null;
 
-console.log('Stripe promise created:', stripePromise);
+const initializeStripe = async () => {
+  console.log('Initializing Stripe...');
+  try {
+    const { data, error } = await supabase.functions.invoke('get-stripe-publishable-key');
+    console.log('Edge function response:', { data, error });
+    
+    if (error) {
+      console.error('Edge function error:', error);
+      throw error;
+    }
+    
+    if (data?.publishableKey) {
+      console.log('Got publishable key:', data.publishableKey.substring(0, 20) + '...');
+      stripePromise = loadStripe(data.publishableKey);
+      return stripePromise;
+    } else {
+      console.error('No publishable key in response:', data);
+      throw new Error('No publishable key received');
+    }
+  } catch (error) {
+    console.error('Error getting Stripe key:', error);
+    throw error;
+  }
+};
 
 interface PaymentMethod {
   id: string;
@@ -39,8 +61,26 @@ export function PaymentMethods() {
   const [loading, setLoading] = useState(false);
   const [showAddCard, setShowAddCard] = useState(false);
   const [deletingMethod, setDeletingMethod] = useState<string | null>(null);
+  const [stripeReady, setStripeReady] = useState(false);
 
   console.log('PaymentMethods component mounted, user:', user?.id);
+
+  useEffect(() => {
+    // Initialize Stripe when component mounts
+    initializeStripe()
+      .then(() => {
+        console.log('Stripe initialized successfully');
+        setStripeReady(true);
+      })
+      .catch(error => {
+        console.error('Failed to initialize Stripe:', error);
+        toast({
+          title: "Error",
+          description: "Failed to initialize payment system. Please refresh the page.",
+          variant: "destructive"
+        });
+      });
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -337,12 +377,18 @@ export function PaymentMethods() {
             </DialogDescription>
           </DialogHeader>
           
-          <Elements stripe={stripePromise}>
-            <AddCardForm 
-              onSuccess={addPaymentMethod}
-              onCancel={() => setShowAddCard(false)}
-            />
-          </Elements>
+          {stripeReady ? (
+            <Elements stripe={stripePromise}>
+              <AddCardForm 
+                onSuccess={addPaymentMethod}
+                onCancel={() => setShowAddCard(false)}
+              />
+            </Elements>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-sm text-muted-foreground">Initializing payment system...</div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
