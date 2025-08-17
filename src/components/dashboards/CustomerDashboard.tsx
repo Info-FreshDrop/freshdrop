@@ -313,8 +313,6 @@ export function CustomerDashboard() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <TabsContent value="orders" className="flex-1 px-4 py-4 mt-0 pb-20">
             <div className="space-y-6">
-              {/* Native Features Status */}
-              <NativeCapabilitiesStatus />
               
               {/* Quick Action Hero */}
               <div className="relative overflow-hidden rounded-xl bg-gradient-primary p-6 text-white">
