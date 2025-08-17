@@ -81,69 +81,59 @@ serve(async (req) => {
       }
     }
 
-    // Create the order first
-    const orderRecord = {
-      customer_id: user.id,
-      pickup_type: orderData.pickup_type,
-      service_type: orderData.service_type,
-      pickup_address: orderData.pickup_address,
-      delivery_address: orderData.delivery_address,
-      zip_code: orderData.zip_code,
-      is_express: orderData.is_express,
-      pickup_window_start: orderData.pickup_window_start,
-      pickup_window_end: orderData.pickup_window_end,
-      delivery_window_start: orderData.delivery_window_start,
-      delivery_window_end: orderData.delivery_window_end,
-      bag_count: orderData.bag_count,
-      soap_preference_id: orderData.soap_preference_id,
-      wash_temp_preference_id: orderData.wash_temp_preference_id,
-      dry_temp_preference_id: orderData.dry_temp_preference_id,
-      special_instructions: orderData.special_instructions,
-      items: orderData.items,
-      status: orderData.total_amount_cents === 0 ? 'placed' : 'placed', // Both free and paid orders start as 'placed'
-      promo_code: orderData.promoCode,
-      discount_amount_cents: (orderData.discount_amount_cents || 0) + (orderData.referral_cash_used || 0),
-      total_amount_cents: orderData.total_amount_cents,
-      created_at: new Date().toISOString(),
-    };
-
-    console.log("Creating order record:", JSON.stringify(orderRecord, null, 2));
-
-    const { data: order, error: orderError } = await supabaseService
-      .from("orders")
-      .insert(orderRecord)
-      .select()
-      .single();
-
-    if (orderError) {
-      console.error("Error creating order:", orderError);
-      throw new Error(`Failed to create order: ${orderError.message}`);
-    }
-
-    console.log("Order created successfully:", order.id);
-
-    // Update referral cash usage record with order ID if applicable
-    if (orderData.referral_cash_used && orderData.referral_cash_used > 0) {
-      await supabaseService
-        .from('referral_uses')
-        .update({ order_id: order.id })
-        .eq('referrer_user_id', user.id)
-        .eq('reward_given_cents', -orderData.referral_cash_used)
-        .is('order_id', null);
-    }
-
-    // If total is 0, update status to unclaimed and return success
+    // Check if this is a free order
     if (orderData.total_amount_cents === 0) {
-      console.log("Processing $0 order - skipping Stripe payment");
+      console.log("Processing $0 order - creating order immediately");
+      
+      // Create the order for free orders only
+      const orderRecord = {
+        customer_id: user.id,
+        pickup_type: orderData.pickup_type,
+        service_type: orderData.service_type,
+        pickup_address: orderData.pickup_address,
+        delivery_address: orderData.delivery_address,
+        zip_code: orderData.zip_code,
+        is_express: orderData.is_express,
+        pickup_window_start: orderData.pickup_window_start,
+        pickup_window_end: orderData.pickup_window_end,
+        delivery_window_start: orderData.delivery_window_start,
+        delivery_window_end: orderData.delivery_window_end,
+        bag_count: orderData.bag_count,
+        soap_preference_id: orderData.soap_preference_id,
+        wash_temp_preference_id: orderData.wash_temp_preference_id,
+        dry_temp_preference_id: orderData.dry_temp_preference_id,
+        special_instructions: orderData.special_instructions,
+        items: orderData.items,
+        status: 'unclaimed',
+        promo_code: orderData.promoCode,
+        discount_amount_cents: (orderData.discount_amount_cents || 0) + (orderData.referral_cash_used || 0),
+        total_amount_cents: orderData.total_amount_cents,
+        created_at: new Date().toISOString(),
+      };
 
-      const { error: updateError } = await supabaseService
+      console.log("Creating free order record:", JSON.stringify(orderRecord, null, 2));
+
+      const { data: order, error: orderError } = await supabaseService
         .from("orders")
-        .update({ status: 'unclaimed' })
-        .eq('id', order.id);
+        .insert(orderRecord)
+        .select()
+        .single();
 
-      if (updateError) {
-        console.error("Error updating $0 order status:", updateError);
-        throw new Error(`Failed to update order status: ${updateError.message}`);
+      if (orderError) {
+        console.error("Error creating order:", orderError);
+        throw new Error(`Failed to create order: ${orderError.message}`);
+      }
+
+      console.log("Free order created successfully:", order.id);
+
+      // Update referral cash usage record with order ID if applicable
+      if (orderData.referral_cash_used && orderData.referral_cash_used > 0) {
+        await supabaseService
+          .from('referral_uses')
+          .update({ order_id: order.id })
+          .eq('referrer_user_id', user.id)
+          .eq('reward_given_cents', -orderData.referral_cash_used)
+          .is('order_id', null);
       }
 
       // Record promo code usage if applicable
@@ -169,8 +159,6 @@ serve(async (req) => {
           console.error("Error recording promo code usage:", promoError);
         }
       }
-
-      console.log("$0 order created successfully:", order.id);
 
       return new Response(
         JSON.stringify({ 
@@ -215,22 +203,18 @@ serve(async (req) => {
       throw new Error("Failed to create or retrieve Stripe customer");
     }
 
-    // Create payment intent
+    // Create payment intent with order data in metadata (NO ORDER CREATED YET)
+    console.log("Creating Payment Intent for paid order - order will be created after payment confirmation");
+    
     const paymentIntent = await stripe.paymentIntents.create({
       amount: orderData.total_amount_cents,
       currency: "usd",
       customer: customerId,
       metadata: {
-        order_id: order.id,
-        user_id: user.id
+        user_id: user.id,
+        order_data: JSON.stringify(orderData), // Store full order data for later creation
       },
     });
-
-    // Update order with payment intent ID
-    await supabaseService
-      .from("orders")
-      .update({ stripe_payment_intent_id: paymentIntent.id })
-      .eq('id', order.id);
 
     console.log("Payment Intent created:", paymentIntent.id);
 
@@ -238,8 +222,8 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         clientSecret: paymentIntent.client_secret,
-        orderId: order.id,
-        paymentIntentId: paymentIntent.id
+        paymentIntentId: paymentIntent.id,
+        message: "Payment intent created - order will be created after payment confirmation"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
