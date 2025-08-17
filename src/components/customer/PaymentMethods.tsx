@@ -6,12 +6,17 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { 
   CreditCard, 
   Plus,
   Trash2,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from "lucide-react";
+
+const stripePromise = loadStripe("pk_test_51QIJ7mBfJbF8BXgVFFyNaZEYmGgJY5t8QNe6o8KuFeCeJ25KKU6y3R1uXL7x8x7EFOmnNLVLPECnyHOKDhbotd5W00jRoNZqSo");
 
 interface PaymentMethod {
   id: string;
@@ -124,6 +129,39 @@ export function PaymentMethods() {
       });
     } finally {
       setDeletingMethod(null);
+    }
+  };
+
+  const addPaymentMethod = async (paymentMethodId: string, cardInfo: any) => {
+    try {
+      const { error } = await supabase
+        .from('payment_methods')
+        .insert({
+          user_id: user?.id,
+          stripe_payment_method_id: paymentMethodId,
+          card_brand: cardInfo.brand,
+          card_last4: cardInfo.last4,
+          card_exp_month: cardInfo.exp_month,
+          card_exp_year: cardInfo.exp_year,
+          is_default: paymentMethods.length === 0 // First card becomes default
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Payment method added successfully"
+      });
+
+      loadPaymentMethods();
+      setShowAddCard(false);
+    } catch (error) {
+      console.error('Error adding payment method:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add payment method",
+        variant: "destructive"
+      });
     }
   };
 
@@ -279,24 +317,100 @@ export function PaymentMethods() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4">
-            <div className="text-center py-8 text-muted-foreground">
-              <CreditCard className="h-12 w-12 mx-auto mb-4" />
-              <p>Payment method integration with Stripe</p>
-              <p className="text-sm">would be implemented here</p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddCard(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => setShowAddCard(false)}>
-              Add Method
-            </Button>
-          </DialogFooter>
+          <Elements stripe={stripePromise}>
+            <AddCardForm 
+              onSuccess={addPaymentMethod}
+              onCancel={() => setShowAddCard(false)}
+            />
+          </Elements>
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// Component for adding a new card
+function AddCardForm({ onSuccess, onCancel }: { 
+  onSuccess: (paymentMethodId: string, cardInfo: any) => void;
+  onCancel: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setLoading(true);
+
+    const card = elements.getElement(CardElement);
+    if (!card) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: card,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (paymentMethod) {
+        onSuccess(paymentMethod.id, paymentMethod.card);
+      }
+    } catch (error) {
+      console.error('Error creating payment method:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add payment method",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cardElementOptions = {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#424770',
+        '::placeholder': {
+          color: '#aab7c4',
+        },
+      },
+    },
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="p-4 border rounded-lg">
+        <CardElement options={cardElementOptions} />
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={!stripe || loading}>
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Add Payment Method
+        </Button>
+      </div>
+    </form>
   );
 }
