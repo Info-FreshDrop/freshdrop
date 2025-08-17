@@ -184,6 +184,17 @@ export function ClothesShop({ onBack }: ClothesShopProps) {
 
     setIsLoading(true);
     try {
+      // Get default laundry preferences for shop-only orders
+      const { data: defaultPrefs } = await supabase
+        .from('laundry_preferences')
+        .select('*')
+        .eq('is_default', true)
+        .eq('is_active', true);
+
+      const soapPref = defaultPrefs?.find(p => p.category === 'soap');
+      const washTempPref = defaultPrefs?.find(p => p.category === 'wash_temp');
+      const dryTempPref = defaultPrefs?.find(p => p.category === 'dry_temp');
+
       const orderData = {
         pickup_type: 'pickup_delivery' as const,
         service_type: 'wash_fold' as const,
@@ -195,11 +206,15 @@ export function ClothesShop({ onBack }: ClothesShopProps) {
         bag_count: 0, // No laundry bags for shop-only orders
         items: [{ shop_items: cart }],
         total_amount_cents: getCartTotal(),
-        shop_items: cart,
+        discount_amount_cents: 0,
+        soap_preference_id: soapPref?.id || null,
+        wash_temp_preference_id: washTempPref?.id || null,
+        dry_temp_preference_id: dryTempPref?.id || null,
         pickup_window_start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
         pickup_window_end: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(), // Tomorrow +2h
         delivery_window_start: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), // Day after
         delivery_window_end: new Date(Date.now() + 50 * 60 * 60 * 1000).toISOString(), // Day after +2h
+        promoCode: null
       };
 
       const { data, error } = await supabase.functions.invoke('create-order-with-payment', {
