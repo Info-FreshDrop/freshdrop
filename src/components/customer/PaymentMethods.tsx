@@ -133,33 +133,47 @@ export function PaymentMethods() {
   };
 
   const addPaymentMethod = async (paymentMethodId: string, cardInfo: any) => {
+    console.log('addPaymentMethod called with:', { paymentMethodId, cardInfo });
+    
     try {
-      const { error } = await supabase
+      console.log('Attempting to insert payment method into database...');
+      
+      const insertData = {
+        user_id: user?.id,
+        stripe_payment_method_id: paymentMethodId,
+        card_brand: cardInfo?.brand || 'unknown',
+        card_last4: cardInfo?.last4 || '0000',
+        card_exp_month: cardInfo?.exp_month || 12,
+        card_exp_year: cardInfo?.exp_year || 2025,
+        is_default: paymentMethods.length === 0 // First card becomes default
+      };
+      
+      console.log('Insert data:', insertData);
+      
+      const { data, error } = await supabase
         .from('payment_methods')
-        .insert({
-          user_id: user?.id,
-          stripe_payment_method_id: paymentMethodId,
-          card_brand: cardInfo.brand,
-          card_last4: cardInfo.last4,
-          card_exp_month: cardInfo.exp_month,
-          card_exp_year: cardInfo.exp_year,
-          is_default: paymentMethods.length === 0 // First card becomes default
-        });
+        .insert(insertData)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      console.log('Payment method inserted successfully:', data);
 
       toast({
         title: "Success",
         description: "Payment method added successfully"
       });
 
-      loadPaymentMethods();
+      await loadPaymentMethods();
       setShowAddCard(false);
     } catch (error) {
       console.error('Error adding payment method:', error);
       toast({
         title: "Error",
-        description: "Failed to add payment method",
+        description: `Failed to add payment method: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     }
@@ -343,34 +357,42 @@ function AddCardForm({ onSuccess, onCancel }: {
     event.preventDefault();
 
     if (!stripe || !elements) {
+      console.log('Stripe not loaded yet');
       return;
     }
 
     setLoading(true);
+    console.log('Starting payment method creation...');
 
     const card = elements.getElement(CardElement);
     if (!card) {
+      console.log('Card element not found');
       setLoading(false);
       return;
     }
 
     try {
+      console.log('Creating payment method with Stripe...');
       const { error, paymentMethod } = await stripe.createPaymentMethod({
         type: 'card',
         card: card,
       });
 
       if (error) {
+        console.error('Stripe error:', error);
         toast({
           title: "Error",
-          description: error.message,
+          description: error.message || "Failed to process card information",
           variant: "destructive"
         });
         return;
       }
 
+      console.log('Payment method created:', paymentMethod);
+
       if (paymentMethod) {
-        onSuccess(paymentMethod.id, paymentMethod.card);
+        console.log('Calling onSuccess with payment method data...');
+        await onSuccess(paymentMethod.id, paymentMethod.card);
       }
     } catch (error) {
       console.error('Error creating payment method:', error);
