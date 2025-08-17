@@ -16,7 +16,25 @@ import {
   Loader2
 } from "lucide-react";
 
-const stripePromise = loadStripe("pk_test_51QIJ7mBfJbF8BXgVFFyNaZEYmGgJY5t8QNe6o8KuFeCeJ25KKU6y3R1uXL7x8x7EFOmnNLVLPECnyHOKDhbotd5W00jRoNZqSo");
+let stripePromise: Promise<any> | null = null;
+
+const getStripePromise = async () => {
+  if (!stripePromise) {
+    try {
+      const { data } = await supabase.functions.invoke('get-stripe-publishable-key');
+      if (data?.publishableKey) {
+        stripePromise = loadStripe(data.publishableKey);
+      } else {
+        console.error('No publishable key received from function');
+        throw new Error('Failed to get Stripe publishable key');
+      }
+    } catch (error) {
+      console.error('Error getting Stripe key:', error);
+      throw error;
+    }
+  }
+  return stripePromise;
+};
 
 interface PaymentMethod {
   id: string;
@@ -36,6 +54,21 @@ export function PaymentMethods() {
   const [loading, setLoading] = useState(false);
   const [showAddCard, setShowAddCard] = useState(false);
   const [deletingMethod, setDeletingMethod] = useState<string | null>(null);
+  const [stripeReady, setStripeReady] = useState(false);
+
+  useEffect(() => {
+    // Initialize Stripe
+    getStripePromise().then(() => {
+      setStripeReady(true);
+    }).catch(error => {
+      console.error('Failed to initialize Stripe:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize payment system",
+        variant: "destructive"
+      });
+    });
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -331,7 +364,7 @@ export function PaymentMethods() {
             </DialogDescription>
           </DialogHeader>
           
-          <Elements stripe={stripePromise}>
+          <Elements stripe={stripeReady ? getStripePromise() : null}>
             <AddCardForm 
               onSuccess={addPaymentMethod}
               onCancel={() => setShowAddCard(false)}
