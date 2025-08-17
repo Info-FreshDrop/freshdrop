@@ -664,18 +664,18 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('operators')}
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  Manage Operators
+                  <span className="truncate">Manage Operators</span>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('all-operators')}
                 >
-                  View All Operators
+                  <span className="truncate">View All Operators</span>
                 </Button>
               </div>
             </CardContent>
@@ -695,18 +695,18 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('service-areas')}
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  Manage Service Areas
+                  <span className="truncate">Manage Service Areas</span>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('service-areas')}
                 >
-                  View Coverage Map
+                  <span className="truncate">View Coverage Map</span>
                 </Button>
               </div>
             </CardContent>
@@ -726,17 +726,17 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('live-orders')}
                 >
-                  Live Orders ({liveOrders.length})
+                  <span className="truncate">Live Orders ({liveOrders.length})</span>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('order-history')}
                 >
-                  Order History ({completedOrders.length})
+                  <span className="truncate">Order History ({completedOrders.length})</span>
                 </Button>
               </div>
             </CardContent>
@@ -756,17 +756,17 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('shop')}
                 >
-                  Edit Items
+                  <span className="truncate">Edit Items</span>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('shop')}
                 >
-                  Update Pricing
+                  <span className="truncate">Update Pricing</span>
                 </Button>
               </div>
             </CardContent>
@@ -786,13 +786,13 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('analytics')}
                 >
-                  Performance Dashboard
+                  <span className="truncate">Performance Dashboard</span>
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Export Reports
+                <Button variant="outline" className="w-full text-sm sm:text-base h-10 sm:h-11">
+                  <span className="truncate">Export Reports</span>
                 </Button>
               </div>
             </CardContent>
@@ -812,17 +812,17 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('promo-codes')}
                 >
-                  Manage Codes
+                  <span className="truncate">Manage Codes</span>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('promo-analytics')}
                 >
-                  Usage Analytics
+                  <span className="truncate">Usage Analytics</span>
                 </Button>
               </div>
             </CardContent>
@@ -842,14 +842,14 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('user-management')}
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Manage Users
+                  <span className="truncate">Manage Users</span>
                 </Button>
-                <Button variant="outline" className="w-full">
-                  View Team Members
+                <Button variant="outline" className="w-full text-sm sm:text-base h-10 sm:h-11">
+                  <span className="truncate">View Team Members</span>
                 </Button>
               </div>
             </CardContent>
@@ -869,14 +869,14 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('notifications')}
                 >
                   <Bell className="h-4 w-4 mr-2" />
-                  Test Notifications
+                  <span className="truncate">Test Notifications</span>
                 </Button>
-                <Button variant="outline" className="w-full">
-                  View Logs
+                <Button variant="outline" className="w-full text-sm sm:text-base h-10 sm:h-11">
+                  <span className="truncate">View Logs</span>
                 </Button>
               </div>
             </CardContent>
@@ -896,14 +896,14 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('notification-templates')}
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
-                  Edit Templates
+                  <span className="truncate">Edit Templates</span>
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Preview Messages
+                <Button variant="outline" className="w-full text-sm sm:text-base h-10 sm:h-11">
+                  <span className="truncate">Preview Messages</span>
                 </Button>
               </div>
             </CardContent>
@@ -923,14 +923,14 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('operator-payments')}
                 >
                   <DollarSign className="h-4 w-4 mr-2" />
-                  Manage Payments
+                  <span className="truncate">Manage Payments</span>
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Payment Reports
+                <Button variant="outline" className="w-full text-sm sm:text-base h-10 sm:h-11">
+                  <span className="truncate">Payment Reports</span>
                 </Button>
               </div>
             </CardContent>
@@ -950,14 +950,14 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="hero" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('business-cut')}
                 >
                   <TrendingUp className="h-4 w-4 mr-2" />
-                  Manage Business Cut
+                  <span className="truncate">Manage Business Cut</span>
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Revenue Analytics
+                <Button variant="outline" className="w-full text-sm sm:text-base h-10 sm:h-11">
+                  <span className="truncate">Revenue Analytics</span>
                 </Button>
               </div>
             </CardContent>
@@ -977,13 +977,13 @@ export function OwnerDashboard() {
               <div className="space-y-2">
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-10 sm:h-11"
                   onClick={() => setCurrentView('customer-management')}
                 >
-                  Customer List
+                  <span className="truncate">Customer List</span>
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Support Tickets
+                <Button variant="outline" className="w-full text-sm sm:text-base h-10 sm:h-11">
+                  <span className="truncate">Support Tickets</span>
                 </Button>
               </div>
             </CardContent>
