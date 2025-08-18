@@ -186,29 +186,30 @@ export function MarketingDashboard() {
   return (
     <div className="min-h-screen bg-gradient-wave">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Marketing Dashboard
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm sm:text-base">
               Manage campaigns, promotions, and communications
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
             <Button 
               variant="outline" 
               onClick={() => navigate('/owner-dashboard')}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 flex-1 sm:flex-none"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Owner Dashboard
+              <span className="hidden sm:inline">Back to Owner Dashboard</span>
+              <span className="sm:hidden">Owner Dashboard</span>
             </Button>
-            <Badge variant="secondary" className="px-3 py-1">
+            <Badge variant="secondary" className="px-3 py-2 sm:py-1 justify-center flex-1 sm:flex-none">
               <Megaphone className="h-3 w-3 mr-1" />
               Marketing Access
             </Badge>
-            <Button variant="outline" onClick={signOut}>
+            <Button variant="outline" onClick={signOut} className="flex-1 sm:flex-none">
               Sign Out
             </Button>
           </div>
