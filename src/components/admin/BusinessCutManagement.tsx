@@ -604,7 +604,7 @@ export function BusinessCutManagement() {
 
       {/* Revenue Split Edit Dialog */}
       <Dialog open={editingRevenue} onOpenChange={setEditingRevenue}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Revenue Split</DialogTitle>
             <DialogDescription>
@@ -688,7 +688,7 @@ export function BusinessCutManagement() {
 
       {/* Pricing Edit Dialog */}
       <Dialog open={editingPricing} onOpenChange={setEditingPricing}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Pricing Structure</DialogTitle>
             <DialogDescription>
@@ -777,7 +777,7 @@ export function BusinessCutManagement() {
 
       {/* Clothing Shop Edit Dialog */}
       <Dialog open={editingClothingShop} onOpenChange={setEditingClothingShop}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Clothing Shop Revenue Split</DialogTitle>
             <DialogDescription>
@@ -861,7 +861,7 @@ export function BusinessCutManagement() {
 
       {/* Tips Edit Dialog */}
       <Dialog open={editingTips} onOpenChange={setEditingTips}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Tips Distribution</DialogTitle>
             <DialogDescription>

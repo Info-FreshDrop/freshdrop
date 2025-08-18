@@ -213,7 +213,7 @@ export function ProfileCompletionPrompt({ isOpen, onComplete, onSkip }: ProfileC
 
   return (
     <Dialog open={isOpen} onOpenChange={onSkip} modal>
-      <DialogContent className="sm:max-w-[500px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl text-center">Complete Your Profile</DialogTitle>
           <div className="text-center text-muted-foreground text-sm">

@@ -277,20 +277,21 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Customer Name</TableHead>
-                    <TableHead>Customer ID</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Birthday</TableHead>
-                    <TableHead>Preferences</TableHead>
-                    <TableHead>Registration Date</TableHead>
-                    <TableHead>Total Orders</TableHead>
-                    <TableHead>Last Order</TableHead>
-                  </TableRow>
-                </TableHeader>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[150px]">Customer Name</TableHead>
+                      <TableHead className="min-w-[120px]">Customer ID</TableHead>
+                      <TableHead className="min-w-[180px]">Email</TableHead>
+                      <TableHead className="min-w-[120px]">Phone</TableHead>
+                      <TableHead className="min-w-[100px]">Birthday</TableHead>
+                      <TableHead className="min-w-[120px]">Preferences</TableHead>
+                      <TableHead className="min-w-[130px]">Registration Date</TableHead>
+                      <TableHead className="min-w-[100px]">Total Orders</TableHead>
+                      <TableHead className="min-w-[120px]">Last Order</TableHead>
+                    </TableRow>
+                  </TableHeader>
                 <TableBody>
                   {filteredCustomers.map((customer) => (
                     <TableRow key={customer.id}>
@@ -377,7 +378,8 @@ export const CustomerManagement = ({ onBack }: CustomerManagementProps) => {
                     </TableRow>
                   )}
                 </TableBody>
-              </Table>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

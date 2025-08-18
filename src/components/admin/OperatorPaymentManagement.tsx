@@ -253,7 +253,7 @@ export function OperatorPaymentManagement() {
 
       {/* Edit Payment Dialog */}
       <Dialog open={!!editingWasher} onOpenChange={() => setEditingWasher(null)}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Payment for {editingWasher && getOperatorName(editingWasher)}</DialogTitle>
             <DialogDescription>

@@ -158,7 +158,7 @@ export const NotificationTesting = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Test Notification Form */}
         <Card>
           <CardHeader>
@@ -168,7 +168,7 @@ export const NotificationTesting = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="customerId">Customer ID *</Label>
                 <Input
@@ -198,7 +198,7 @@ export const NotificationTesting = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="orderId">Order ID</Label>
                 <Input
@@ -229,7 +229,7 @@ export const NotificationTesting = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="customerEmail">Email</Label>
                 <Input
@@ -268,7 +268,7 @@ export const NotificationTesting = () => {
             <CardTitle>Notification Stats (Last 24h)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="text-center p-4 bg-muted rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
                   {logs.filter(log => log.status === 'sent' && 
@@ -302,17 +302,18 @@ export const NotificationTesting = () => {
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Recipient</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Sent At</TableHead>
-                  <TableHead>Error</TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[80px]">Type</TableHead>
+                    <TableHead className="min-w-[150px]">Recipient</TableHead>
+                    <TableHead className="min-w-[80px]">Status</TableHead>
+                    <TableHead className="min-w-[100px]">Order ID</TableHead>
+                    <TableHead className="min-w-[130px]">Sent At</TableHead>
+                    <TableHead className="min-w-[150px]">Error</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {logs.map((log) => (
                   <TableRow key={log.id}>
@@ -347,7 +348,8 @@ export const NotificationTesting = () => {
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

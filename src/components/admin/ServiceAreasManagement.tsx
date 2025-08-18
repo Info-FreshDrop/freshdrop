@@ -400,7 +400,7 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-6">
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-primary">{stats.total}</div>
@@ -452,7 +452,7 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
         </div>
         
         <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-          <SelectTrigger className="w-full md:w-[180px]">
+          <SelectTrigger className="w-full md:w-40">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -463,7 +463,7 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
         </Select>
 
         <Select value={serviceFilter} onValueChange={(value: any) => setServiceFilter(value)}>
-          <SelectTrigger className="w-full md:w-[180px]">
+          <SelectTrigger className="w-full md:w-40">
             <SelectValue placeholder="Filter by service" />
           </SelectTrigger>
           <SelectContent>

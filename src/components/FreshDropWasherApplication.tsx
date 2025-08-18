@@ -597,7 +597,7 @@ export function FreshDropWasherApplication() {
             </div>
             <div>
               <Label className="text-sm font-medium mb-3 block">Available Days *</Label>
-              <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                   <div key={day} className="flex items-center space-x-2">
                     <Checkbox

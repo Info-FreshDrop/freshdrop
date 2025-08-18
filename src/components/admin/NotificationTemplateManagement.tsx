@@ -300,7 +300,7 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
                   {template.is_active ? "Active" : "Disabled"}
                 </Badge>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Switch
                   checked={template.is_active}
                   onCheckedChange={() => toggleTemplateStatus(template)}
@@ -311,7 +311,7 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
                       <Eye className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-[95vw] sm:max-w-2xl">
                     <DialogHeader>
                       <DialogTitle>Preview - {formatStatus(template.status)}</DialogTitle>
                     </DialogHeader>
@@ -428,7 +428,7 @@ export default function NotificationTemplateManagement({ onBack }: NotificationT
       {/* Edit Dialog */}
       {editingTemplate && (
         <Dialog open={!!editingTemplate} onOpenChange={() => setEditingTemplate(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-[95vw] sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Template - {formatStatus(editingTemplate.status)}</DialogTitle>
             </DialogHeader>

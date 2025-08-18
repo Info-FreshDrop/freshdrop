@@ -417,7 +417,7 @@ export function ContentManagement() {
       </div>
 
       <Tabs defaultValue="homepage" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-0.5">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-0.5 h-auto">
           <TabsTrigger value="homepage" className="text-xs px-2 py-1">Home</TabsTrigger>
           <TabsTrigger value="order-flow" className="text-xs px-2 py-1">Order</TabsTrigger>
           <TabsTrigger value="trust" className="text-xs px-2 py-1">Trust</TabsTrigger>
