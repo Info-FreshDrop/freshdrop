@@ -310,7 +310,7 @@ export function WasherManagement({ onBack }: WasherManagementProps) {
 
                 <div className="space-y-2">
                   <Label>Service Areas (Zip Codes)</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     {serviceAreas.map((area) => (
                       <div key={area.id} className="flex items-center space-x-2">
                         <input

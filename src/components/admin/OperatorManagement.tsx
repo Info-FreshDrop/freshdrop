@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Users, UserCheck, UserX, Clock, Copy, Link as LinkIcon, Edit, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { OperatorZipCodeEditModal } from './OperatorZipCodeEditModal';
 
 interface OperatorManagementProps {
@@ -457,495 +458,477 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-1 border-b">
-        <Button
-          variant={activeTab === 'applications' ? 'default' : 'ghost'}
-          onClick={() => setActiveTab('applications')}
-          className="rounded-b-none"
-        >
-          Applications {pendingApplications.length > 0 && (
-            <Badge variant="destructive" className="ml-2">
-              {pendingApplications.length}
-            </Badge>
-          )}
-        </Button>
-        <Button
-          variant={activeTab === 'rejected' ? 'default' : 'ghost'}
-          onClick={() => setActiveTab('rejected')}
-          className="rounded-b-none"
-        >
-          Rejected Applications {rejectedCount > 0 && (
-            <Badge variant="secondary" className="ml-2">
-              {rejectedCount}
-            </Badge>
-          )}
-        </Button>
-        <Button
-          variant={activeTab === 'operators' ? 'default' : 'ghost'}
-          onClick={() => setActiveTab('operators')}
-          className="rounded-b-none"
-        >
-          Operators {pendingOperators.length > 0 && (
-            <Badge variant="destructive" className="ml-2">
-              {pendingOperators.length}
-            </Badge>
-          )}
-        </Button>
-        <Button
-          variant={activeTab === 'invite' ? 'default' : 'ghost'}
-          onClick={() => setActiveTab('invite')}
-          className="rounded-b-none"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Invite Operator
-        </Button>
-      </div>
-
-      {/* Applications Tab */}
-      {activeTab === 'applications' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Operator Applications ({pendingApplications.length} pending)
-            </CardTitle>
-            <CardDescription>Review applications from the homepage form</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {pendingApplications.length === 0 ? (
-              <div className="text-center py-8">
-                <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No pending applications</h3>
-                <p className="text-muted-foreground">New applications will appear here for review</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {pendingApplications.map((application) => (
-                  <div key={application.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-lg">
-                          {application.first_name} {application.last_name}
-                        </h4>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                          <p><strong>Email:</strong> {application.email}</p>
-                          <p><strong>Phone:</strong> {application.phone}</p>
-                          <p><strong>Address:</strong> {application.address}, {application.city}, {application.state}</p>
-                          <p><strong>Zip Code:</strong> {application.zip_code}</p>
-                          <p><strong>Vehicle:</strong> {application.vehicle_type}</p>
-                          <p><strong>Availability:</strong> {application.availability}</p>
-                        </div>
-                        {application.experience && (
-                          <div className="mt-2">
-                            <p className="text-sm"><strong>Experience:</strong> {application.experience}</p>
-                          </div>
-                        )}
-                        <div className="mt-2">
-                          <p className="text-sm"><strong>Motivation:</strong> {application.motivation}</p>
-                        </div>
-                        
-                        {/* Application Photos */}
-                        <div className="mt-4 border-t pt-4">
-                          <h5 className="text-sm font-medium mb-3">Application Photos:</h5>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {application.washer_photo_url && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Washer (Front)</p>
-                                <img 
-                                  src={application.washer_photo_url} 
-                                  alt="Washer front" 
-                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
-                                  onClick={() => window.open(application.washer_photo_url, '_blank')}
-                                />
-                              </div>
-                            )}
-                            {application.washer_inside_photo_url && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Washer (Inside)</p>
-                                <img 
-                                  src={application.washer_inside_photo_url} 
-                                  alt="Washer inside" 
-                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
-                                  onClick={() => window.open(application.washer_inside_photo_url, '_blank')}
-                                />
-                              </div>
-                            )}
-                            {application.dryer_photo_url && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Dryer (Front)</p>
-                                <img 
-                                  src={application.dryer_photo_url} 
-                                  alt="Dryer front" 
-                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
-                                  onClick={() => window.open(application.dryer_photo_url, '_blank')}
-                                />
-                              </div>
-                            )}
-                            {application.dryer_inside_photo_url && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Dryer (Inside)</p>
-                                <img 
-                                  src={application.dryer_inside_photo_url} 
-                                  alt="Dryer inside" 
-                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
-                                  onClick={() => window.open(application.dryer_inside_photo_url, '_blank')}
-                                />
-                              </div>
-                            )}
-                            {application.towel_photo_url && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Folded Towel</p>
-                                <img 
-                                  src={application.towel_photo_url} 
-                                  alt="Folded towel" 
-                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
-                                  onClick={() => window.open(application.towel_photo_url, '_blank')}
-                                />
-                              </div>
-                            )}
-                            {application.tshirt_photo_url && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Folded T-Shirt</p>
-                                <img 
-                                  src={application.tshirt_photo_url} 
-                                  alt="Folded t-shirt" 
-                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
-                                  onClick={() => window.open(application.tshirt_photo_url, '_blank')}
-                                />
-                              </div>
-                            )}
-                            {application.laundry_stack_photo_url && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Laundry Stack</p>
-                                <img 
-                                  src={application.laundry_stack_photo_url} 
-                                  alt="Laundry stack" 
-                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
-                                  onClick={() => window.open(application.laundry_stack_photo_url, '_blank')}
-                                />
-                              </div>
-                            )}
-                            {application.laundry_area_photo_url && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Laundry Area</p>
-                                <img 
-                                  src={application.laundry_area_photo_url} 
-                                  alt="Laundry area" 
-                                  className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
-                                  onClick={() => window.open(application.laundry_area_photo_url, '_blank')}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <p className="text-xs text-muted-foreground mt-4">
-                          Applied: {new Date(application.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleApplicationAction(application.id, 'approved')}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <UserCheck className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => handleApplicationAction(application.id, 'rejected')}
-                        >
-                          <UserX className="h-4 w-4 mr-1" />
-                          Reject
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-0.5">
+          <TabsTrigger value="applications" className="text-xs px-2 py-1">
+            Apps {pendingApplications.length > 0 && (
+              <Badge variant="destructive" className="ml-1 text-xs px-1">
+                {pendingApplications.length}
+              </Badge>
             )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Rejected Applications Tab */}
-      {activeTab === 'rejected' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserX className="h-5 w-5" />
-              Rejected Applications ({rejectedCount})
-            </CardTitle>
-            <CardDescription>Review and reinstate rejected applications</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {rejectedCount === 0 ? (
-              <div className="text-center py-8">
-                <UserX className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No rejected applications</h3>
-                <p className="text-muted-foreground">Rejected applications will appear here for future review</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {rejectedApplications.map((application) => (
-                  <div key={application.id} className="border border-red-200 rounded-lg p-4 space-y-3 bg-red-50">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-lg">
-                            {application.first_name} {application.last_name}
-                          </h4>
-                          <Badge variant="destructive">Rejected</Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                          <p><strong>Email:</strong> {application.email}</p>
-                          <p><strong>Phone:</strong> {application.phone}</p>
-                          <p><strong>Address:</strong> {application.address}, {application.city}, {application.state}</p>
-                          <p><strong>Zip Code:</strong> {application.zip_code}</p>
-                          <p><strong>Vehicle:</strong> {application.vehicle_type}</p>
-                          <p><strong>Availability:</strong> {application.availability}</p>
-                        </div>
-                        {application.experience && (
-                          <div className="mt-2">
-                            <p className="text-sm"><strong>Experience:</strong> {application.experience}</p>
-                          </div>
-                        )}
-                        <div className="mt-2">
-                          <p className="text-sm"><strong>Motivation:</strong> {application.motivation}</p>
-                        </div>
-                        
-                        <div className="flex gap-4 text-xs text-muted-foreground mt-4 pt-4 border-t border-red-200">
-                          <p>Applied: {new Date(application.created_at).toLocaleDateString()}</p>
-                          <p>Rejected: {new Date(application.created_at).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          onClick={() => reinstateApplication(application.id)}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          <UserCheck className="h-4 w-4 mr-1" />
-                          Reinstate
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          </TabsTrigger>
+          <TabsTrigger value="rejected" className="text-xs px-2 py-1">
+            Rejected {rejectedCount > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs px-1">
+                {rejectedCount}
+              </Badge>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </TabsTrigger>
+          <TabsTrigger value="operators" className="text-xs px-2 py-1">
+            Operators {pendingOperators.length > 0 && (
+              <Badge variant="destructive" className="ml-1 text-xs px-1">
+                {pendingOperators.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="invite" className="text-xs px-2 py-1">
+            <Plus className="h-3 w-3 mr-1" />
+            Invite
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Operators Tab */}
-      {activeTab === 'operators' && (
-        <>
-          {/* Pending Approvals */}
-          {pendingOperators.length > 0 && (
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-yellow-800">
-                  <Clock className="h-5 w-5" />
-                  Pending Approvals ({pendingOperators.length})
-                </CardTitle>
-                <CardDescription>Review and approve new operator invites</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {pendingOperators.map((operator) => (
-                    <div key={operator.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
-                      <div>
-                        <h4 className="font-medium">
-                          {operator.profiles ? 
-                            `${operator.profiles.first_name} ${operator.profiles.last_name}` : 
-                            'Pending Registration'
-                          }
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          Service Areas: {operator.zip_codes?.join(', ') || 'None'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Applied: {new Date(operator.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleApproval(operator.id, true)}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <UserCheck className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => handleApproval(operator.id, false)}
-                        >
-                          <UserX className="h-4 w-4 mr-1" />
-                          Reject
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Active Operators */}
+        <TabsContent value="applications">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Active Operators ({activeOperators.length})
+                <Clock className="h-5 w-5" />
+                Operator Applications ({pendingApplications.length} pending)
               </CardTitle>
-              <CardDescription>Manage your approved operators</CardDescription>
+              <CardDescription>Review applications from the homepage form</CardDescription>
             </CardHeader>
             <CardContent>
-              {activeOperators.length === 0 ? (
+              {pendingApplications.length === 0 ? (
                 <div className="text-center py-8">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No operators yet</h3>
-                  <p className="text-muted-foreground mb-4">Invite your first operator to get started</p>
-                  <Button onClick={() => setActiveTab('invite')}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Invite Operator
-                  </Button>
+                  <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No pending applications</h3>
+                  <p className="text-muted-foreground">New applications will appear here for review</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {activeOperators.map((operator) => (
-                    <div key={operator.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div>
-                          <h4 className="font-medium">
-                            {operator.profiles ? 
-                              `${operator.profiles.first_name} ${operator.profiles.last_name}` : 
-                              'Unknown Operator'
-                            }
+                  {pendingApplications.map((application) => (
+                    <div key={application.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-lg">
+                            {application.first_name} {application.last_name}
                           </h4>
-                          <p className="text-sm text-muted-foreground">
-                            {operator.profiles?.phone && `Phone: ${operator.profiles.phone} • `}
-                            Service Areas: {operator.zip_codes?.join(', ') || 'None'}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Locker Access: {operator.locker_access?.length || 0} location(s)
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                            <p><strong>Email:</strong> {application.email}</p>
+                            <p><strong>Phone:</strong> {application.phone}</p>
+                            <p><strong>Address:</strong> {application.address}, {application.city}, {application.state}</p>
+                            <p><strong>Zip Code:</strong> {application.zip_code}</p>
+                            <p><strong>Vehicle:</strong> {application.vehicle_type}</p>
+                            <p><strong>Availability:</strong> {application.availability}</p>
+                          </div>
+                          {application.experience && (
+                            <div className="mt-2">
+                              <p className="text-sm"><strong>Experience:</strong> {application.experience}</p>
+                            </div>
+                          )}
+                          <div className="mt-2">
+                            <p className="text-sm"><strong>Motivation:</strong> {application.motivation}</p>
+                          </div>
+                          
+                          {/* Application Photos */}
+                          <div className="mt-4 border-t pt-4">
+                            <h5 className="text-sm font-medium mb-3">Application Photos:</h5>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              {application.washer_photo_url && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Washer (Front)</p>
+                                  <img 
+                                    src={application.washer_photo_url} 
+                                    alt="Washer front" 
+                                    className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                    onClick={() => window.open(application.washer_photo_url, '_blank')}
+                                  />
+                                </div>
+                              )}
+                              {application.washer_inside_photo_url && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Washer (Inside)</p>
+                                  <img 
+                                    src={application.washer_inside_photo_url} 
+                                    alt="Washer inside" 
+                                    className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                    onClick={() => window.open(application.washer_inside_photo_url, '_blank')}
+                                  />
+                                </div>
+                              )}
+                              {application.dryer_photo_url && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Dryer (Front)</p>
+                                  <img 
+                                    src={application.dryer_photo_url} 
+                                    alt="Dryer front" 
+                                    className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                    onClick={() => window.open(application.dryer_photo_url, '_blank')}
+                                  />
+                                </div>
+                              )}
+                              {application.dryer_inside_photo_url && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Dryer (Inside)</p>
+                                  <img 
+                                    src={application.dryer_inside_photo_url} 
+                                    alt="Dryer inside" 
+                                    className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                    onClick={() => window.open(application.dryer_inside_photo_url, '_blank')}
+                                  />
+                                </div>
+                              )}
+                              {application.towel_photo_url && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Folded Towel</p>
+                                  <img 
+                                    src={application.towel_photo_url} 
+                                    alt="Folded towel" 
+                                    className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                    onClick={() => window.open(application.towel_photo_url, '_blank')}
+                                  />
+                                </div>
+                              )}
+                              {application.tshirt_photo_url && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Folded T-Shirt</p>
+                                  <img 
+                                    src={application.tshirt_photo_url} 
+                                    alt="Folded t-shirt" 
+                                    className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                    onClick={() => window.open(application.tshirt_photo_url, '_blank')}
+                                  />
+                                </div>
+                              )}
+                              {application.laundry_stack_photo_url && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Laundry Stack</p>
+                                  <img 
+                                    src={application.laundry_stack_photo_url} 
+                                    alt="Laundry stack" 
+                                    className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                    onClick={() => window.open(application.laundry_stack_photo_url, '_blank')}
+                                  />
+                                </div>
+                              )}
+                              {application.laundry_area_photo_url && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Laundry Area</p>
+                                  <img 
+                                    src={application.laundry_area_photo_url} 
+                                    alt="Laundry area" 
+                                    className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                    onClick={() => window.open(application.laundry_area_photo_url, '_blank')}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs text-muted-foreground mt-4">
+                            Applied: {new Date(application.created_at).toLocaleDateString()}
                           </p>
                         </div>
+                        <div className="flex flex-col gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleApplicationAction(application.id, 'approved')}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <UserCheck className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => handleApplicationAction(application.id, 'rejected')}
+                          >
+                            <UserX className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
                       </div>
-                      
-                       <div className="flex items-center gap-4">
-                         {getStatusBadge(operator)}
-                         <div className="flex items-center gap-2">
-                           <Label className="text-sm">Active</Label>
-                           <Switch
-                             checked={operator.is_active}
-                             onCheckedChange={(checked) => toggleOperatorStatus(operator.id, checked)}
-                           />
-                         </div>
-                         <div className="flex gap-2">
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             onClick={() => setEditingOperator(operator)}
-                           >
-                             <Edit className="h-4 w-4" />
-                           </Button>
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             onClick={() => toggleOperatorStatus(operator.id, false)}
-                           >
-                             <Trash2 className="h-4 w-4" />
-                           </Button>
-                         </div>
-                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </CardContent>
           </Card>
-        </>
-      )}
+        </TabsContent>
 
-      {/* Invite Form Tab */}
-      {activeTab === 'invite' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Invite New Operator</CardTitle>
-            <CardDescription>Generate an invite link for a new operator</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <Label className="text-base font-medium">Service Areas</Label>
-              <p className="text-sm text-muted-foreground mb-3">Select zip codes this operator can service</p>
-              <div className="grid grid-cols-3 gap-2">
-                {serviceAreas.map((area) => (
-                  <div key={area.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`zip-${area.zip_code}`}
-                      checked={inviteForm.selectedZipCodes.includes(area.zip_code)}
-                      onCheckedChange={(checked) => handleZipCodeChange(area.zip_code, checked as boolean)}
-                    />
-                    <Label htmlFor={`zip-${area.zip_code}`} className="text-sm">
-                      {area.zip_code}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-base font-medium">Locker Access</Label>
-              <p className="text-sm text-muted-foreground mb-3">Select lockers this operator can access</p>
-              <div className="space-y-2">
-                {lockers.map((locker) => (
-                  <div key={locker.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`locker-${locker.id}`}
-                      checked={inviteForm.selectedLockers.includes(locker.id)}
-                      onCheckedChange={(checked) => handleLockerAccessChange(locker.id, checked as boolean)}
-                    />
-                    <Label htmlFor={`locker-${locker.id}`} className="text-sm">
-                      {locker.name} - {locker.address}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button onClick={generateInviteLink}>
-                <LinkIcon className="h-4 w-4 mr-2" />
-                Generate Invite Link
-              </Button>
-              <Button variant="outline" onClick={() => setShowInviteForm(false)}>
-                Cancel
-              </Button>
-            </div>
-
-            {generatedLink && (
-              <div className="p-4 bg-muted rounded-lg">
-                <Label className="text-sm font-medium">Generated Invite Link:</Label>
-                <div className="flex items-center gap-2 mt-2">
-                  <Input value={generatedLink} readOnly className="font-mono text-xs" />
-                  <Button size="sm" onClick={copyInviteLink}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
+        <TabsContent value="rejected">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserX className="h-5 w-5" />
+                Rejected Applications ({rejectedCount})
+              </CardTitle>
+              <CardDescription>Review and reinstate rejected applications</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {rejectedCount === 0 ? (
+                <div className="text-center py-8">
+                  <UserX className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No rejected applications</h3>
+                  <p className="text-muted-foreground">Rejected applications will appear here for future review</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  This link expires in 7 days. Share it with the operator to complete registration.
-                </p>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  {rejectedApplications.map((application) => (
+                    <div key={application.id} className="border border-red-200 rounded-lg p-4 space-y-3 bg-red-50">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium text-lg">
+                              {application.first_name} {application.last_name}
+                            </h4>
+                            <Badge variant="destructive">Rejected</Badge>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                            <p><strong>Email:</strong> {application.email}</p>
+                            <p><strong>Phone:</strong> {application.phone}</p>
+                            <p><strong>Address:</strong> {application.address}, {application.city}, {application.state}</p>
+                            <p><strong>Zip Code:</strong> {application.zip_code}</p>
+                            <p><strong>Vehicle:</strong> {application.vehicle_type}</p>
+                            <p><strong>Availability:</strong> {application.availability}</p>
+                          </div>
+                          {application.experience && (
+                            <div className="mt-2">
+                              <p className="text-sm"><strong>Experience:</strong> {application.experience}</p>
+                            </div>
+                          )}
+                          <div className="mt-2">
+                            <p className="text-sm"><strong>Motivation:</strong> {application.motivation}</p>
+                          </div>
+                          
+                          <div className="flex gap-4 text-xs text-muted-foreground mt-4 pt-4 border-t border-red-200">
+                            <p>Applied: {new Date(application.created_at).toLocaleDateString()}</p>
+                            <p>Rejected: {new Date(application.created_at).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => reinstateApplication(application.id)}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <UserCheck className="h-4 w-4 mr-1" />
+                            Reinstate
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="operators">
+          <>
+            {/* Pending Approvals */}
+            {pendingOperators.length > 0 && (
+              <Card className="border-yellow-200 bg-yellow-50 mb-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-yellow-800">
+                    <Clock className="h-5 w-5" />
+                    Pending Approvals ({pendingOperators.length})
+                  </CardTitle>
+                  <CardDescription>Review and approve new operator invites</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {pendingOperators.map((operator) => (
+                      <div key={operator.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                        <div>
+                          <h4 className="font-medium">
+                            {operator.profiles ? 
+                              `${operator.profiles.first_name} ${operator.profiles.last_name}` : 
+                              'Pending Registration'
+                            }
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            Service Areas: {operator.zip_codes?.join(', ') || 'None'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Applied: {new Date(operator.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleApproval(operator.id, true)}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <UserCheck className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => handleApproval(operator.id, false)}
+                          >
+                            <UserX className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
-      )}
+
+            {/* Active Operators */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Active Operators ({activeOperators.length})
+                </CardTitle>
+                <CardDescription>Manage your approved operators</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {activeOperators.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No operators yet</h3>
+                    <p className="text-muted-foreground mb-4">Invite your first operator to get started</p>
+                    <Button onClick={() => setActiveTab('invite')}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Invite Operator
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {activeOperators.map((operator) => (
+                      <div key={operator.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg space-y-4 sm:space-y-0">
+                        <div className="flex items-center gap-4">
+                          <div>
+                            <h4 className="font-medium">
+                              {operator.profiles ? 
+                                `${operator.profiles.first_name} ${operator.profiles.last_name}` : 
+                                'Unknown Operator'
+                              }
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {operator.profiles?.phone && `Phone: ${operator.profiles.phone} • `}
+                              Service Areas: {operator.zip_codes?.join(', ') || 'None'}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Locker Access: {operator.locker_access?.length || 0} location(s)
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+                          {getStatusBadge(operator)}
+                          <div className="flex items-center gap-2">
+                            <Label className="text-sm">Active</Label>
+                            <Switch
+                              checked={operator.is_active}
+                              onCheckedChange={(checked) => toggleOperatorStatus(operator.id, checked)}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingOperator(operator)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => toggleOperatorStatus(operator.id, false)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        </TabsContent>
+
+        <TabsContent value="invite">
+          <Card>
+            <CardHeader>
+              <CardTitle>Invite New Operator</CardTitle>
+              <CardDescription>Generate an invite link for a new operator</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-base font-medium">Service Areas</Label>
+                <p className="text-sm text-muted-foreground mb-3">Select zip codes this operator can service</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {serviceAreas.map((area) => (
+                    <div key={area.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`zip-${area.zip_code}`}
+                        checked={inviteForm.selectedZipCodes.includes(area.zip_code)}
+                        onCheckedChange={(checked) => handleZipCodeChange(area.zip_code, checked as boolean)}
+                      />
+                      <Label htmlFor={`zip-${area.zip_code}`} className="text-sm">
+                        {area.zip_code}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-base font-medium">Locker Access</Label>
+                <p className="text-sm text-muted-foreground mb-3">Select lockers this operator can access</p>
+                <div className="space-y-2">
+                  {lockers.map((locker) => (
+                    <div key={locker.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`locker-${locker.id}`}
+                        checked={inviteForm.selectedLockers.includes(locker.id)}
+                        onCheckedChange={(checked) => handleLockerAccessChange(locker.id, checked as boolean)}
+                      />
+                      <Label htmlFor={`locker-${locker.id}`} className="text-sm">
+                        {locker.name} - {locker.address}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={generateInviteLink}>
+                  <LinkIcon className="h-4 w-4 mr-2" />
+                  Generate Invite Link
+                </Button>
+                <Button variant="outline" onClick={() => setShowInviteForm(false)}>
+                  Cancel
+                </Button>
+              </div>
+
+              {generatedLink && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <Label className="text-sm font-medium">Generated Invite Link:</Label>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Input value={generatedLink} readOnly className="font-mono text-xs" />
+                    <Button size="sm" onClick={copyInviteLink}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    This link expires in 7 days. Share it with the operator to complete registration.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Zip Code Edit Modal */}
       {editingOperator && (
