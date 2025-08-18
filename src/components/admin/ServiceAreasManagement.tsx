@@ -372,15 +372,15 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4">
         <div>
           <Button onClick={onBack} variant="outline" className="mb-4">
             ← Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold">Service Areas Management</h1>
-          <p className="text-muted-foreground">Manage zip codes and their service capabilities</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Service Areas Management</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Manage zip codes and their service capabilities</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button 
             onClick={() => setShowAddForm(!showAddForm)}
             className="flex items-center gap-2"
