@@ -417,15 +417,15 @@ export function ContentManagement() {
       </div>
 
       <Tabs defaultValue="homepage" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-          <TabsTrigger value="homepage">Homepage</TabsTrigger>
-          <TabsTrigger value="order-flow">Order Flow</TabsTrigger>
-          <TabsTrigger value="trust">Trust Metrics</TabsTrigger>
-          <TabsTrigger value="testimonials">Reviews</TabsTrigger>
-          <TabsTrigger value="operators">Operators</TabsTrigger>
-          <TabsTrigger value="shop">Shop Items</TabsTrigger>
-          <TabsTrigger value="preferences">Preferences</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-0.5">
+          <TabsTrigger value="homepage" className="text-xs px-2 py-1">Home</TabsTrigger>
+          <TabsTrigger value="order-flow" className="text-xs px-2 py-1">Order</TabsTrigger>
+          <TabsTrigger value="trust" className="text-xs px-2 py-1">Trust</TabsTrigger>
+          <TabsTrigger value="testimonials" className="text-xs px-2 py-1">Reviews</TabsTrigger>
+          <TabsTrigger value="operators" className="text-xs px-2 py-1">Ops</TabsTrigger>
+          <TabsTrigger value="shop" className="text-xs px-2 py-1">Shop</TabsTrigger>
+          <TabsTrigger value="preferences" className="text-xs px-2 py-1">Prefs</TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs px-2 py-1">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="homepage" className="space-y-6">

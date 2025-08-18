@@ -392,20 +392,20 @@ export function LiveOrderManagement({ onBack }: LiveOrderManagementProps) {
 
         {/* Order Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all">
-              All Orders ({orders.length})
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-0.5">
+            <TabsTrigger value="all" className="text-xs px-2 py-1">
+              All ({orders.length})
             </TabsTrigger>
-            <TabsTrigger value="new">
+            <TabsTrigger value="new" className="text-xs px-2 py-1">
               New ({orders.filter(o => o.status === 'unclaimed').length})
             </TabsTrigger>
-            <TabsTrigger value="active">
+            <TabsTrigger value="active" className="text-xs px-2 py-1">
               Active ({orders.filter(o => ['claimed', 'in_progress', 'washing', 'drying', 'folding', 'delivering', 'washed'].includes(o.status)).length})
             </TabsTrigger>
-            <TabsTrigger value="completed">
-              Completed ({orders.filter(o => o.status === 'completed').length})
+            <TabsTrigger value="completed" className="text-xs px-2 py-1">
+              Done ({orders.filter(o => o.status === 'completed').length})
             </TabsTrigger>
-            <TabsTrigger value="issues">
+            <TabsTrigger value="issues" className="text-xs px-2 py-1">
               Issues ({orders.filter(o => o.status === 'cancelled').length})
             </TabsTrigger>
           </TabsList>

@@ -179,21 +179,21 @@ export default function OwnerDashboard() {
         </div>
 
         <Tabs defaultValue="pricing" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="pricing">
-              <DollarSign className="h-4 w-4 mr-2" />
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-0.5">
+            <TabsTrigger value="pricing" className="flex items-center gap-1 px-2 py-2 text-xs">
+              <DollarSign className="h-3 w-3" />
               Pricing
             </TabsTrigger>
-            <TabsTrigger value="locations">
-              <MapPin className="h-4 w-4 mr-2" />
+            <TabsTrigger value="locations" className="flex items-center gap-1 px-2 py-2 text-xs">
+              <MapPin className="h-3 w-3" />
               Locations
             </TabsTrigger>
-            <TabsTrigger value="service-areas" onClick={() => setCurrentView('service-areas')}>
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Service Areas
+            <TabsTrigger value="service-areas" onClick={() => setCurrentView('service-areas')} className="flex items-center gap-1 px-2 py-2 text-xs">
+              <BarChart3 className="h-3 w-3" />
+              Service
             </TabsTrigger>
-            <TabsTrigger value="content">
-              <FileText className="h-4 w-4 mr-2" />
+            <TabsTrigger value="content" className="flex items-center gap-1 px-2 py-2 text-xs">
+              <FileText className="h-3 w-3" />
               Content
             </TabsTrigger>
           </TabsList>
