@@ -440,7 +440,7 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
       </div>
 
       {/* Filters and Search */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col md:flex-row gap-4 mb-6 items-stretch md:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -477,9 +477,10 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
         {selectedAreas.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2 text-sm">
                 <MoreHorizontal className="h-4 w-4" />
-                Bulk Actions ({selectedAreas.length})
+                <span className="hidden sm:inline">Bulk Actions ({selectedAreas.length})</span>
+                <span className="sm:hidden">Actions</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -548,9 +549,9 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
               </div>
             </div>
             
-            <div className="flex gap-2 mt-4">
-              <Button onClick={handleAddArea}>Add Service Area</Button>
-              <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
+            <div className="flex flex-col sm:flex-row gap-2 mt-4">
+              <Button onClick={handleAddArea} className="flex-1 sm:flex-none">Add Service Area</Button>
+              <Button variant="outline" onClick={() => setShowAddForm(false)} className="flex-1 sm:flex-none">Cancel</Button>
             </div>
           </CardContent>
         </Card>
@@ -558,7 +559,7 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
 
       {/* Area List with Selection */}
       {filteredAreas.length > 0 && (
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
           <div className="flex items-center gap-2">
             <Checkbox
               checked={selectedAreas.length === filteredAreas.length}
