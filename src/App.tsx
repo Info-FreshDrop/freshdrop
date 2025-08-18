@@ -14,6 +14,7 @@ import OperatorSignup from "./pages/OperatorSignup";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import Support from "./pages/Support";
 import AppStoreSubmissionKit from "./components/mobile/AppStoreSubmissionKit";
 import "./App.css";
 
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/operator-signup" element={<OperatorSignup />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/support" element={<Support />} />
               <Route path="/ios-ready" element={<AppStoreSubmissionKit />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
