@@ -321,7 +321,7 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <Card className="border-0 shadow-soft">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -380,7 +380,7 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
         {/* Filters and Search */}
         <Card className="border-0 shadow-soft mb-6">
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
@@ -467,7 +467,7 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
                             {getStatusBadge(operator)}
                           </div>
                           
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div className="flex items-center gap-2">
                               <MapPin className="h-4 w-4 text-muted-foreground" />
                               <span>Zip Codes: {operator.zip_codes?.join(', ') || 'None'}</span>
@@ -488,7 +488,7 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
                           </div>
 
                           {/* Performance Stats */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-muted/50 p-3 rounded">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-muted/50 p-3 rounded">
                             <div>
                               <p className="text-muted-foreground">Total Orders</p>
                               <p className="font-medium">{stats.totalOrders}</p>

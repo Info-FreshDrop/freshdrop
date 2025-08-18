@@ -340,7 +340,7 @@ export function InteractiveServiceMap({ onBack }: InteractiveServiceMapProps) {
             <CardTitle className="text-lg">Map Legend</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-red-500"></div>
                 <span className="text-sm">Express Service</span>

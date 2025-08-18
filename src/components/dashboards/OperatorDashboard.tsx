@@ -903,7 +903,7 @@ export function OperatorDashboard() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 gap-0.5">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-0.5">
             <TabsTrigger value="live-orders" className="flex flex-col items-center gap-1 px-1 py-2 text-xs">
               <Package className="h-4 w-4" />
               <span className="leading-tight text-center">

@@ -155,7 +155,7 @@ export function CustomerEngagementAnalytics({ onBack }: CustomerEngagementProps)
         ) : (
           <div className="space-y-6">
             {/* Overview Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               <Card className="border-0 shadow-soft">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">

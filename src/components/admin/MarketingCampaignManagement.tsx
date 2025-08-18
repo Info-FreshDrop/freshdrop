@@ -437,7 +437,7 @@ export function MarketingCampaignManagement({ onBack }: MarketingCampaignManagem
             </CardHeader>
             
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Target Segment:</span>
                   <p className="font-medium">{campaign.target_segment?.replace('_', ' ') || 'All customers'}</p>
