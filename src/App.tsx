@@ -1,3 +1,4 @@
+
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
@@ -22,9 +23,37 @@ import "./App.css";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+// Create a separate component that uses the profile completion hook
+function AppContent() {
   const { shouldShowPrompt, markPromptCompleted, dismissPrompt } = useProfileCompletion();
 
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+        <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/operator-signup" element={<OperatorSignup />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/support" element={<Support />} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      
+      {/* Profile Completion Prompt */}
+      <ProfileCompletionPrompt
+        isOpen={shouldShowPrompt}
+        onComplete={markPromptCompleted}
+        onSkip={dismissPrompt}
+      />
+    </>
+  );
+}
+
+const App = () => {
   return (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -33,28 +62,9 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-              <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
-              <Route path="/payment-success" element={<PaymentSuccess />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/operator-signup" element={<OperatorSignup />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/support" element={<Support />} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AppContent />
           </BrowserRouter>
         </TooltipProvider>
-        
-        {/* Profile Completion Prompt */}
-        <ProfileCompletionPrompt
-          isOpen={shouldShowPrompt}
-          onComplete={markPromptCompleted}
-          onSkip={dismissPrompt}
-        />
       </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>
