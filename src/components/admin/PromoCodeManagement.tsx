@@ -454,7 +454,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
         <Card>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="code">Promo Code</Label>
                   <Input
@@ -515,7 +515,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
               </div>
 
               {/* Date Range */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {renderDatePicker('Valid From (Optional)', 'valid_from')}
                 {renderDatePicker('Valid Until (Optional)', 'valid_until')}
               </div>
@@ -574,7 +574,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button type="submit">
                   {editingCode ? 'Update Promo Code' : 'Create Promo Code'}
                 </Button>
@@ -749,7 +749,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <Button 
           variant="outline" 
           onClick={() => {
@@ -786,7 +786,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
           ) : (
             <div className="space-y-4">
               {promoCodes.map((promoCode) => (
-                <div key={promoCode.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={promoCode.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 border rounded-lg gap-4">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       {promoCode.discount_type === 'percentage' ? (
