@@ -730,18 +730,18 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
   // Main List View
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4">
         <div>
           <Button onClick={onBack} variant="outline" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold">Promo Code Management</h1>
-          <p className="text-muted-foreground">Create and manage discount codes for customers</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Promo Code Management</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Create and manage discount codes for customers</p>
         </div>
         <Button 
           onClick={() => setCurrentView('create')}
-          className="flex items-center gap-2"
+          className="flex items-center justify-center gap-2 sm:self-start"
         >
           <Plus className="h-4 w-4" />
           Create Promo Code
