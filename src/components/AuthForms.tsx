@@ -23,6 +23,7 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    confirmPassword: '',
     name: '',
     phone: '',
     address: '',
@@ -150,6 +151,27 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password confirmation
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match. Please check and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate password strength
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -394,8 +416,9 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={handleInputChange}
-                      placeholder="Create a password"
+                      placeholder="Create a password (min. 6 characters)"
                       className="pl-10 pr-10"
+                      minLength={6}
                       required
                     />
                     <button
@@ -406,6 +429,33 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  {formData.password.length > 0 && formData.password.length < 6 && (
+                    <p className="text-xs text-red-600">Password must be at least 6 characters long</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="confirm-password"
+                      name="confirmPassword"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      placeholder="Confirm your password"
+                      className="pl-10"
+                      required
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  {formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword && (
+                    <p className="text-xs text-red-600">Passwords do not match</p>
+                  )}
+                  {formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword && formData.password.length >= 6 && (
+                    <p className="text-xs text-green-600">Passwords match ✓</p>
+                  )}
                 </div>
                 
                 <Button 
