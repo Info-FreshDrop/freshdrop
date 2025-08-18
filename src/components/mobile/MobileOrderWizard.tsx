@@ -73,7 +73,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
     deliveryAddress: '',
     zipCode: '',
     specialInstructions: '',
-    bagCount: 1,
+    bags: [{ size: '13gal', count: 1 }], // Array of bag objects
     timeWindow: '',
     pickupDate: '',
     soapPreference: '',
@@ -293,7 +293,13 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
   };
 
   const calculateTotal = () => {
-    let total = formData.bagCount * 3500; // $35 per bag
+    let total = 0;
+    
+    // Calculate bag costs
+    formData.bags.forEach(bag => {
+      const pricePerBag = bag.size === '30gal' ? 6000 : 3500; // $60 for 30gal, $35 for 13gal
+      total += bag.count * pricePerBag;
+    });
     
     if (isExpress) {
       total += 2000; // $20 express fee
@@ -423,7 +429,13 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
       deliveryEnd.setDate(deliveryEnd.getDate() + 1);
 
       // Calculate total and discount amounts
-      let baseTotal = formData.bagCount * 3500; // Base amount before discount
+      let baseTotal = 0;
+      
+      // Calculate bag costs
+      formData.bags.forEach(bag => {
+        const pricePerBag = bag.size === '30gal' ? 6000 : 3500;
+        baseTotal += bag.count * pricePerBag;
+      });
       
       if (isExpress) {
         baseTotal += 2000; // $20 express fee
@@ -459,8 +471,12 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         pickup_address: formData.pickupAddress,
         delivery_address: formData.deliveryAddress,
         special_instructions: formData.specialInstructions,
-        bag_count: formData.bagCount,
-        items: [{ time_window: formData.timeWindow, shop_items: selectedShopItems }],
+        bag_count: formData.bags.reduce((total, bag) => total + bag.count, 0),
+        items: [{ 
+          time_window: formData.timeWindow, 
+          shop_items: selectedShopItems,
+          bag_details: formData.bags // Store bag size details
+        }],
         total_amount_cents: totalAmountCents,
         discount_amount_cents: discountAmountCents,
         soap_preference_id: formData.soapPreference,
@@ -769,24 +785,90 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
               </Select>
             </div>
 
-            {/* Bag Count */}
-            <div className="space-y-2">
-              <Label>Number of Bags ($35 each)</Label>
-              <Select 
-                value={formData.bagCount.toString()} 
-                onValueChange={(value) => handleInputChange('bagCount', parseInt(value))}
+            {/* Bag Selection */}
+            <div className="space-y-4">
+              <Label>Bag Selection</Label>
+              {formData.bags.map((bag, index) => (
+                <Card key={index} className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Bag {index + 1}</h4>
+                      {formData.bags.length > 1 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newBags = formData.bags.filter((_, i) => i !== index);
+                            setFormData(prev => ({ ...prev, bags: newBags }));
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-sm">Size</Label>
+                        <Select 
+                          value={bag.size} 
+                          onValueChange={(value) => {
+                            const newBags = [...formData.bags];
+                            newBags[index] = { ...newBags[index], size: value };
+                            setFormData(prev => ({ ...prev, bags: newBags }));
+                          }}
+                        >
+                          <SelectTrigger className="h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="13gal">13-gal ($35)</SelectItem>
+                            <SelectItem value="30gal">30-gal ($60)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm">Count</Label>
+                        <Select 
+                          value={bag.count.toString()} 
+                          onValueChange={(value) => {
+                            const newBags = [...formData.bags];
+                            newBags[index] = { ...newBags[index], count: parseInt(value) };
+                            setFormData(prev => ({ ...prev, bags: newBags }));
+                          }}
+                        >
+                          <SelectTrigger className="h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[1,2,3,4,5].map(num => (
+                              <SelectItem key={num} value={num.toString()}>
+                                {num}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Total: ${((bag.size === '30gal' ? 60 : 35) * bag.count).toFixed(2)}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    bags: [...prev.bags, { size: '13gal', count: 1 }]
+                  }));
+                }}
+                className="w-full"
               >
-                <SelectTrigger className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1,2,3,4,5].map(num => (
-                    <SelectItem key={num} value={num.toString()}>
-                      {num} bag{num > 1 ? 's' : ''} - ${(num * 35).toFixed(2)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Another Bag
+              </Button>
             </div>
 
             {/* Express Service */}
@@ -1027,7 +1109,13 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
               </div>
               <div className="flex justify-between text-sm">
                 <span>Bags:</span>
-                <span className="font-medium">{formData.bagCount} × $35 = ${(formData.bagCount * 35).toFixed(2)}</span>
+                <div className="text-right">
+                  {formData.bags.map((bag, index) => (
+                    <div key={index} className="font-medium">
+                      {bag.count} × {bag.size === '30gal' ? '30-gal ($60)' : '13-gal ($35)'} = ${((bag.size === '30gal' ? 60 : 35) * bag.count).toFixed(2)}
+                    </div>
+                  ))}
+                </div>
               </div>
               {isExpress && (
                 <div className="flex justify-between text-sm">

@@ -43,11 +43,19 @@ export function LaundryInstructionsModal({ isOpen, onClose, onContinue }: Laundr
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <Package className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                <p className="text-gray-700">
-                  All laundry will need to be placed in a standard 13 gallon bag or a Fresh Drop bag. 
-                  If you have more than one bag, please make sure to select the appropriate 
-                  amount of bags for pickup when you place your order.
-                </p>
+                <div className="text-gray-700">
+                  <p className="mb-2">
+                    All laundry will need to be placed in one of our two bag sizes:
+                  </p>
+                  <ul className="list-disc list-inside ml-4 space-y-1">
+                    <li><strong>13-gallon bag: $35</strong> - Perfect for smaller loads or individual items</li>
+                    <li><strong>30-gallon bag: $60</strong> - Ideal for larger loads or family laundry</li>
+                  </ul>
+                  <p className="mt-2">
+                    If you have multiple bags, please make sure to select the appropriate 
+                    bag sizes and quantities when placing your order.
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-start gap-3">
