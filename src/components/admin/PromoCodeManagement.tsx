@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Percent, DollarSign, ShoppingBag, CalendarIcon, ArrowLeft, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Percent, DollarSign, ShoppingBag, CalendarIcon, ArrowLeft, Eye, Upload, Image, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
@@ -27,6 +27,7 @@ interface PromoCode {
   discount_type: string;
   discount_value: number;
   description: string | null;
+  image_url: string | null;
   is_active: boolean;
   one_time_use_per_user: boolean;
   restricted_to_item_ids: string[] | null;
@@ -66,6 +67,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
     discount_type: 'percentage',
     discount_value: 0,
     description: '',
+    image_url: '',
     is_active: true,
     one_time_use_per_user: false,
     visible_to_customers: false,
@@ -73,6 +75,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
     valid_until: null as Date | null,
     restricted_to_item_ids: [] as string[]
   });
+  const [imageUploading, setImageUploading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -82,6 +85,26 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
     if (initialView === 'reports') {
       loadUsageAnalytics();
     }
+
+    // Set up real-time subscription for promo codes
+    const promoCodesChannel = supabase
+      .channel('promo-codes-admin-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'promo_codes'
+        },
+        () => {
+          loadPromoCodes();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(promoCodesChannel);
+    };
   }, [initialView]);
 
   const loadPromoCodes = async () => {
@@ -198,6 +221,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
       discount_type: 'percentage',
       discount_value: 0,
       description: '',
+      image_url: '',
       is_active: true,
       one_time_use_per_user: false,
       visible_to_customers: false,
@@ -256,6 +280,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
         discount_type: formData.discount_type,
         discount_value: formData.discount_value,
         description: formData.description.trim() || null,
+        image_url: formData.image_url.trim() || null,
         is_active: formData.is_active,
         one_time_use_per_user: formData.one_time_use_per_user,
         visible_to_customers: formData.visible_to_customers,
@@ -320,6 +345,7 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
       discount_type: promoCode.discount_type,
       discount_value: promoCode.discount_value,
       description: promoCode.description || '',
+      image_url: promoCode.image_url || '',
       is_active: promoCode.is_active,
       one_time_use_per_user: promoCode.one_time_use_per_user,
       visible_to_customers: promoCode.visible_to_customers,
@@ -379,6 +405,89 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
         description: "Failed to update promo code status",
         variant: "destructive"
       });
+    }
+  };
+
+  const toggleVisibility = async (id: string, visible_to_customers: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('promo_codes')
+        .update({ visible_to_customers, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Promo code ${visible_to_customers ? 'shown to' : 'hidden from'} customers`
+      });
+
+      loadPromoCodes();
+    } catch (error) {
+      console.error('Error updating promo code visibility:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update promo code visibility",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please select an image file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "Image must be less than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setImageUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `promo-${Date.now()}.${fileExt}`;
+      const filePath = `promo-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('marketing-content')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('marketing-content')
+        .getPublicUrl(filePath);
+
+      handleInputChange('image_url', publicUrl);
+      
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully"
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive"
+      });
+    } finally {
+      setImageUploading(false);
     }
   };
 
@@ -512,6 +621,49 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
                   placeholder="Brief description of this promo code..."
                   rows={2}
                 />
+              </div>
+
+              {/* Image Upload */}
+              <div className="space-y-3">
+                <Label>Coupon Image (Optional)</Label>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={imageUploading}
+                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Upload an image for the coupon (max 5MB)
+                    </p>
+                  </div>
+                  {imageUploading && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Uploading...
+                    </div>
+                  )}
+                </div>
+                {formData.image_url && (
+                  <div className="mt-3">
+                    <img 
+                      src={formData.image_url} 
+                      alt="Coupon preview" 
+                      className="w-32 h-20 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleInputChange('image_url', '')}
+                      className="mt-2"
+                    >
+                      Remove Image
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Date Range */}
@@ -859,6 +1011,14 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
                     >
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={promoCode.visible_to_customers ? "default" : "outline"}
+                      onClick={() => toggleVisibility(promoCode.id, !promoCode.visible_to_customers)}
+                      className="flex-none"
+                    >
+                      {promoCode.visible_to_customers ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                     </Button>
                     <Button
                       size="sm"

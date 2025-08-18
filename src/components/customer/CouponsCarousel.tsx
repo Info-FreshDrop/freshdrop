@@ -23,6 +23,26 @@ export function CouponsCarousel() {
 
   useEffect(() => {
     loadCoupons();
+
+    // Set up real-time subscription for promo codes
+    const promoCodesChannel = supabase
+      .channel('promo-codes-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'promo_codes'
+        },
+        () => {
+          loadCoupons();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(promoCodesChannel);
+    };
   }, []);
 
   const loadCoupons = async () => {
@@ -31,6 +51,7 @@ export function CouponsCarousel() {
         .from('promo_codes')
         .select('*')
         .eq('is_active', true)
+        .eq('visible_to_customers', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
