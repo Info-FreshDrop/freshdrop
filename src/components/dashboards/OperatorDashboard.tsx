@@ -903,22 +903,33 @@ export function OperatorDashboard() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="live-orders" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+            <TabsTrigger value="live-orders" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3">
               <Package className="h-4 w-4" />
-              Live Orders ({availableOrders.length})
+              <span className="text-xs sm:text-sm font-medium text-center">
+                <span className="hidden sm:inline">Live Orders</span>
+                <span className="sm:hidden">Live</span>
+                <span className="block sm:inline"> ({availableOrders.length})</span>
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="my-orders" className="flex items-center gap-2">
+            <TabsTrigger value="my-orders" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3">
               <Clock className="h-4 w-4" />
-              My Orders ({myOrders.filter(order => !['completed', 'delivered'].includes(order.status)).length})
+              <span className="text-xs sm:text-sm font-medium text-center">
+                <span className="hidden sm:inline">My Orders</span>
+                <span className="sm:hidden">Mine</span>
+                <span className="block sm:inline"> ({myOrders.filter(order => !['completed', 'delivered'].includes(order.status)).length})</span>
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="reviews-tips" className="flex items-center gap-2">
+            <TabsTrigger value="reviews-tips" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3">
               <Star className="h-4 w-4" />
-              Reviews & Tips
+              <span className="text-xs sm:text-sm font-medium text-center">
+                <span className="hidden sm:inline">Reviews & Tips</span>
+                <span className="sm:hidden">Reviews</span>
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="account" className="flex items-center gap-2">
+            <TabsTrigger value="account" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3">
               <Users className="h-4 w-4" />
-              Account
+              <span className="text-xs sm:text-sm font-medium">Account</span>
             </TabsTrigger>
           </TabsList>
 

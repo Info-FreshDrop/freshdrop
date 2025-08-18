@@ -238,18 +238,24 @@ export function OperatorProfileSettings({ isOpen, onClose, onSave }: OperatorPro
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 gap-1">
+            <TabsTrigger value="profile" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3">
               <User className="h-4 w-4" />
-              Profile
+              <span className="text-xs sm:text-sm font-medium">Profile</span>
             </TabsTrigger>
-            <TabsTrigger value="service-areas" className="flex items-center gap-2">
+            <TabsTrigger value="service-areas" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3">
               <MapPin className="h-4 w-4" />
-              Service Areas
+              <span className="text-xs sm:text-sm font-medium text-center">
+                <span className="hidden sm:inline">Service Areas</span>
+                <span className="sm:hidden">Areas</span>
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="availability" className="flex items-center gap-2">
+            <TabsTrigger value="availability" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3">
               <Calendar className="h-4 w-4" />
-              Availability
+              <span className="text-xs sm:text-sm font-medium text-center">
+                <span className="hidden sm:inline">Availability</span>
+                <span className="sm:hidden">Schedule</span>
+              </span>
             </TabsTrigger>
           </TabsList>
 
