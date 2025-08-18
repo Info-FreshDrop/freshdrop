@@ -578,56 +578,29 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
         {filteredAreas.map((area) => (
           <Card key={area.id} className={!area.is_active ? 'opacity-50' : ''}>
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    checked={selectedAreas.includes(area.id)}
-                    onCheckedChange={() => toggleAreaSelection(area.id)}
-                  />
-                  <MapPin className="h-5 w-5 text-primary" />
-                  <div>
-                    <h3 className="font-semibold text-lg">{area.zip_code}</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground">
-                        Added {new Date(area.created_at).toLocaleDateString()}
-                      </p>
-                      {!area.is_active && (
-                        <Badge variant="secondary" className="text-xs">Inactive</Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-6">
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm">Delivery</Label>
-                      <Switch
-                        checked={area.allows_delivery}
-                        onCheckedChange={(checked) => handleUpdateCapabilities(area.id, 'allows_delivery', checked)}
-                        disabled={!area.is_active}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm">Locker</Label>
-                      <Switch
-                        checked={area.allows_locker}
-                        onCheckedChange={(checked) => handleUpdateCapabilities(area.id, 'allows_locker', checked)}
-                        disabled={!area.is_active}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm">Express</Label>
-                      <Switch
-                        checked={area.allows_express}
-                        onCheckedChange={(checked) => handleUpdateCapabilities(area.id, 'allows_express', checked)}
-                        disabled={!area.is_active}
-                      />
+              <div className="space-y-4">
+                {/* Header Row */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={selectedAreas.includes(area.id)}
+                      onCheckedChange={() => toggleAreaSelection(area.id)}
+                    />
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <div>
+                      <h3 className="font-semibold text-lg">{area.zip_code}</h3>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-muted-foreground">
+                          Added {new Date(area.created_at).toLocaleDateString()}
+                        </p>
+                        {!area.is_active && (
+                          <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
+                  {/* Actions - Only critical actions in header for mobile */}
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -637,11 +610,43 @@ export const ServiceAreasManagement: React.FC<ServiceAreasManagementProps> = ({ 
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                    
+                  </div>
+                </div>
+                
+                {/* Service Toggles - Stack on mobile, inline on larger screens */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 border-t border-border">
+                  <div className="flex items-center justify-between sm:justify-start gap-2">
                     <Label className="text-sm">Active</Label>
                     <Switch
                       checked={area.is_active}
                       onCheckedChange={(checked) => handleToggleActive(area.id, checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between sm:justify-start gap-2">
+                    <Label className="text-sm">Delivery</Label>
+                    <Switch
+                      checked={area.allows_delivery}
+                      onCheckedChange={(checked) => handleUpdateCapabilities(area.id, 'allows_delivery', checked)}
+                      disabled={!area.is_active}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between sm:justify-start gap-2">
+                    <Label className="text-sm">Locker</Label>
+                    <Switch
+                      checked={area.allows_locker}
+                      onCheckedChange={(checked) => handleUpdateCapabilities(area.id, 'allows_locker', checked)}
+                      disabled={!area.is_active}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between sm:justify-start gap-2">
+                    <Label className="text-sm">Express</Label>
+                    <Switch
+                      checked={area.allows_express}
+                      onCheckedChange={(checked) => handleUpdateCapabilities(area.id, 'allows_express', checked)}
+                      disabled={!area.is_active}
                     />
                   </div>
                 </div>
