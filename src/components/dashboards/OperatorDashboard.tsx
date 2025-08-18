@@ -33,6 +33,7 @@ import {
   Check,
   Settings,
   User,
+  LogOut,
   ExternalLink
 } from "lucide-react";
 import { ServiceAreaModal } from './ServiceAreaModal';
@@ -864,16 +865,6 @@ export function OperatorDashboard() {
   return (
     <div className="min-h-screen bg-gradient-wave">
       <div className="container mx-auto px-4 py-8 pb-16">
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="p-0 h-auto text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Exit Dashboard
-          </Button>
-        </div>
         
         <div className="flex flex-col gap-4 mb-8">
           <div>
@@ -1266,6 +1257,26 @@ export function OperatorDashboard() {
                       <p className="text-sm text-muted-foreground">Active Orders</p>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Sign Out Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-red-600">
+                    <LogOut className="h-5 w-5" />
+                    Account Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    variant="destructive" 
+                    onClick={signOut}
+                    className="w-full"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
                 </CardContent>
               </Card>
             </div>

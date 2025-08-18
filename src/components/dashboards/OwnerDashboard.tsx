@@ -529,17 +529,6 @@ export function OwnerDashboard() {
   return (
     <div className="min-h-screen bg-gradient-wave">
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-        <div className="mb-4 sm:mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="p-0 h-auto text-muted-foreground hover:text-foreground text-sm"
-          >
-            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-            Exit Dashboard
-          </Button>
-        </div>
-        
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
@@ -554,6 +543,9 @@ export function OwnerDashboard() {
               <Shield className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
               Owner Access
             </Badge>
+            <Button variant="outline" onClick={signOut} className="text-xs sm:text-sm">
+              Sign Out
+            </Button>
           </div>
         </div>
 
