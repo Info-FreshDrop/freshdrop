@@ -6,6 +6,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Percent, Gift, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import Autoplay from "embla-carousel-autoplay";
 
 interface Coupon {
   id: string;
@@ -96,7 +97,11 @@ export function CouponsCarousel() {
         Available Coupons
       </h3>
       
-      <Carousel className="w-full" opts={{ align: "start", loop: false }}>
+      <Carousel 
+        className="w-full" 
+        opts={{ align: "start", loop: true }}
+        plugins={[Autoplay({ delay: 4000, stopOnInteraction: true })]}
+      >
         <CarouselContent className="-ml-2 md:-ml-4">
           {coupons.map((coupon) => (
             <CarouselItem key={coupon.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
