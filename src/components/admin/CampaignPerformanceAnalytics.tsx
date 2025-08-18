@@ -88,7 +88,7 @@ export function CampaignPerformanceAnalytics({ onBack }: CampaignPerformanceProp
   return (
     <div className="min-h-screen bg-gradient-wave">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col gap-4 mb-8">
           <div>
             <Button
               variant="ghost"
