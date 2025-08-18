@@ -1986,6 +1986,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_rate_limit: {
+        Args: {
+          p_action: string
+          p_identifier: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
       cleanup_expired_pending_orders: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2012,6 +2021,15 @@ export type Database = {
       is_admin_role: {
         Args: { user_uuid: string }
         Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_ip_address?: string
+          p_user_agent?: string
+        }
+        Returns: undefined
       }
       send_order_notification: {
         Args: {
