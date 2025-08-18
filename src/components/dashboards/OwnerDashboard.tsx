@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ import {
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'order-history' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management' | 'operator-payments' | 'business-cut'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [liveOrders, setLiveOrders] = useState<any[]>([]);
@@ -530,7 +532,7 @@ export function OwnerDashboard() {
         <div className="mb-4 sm:mb-6">
           <Button
             variant="ghost"
-            onClick={signOut}
+            onClick={() => navigate('/')}
             className="p-0 h-auto text-muted-foreground hover:text-foreground text-sm"
           >
             <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />

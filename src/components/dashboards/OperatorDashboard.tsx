@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { useCapacitor } from "@/hooks/useCapacitor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -178,6 +179,7 @@ function OperatorMessageButton({ order, onClick }: { order: Order; onClick: () =
 export function OperatorDashboard() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { getCurrentLocation } = useCapacitor();
   const [activeTab, setActiveTab] = useState("live-orders");
   const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<Order | null>(null);
@@ -865,7 +867,7 @@ export function OperatorDashboard() {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={signOut}
+            onClick={() => navigate('/')}
             className="p-0 h-auto text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
