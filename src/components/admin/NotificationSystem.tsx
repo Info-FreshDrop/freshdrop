@@ -48,37 +48,34 @@ export function NotificationSystem({ onBack }: NotificationSystemProps) {
   }, []);
 
   const loadRecentNotifications = async () => {
-    // In a real implementation, you'd load notification history from a database
-    // For now, we'll use mock data
-    setRecentNotifications([
-      {
-        id: '1',
-        title: 'System Maintenance',
-        content: 'Scheduled maintenance tonight from 11 PM to 1 AM',
-        type: 'warning',
-        audience: 'all',
-        sent_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        delivered_count: 245
-      },
-      {
-        id: '2',
-        title: 'New Express Service',
-        content: 'Express service now available in Manhattan!',
-        type: 'success',
-        audience: 'customers',
-        sent_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        delivered_count: 156
-      },
-      {
-        id: '3',
-        title: 'High Order Volume',
-        content: 'Multiple orders available in your area',
-        type: 'info',
-        audience: 'washers',
-        sent_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        delivered_count: 12
+    try {
+      // Load actual notification logs from the database
+      const { data: notifications, error } = await supabase
+        .from('notification_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      if (notifications && notifications.length > 0) {
+        const formattedNotifications = notifications.map(notif => ({
+          id: notif.id,
+          title: notif.notification_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          content: notif.message_content || 'No content available',
+          type: notif.status === 'delivered' ? 'success' : notif.status === 'failed' ? 'error' : 'info',
+          audience: 'customers', // Default, could be enhanced based on notification type
+          sent_at: notif.sent_at || notif.created_at,
+          delivered_count: 1 // Could be enhanced to count actual deliveries
+        }));
+        setRecentNotifications(formattedNotifications);
+      } else {
+        setRecentNotifications([]);
       }
-    ]);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      setRecentNotifications([]);
+    }
   };
 
   const predefinedTemplates: NotificationTemplate[] = [

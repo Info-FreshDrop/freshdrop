@@ -64,6 +64,8 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
   const [operatorDetails, setOperatorDetails] = useState<any>(null);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
   const [isLoading, setIsLoading] = useState(true);
+  const [serviceAreaStats, setServiceAreaStats] = useState<Array<{zip_code: string; order_count: number}>>([]);
+  const [systemAlerts, setSystemAlerts] = useState<Array<{type: string; title: string; description: string}>>([]);
 
   const { userRole } = useAuth();
 
@@ -214,6 +216,37 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
           topServices,
           operatorsPerformance
         });
+
+        // Load service area stats from actual orders
+        const areaStats = orders.reduce((acc: Record<string, number>, order) => {
+          acc[order.zip_code] = (acc[order.zip_code] || 0) + 1;
+          return acc;
+        }, {});
+        
+        const serviceAreas = Object.entries(areaStats)
+          .map(([zip_code, order_count]) => ({ zip_code, order_count: order_count as number }))
+          .sort((a, b) => b.order_count - a.order_count);
+        
+        setServiceAreaStats(serviceAreas);
+
+        // Generate real system alerts based on actual data
+        const alerts = [];
+        
+        // Check for unclaimed orders
+        const unclaimedOrders = orders.filter(order => 
+          order.status === 'unclaimed' && 
+          (new Date().getTime() - new Date(order.created_at).getTime()) > (2 * 60 * 60 * 1000) // > 2 hours
+        );
+        
+        if (unclaimedOrders.length > 0) {
+          alerts.push({
+            type: 'warning',
+            title: 'High unclaimed orders',
+            description: `${unclaimedOrders.length} orders pending for >2 hours`
+          });
+        }
+        
+        setSystemAlerts(alerts);
       }
     } catch (error) {
       console.error('Error loading analytics:', error);
@@ -710,27 +743,25 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">10001 (Manhattan)</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">89 orders</span>
-                    <Badge variant="default">High</Badge>
+                {serviceAreaStats.length > 0 ? serviceAreaStats.map((area, index) => (
+                  <div key={area.zip_code} className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{area.zip_code}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">{area.order_count} orders</span>
+                      <Badge variant={
+                        area.order_count >= 50 ? "default" : 
+                        area.order_count >= 20 ? "secondary" : 
+                        "outline"
+                      }>
+                        {area.order_count >= 50 ? "High" : 
+                         area.order_count >= 20 ? "Medium" : 
+                         "Low"}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">10002 (Lower East)</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">67 orders</span>
-                    <Badge variant="secondary">Medium</Badge>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">10003 (East Village)</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">45 orders</span>
-                    <Badge variant="outline">Low</Badge>
-                  </div>
-                </div>
+                )) : (
+                  <p className="text-sm text-muted-foreground">No service areas found</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -745,27 +776,33 @@ export function AnalyticsDashboard({ onBack }: AnalyticsDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">High unclaimed orders</p>
-                    <p className="text-xs text-muted-foreground">8 orders pending for &gt;2 hours</p>
+                {systemAlerts.length > 0 ? systemAlerts.map((alert, index) => (
+                  <div key={index} className={`flex items-start gap-3 p-3 rounded-lg border ${
+                    alert.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
+                    alert.type === 'info' ? 'bg-blue-50 border-blue-200' :
+                    'bg-green-50 border-green-200'
+                  }`}>
+                    {alert.type === 'warning' ? (
+                      <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />
+                    ) : alert.type === 'info' ? (
+                      <Clock className="h-4 w-4 text-blue-600 mt-0.5" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">{alert.title}</p>
+                      <p className="text-xs text-muted-foreground">{alert.description}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <Clock className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Locker #3 maintenance</p>
-                    <p className="text-xs text-muted-foreground">Scheduled for tomorrow 2 PM</p>
+                )) : (
+                  <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">All systems operational</p>
+                      <p className="text-xs text-muted-foreground">No alerts at this time</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">All systems operational</p>
-                    <p className="text-xs text-muted-foreground">No critical issues detected</p>
-                  </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
