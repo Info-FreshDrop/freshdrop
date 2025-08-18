@@ -786,76 +786,88 @@ export const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({ onBack
           ) : (
             <div className="space-y-4">
               {promoCodes.map((promoCode) => (
-                <div key={promoCode.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 border rounded-lg gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      {promoCode.discount_type === 'percentage' ? (
-                        <Percent className="h-4 w-4 text-primary" />
-                      ) : (
-                        <DollarSign className="h-4 w-4 text-primary" />
-                      )}
-                      <Badge variant={promoCode.is_active ? "default" : "secondary"}>
-                        {promoCode.code}
-                      </Badge>
-                    </div>
-                    <div>
-                      <h4 className="font-medium">
-                        {getDiscountDisplay(promoCode.discount_type, promoCode.discount_value)}
-                      </h4>
-                      {promoCode.description && (
-                        <p className="text-sm text-muted-foreground">{promoCode.description}</p>
-                      )}
-                      <div className="flex gap-4 text-xs text-muted-foreground">
-                        <span>Created: {new Date(promoCode.created_at).toLocaleDateString()}</span>
-                        {promoCode.valid_from && (
-                          <span>From: {new Date(promoCode.valid_from).toLocaleDateString()}</span>
-                        )}
-                        {promoCode.valid_until && (
-                          <span>Until: {new Date(promoCode.valid_until).toLocaleDateString()}</span>
-                        )}
-                        {promoCode.visible_to_customers && (
-                          <Badge variant="outline" className="text-xs flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            Visible
-                          </Badge>
-                        )}
-                        {promoCode.one_time_use_per_user && (
-                          <Badge variant="outline" className="text-xs">One-time use</Badge>
-                        )}
-                        {promoCode.restricted_to_item_ids && promoCode.restricted_to_item_ids.length > 0 && (
-                          <Badge variant="outline" className="text-xs flex items-center gap-1">
-                            <ShoppingBag className="h-3 w-3" />
-                            {promoCode.restricted_to_item_ids.length} item(s)
-                          </Badge>
+                <div key={promoCode.id} className="bg-card border rounded-xl p-4 space-y-4 shadow-sm">
+                  {/* Header with code and discount */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
+                        {promoCode.discount_type === 'percentage' ? (
+                          <Percent className="h-5 w-5 text-primary" />
+                        ) : (
+                          <DollarSign className="h-5 w-5 text-primary" />
                         )}
                       </div>
+                      <div>
+                        <Badge variant={promoCode.is_active ? "default" : "secondary"} className="text-sm font-medium">
+                          {promoCode.code}
+                        </Badge>
+                        <h4 className="font-semibold text-lg mt-1">
+                          {getDiscountDisplay(promoCode.discount_type, promoCode.discount_value)}
+                        </h4>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <Label className="text-sm">Active</Label>
                       <Switch
                         checked={promoCode.is_active}
                         onCheckedChange={(checked) => toggleStatus(promoCode.id, checked)}
                       />
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(promoCode)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(promoCode.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {promoCode.description && (
+                    <p className="text-muted-foreground">{promoCode.description}</p>
+                  )}
+
+                  {/* Badges and restrictions */}
+                  <div className="flex flex-wrap gap-2">
+                    {promoCode.visible_to_customers && (
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        Visible
+                      </Badge>
+                    )}
+                    {promoCode.one_time_use_per_user && (
+                      <Badge variant="outline">One-time use</Badge>
+                    )}
+                    {promoCode.restricted_to_item_ids && promoCode.restricted_to_item_ids.length > 0 && (
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <ShoppingBag className="h-3 w-3" />
+                        {promoCode.restricted_to_item_ids.length} item(s)
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Dates */}
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <div>Created: {new Date(promoCode.created_at).toLocaleDateString()}</div>
+                    {promoCode.valid_from && (
+                      <div>Valid from: {new Date(promoCode.valid_from).toLocaleDateString()}</div>
+                    )}
+                    {promoCode.valid_until && (
+                      <div>Valid until: {new Date(promoCode.valid_until).toLocaleDateString()}</div>
+                    )}
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2 pt-2 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(promoCode)}
+                      className="flex-1"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(promoCode.id)}
+                      className="flex-none"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
