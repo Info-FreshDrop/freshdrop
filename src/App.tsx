@@ -15,12 +15,17 @@ import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Support from "./pages/Support";
+import { ProfileCompletionPrompt } from "./components/ProfileCompletionPrompt";
+import { useProfileCompletion } from "./hooks/useProfileCompletion";
 
 import "./App.css";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  const { shouldShowPrompt, markPromptCompleted, dismissPrompt } = useProfileCompletion();
+
+  return (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -43,9 +48,17 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
+        
+        {/* Profile Completion Prompt */}
+        <ProfileCompletionPrompt
+          isOpen={shouldShowPrompt}
+          onComplete={markPromptCompleted}
+          onSkip={dismissPrompt}
+        />
       </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>
-);
+  );
+};
 
 export default App;
