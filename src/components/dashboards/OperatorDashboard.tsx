@@ -863,7 +863,7 @@ export function OperatorDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-wave">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-16">
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -905,28 +905,28 @@ export function OperatorDashboard() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-0.5">
-            <TabsTrigger value="live-orders" className="flex flex-col items-center gap-1 px-1 py-2 text-xs">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto">
+            <TabsTrigger value="live-orders" className="flex flex-col items-center gap-1 px-2 py-3 text-xs min-h-[60px]">
               <Package className="h-4 w-4" />
-              <span className="leading-tight text-center">
+              <span className="leading-tight text-center whitespace-nowrap">
                 Live<br />({availableOrders.length})
               </span>
             </TabsTrigger>
-            <TabsTrigger value="my-orders" className="flex flex-col items-center gap-1 px-1 py-2 text-xs">
+            <TabsTrigger value="my-orders" className="flex flex-col items-center gap-1 px-2 py-3 text-xs min-h-[60px]">
               <Clock className="h-4 w-4" />
-              <span className="leading-tight text-center">
+              <span className="leading-tight text-center whitespace-nowrap">
                 Orders<br />({myOrders.filter(order => !['completed', 'delivered'].includes(order.status)).length})
               </span>
             </TabsTrigger>
-            <TabsTrigger value="reviews-tips" className="flex flex-col items-center gap-1 px-1 py-2 text-xs">
+            <TabsTrigger value="reviews-tips" className="flex flex-col items-center gap-1 px-2 py-3 text-xs min-h-[60px]">
               <Star className="h-4 w-4" />
-              <span className="leading-tight text-center">
+              <span className="leading-tight text-center whitespace-nowrap">
                 Reviews
               </span>
             </TabsTrigger>
-            <TabsTrigger value="account" className="flex flex-col items-center gap-1 px-1 py-2 text-xs">
+            <TabsTrigger value="account" className="flex flex-col items-center gap-1 px-2 py-3 text-xs min-h-[60px]">
               <Users className="h-4 w-4" />
-              <span className="leading-tight text-center">
+              <span className="leading-tight text-center whitespace-nowrap">
                 Account
               </span>
             </TabsTrigger>
