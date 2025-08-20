@@ -18,7 +18,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Initialize Supabase client
+    // Initialize Supabase client with service role key for admin operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -117,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Immediately disable the user account
+    // Immediately disable the user account using admin API
     const { error: disableError } = await supabaseClient.auth.admin.updateUserById(
       user.id,
       { 
@@ -140,6 +140,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
+    console.log('User account disabled successfully:', user.id);
 
     // Create deletion request
     const { data: deletionRequest, error: insertError } = await supabaseClient
