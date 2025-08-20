@@ -100,28 +100,37 @@ export function ProfileCompletionPrompt({ isOpen, onComplete, onSkip }: ProfileC
   const handleSave = async () => {
     setLoading(true);
     try {
-      let result;
+      console.log('Saving profile:', profile);
       
-      if (profile.id) {
-        // Update existing profile
-        result = await supabase
-          .from('profiles')
-          .update({
-            ...profile,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', profile.id);
-      } else {
-        // Insert new profile
-        result = await supabase
-          .from('profiles')
-          .insert({
-            user_id: user?.id,
-            ...profile,
-          });
+      // Always use upsert with user_id as the key for better reliability
+      const profileData = {
+        user_id: user?.id,
+        first_name: profile.first_name?.trim() || null,
+        last_name: profile.last_name?.trim() || null,
+        phone: profile.phone?.trim() || null,
+        email: profile.email?.trim() || null,
+        birthday: profile.birthday || null,
+        avatar_url: profile.avatar_url || null,
+        opt_in_sms: profile.opt_in_sms || false,
+        opt_in_email: profile.opt_in_email || false,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .upsert(profileData, { 
+          onConflict: 'user_id',
+          ignoreDuplicates: false 
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Profile save error:', error);
+        throw error;
       }
 
-      if (result.error) throw result.error;
+      console.log('Profile saved successfully:', data);
 
       toast({
         title: "Profile completed!",
