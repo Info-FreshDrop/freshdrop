@@ -59,7 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from('orders')
       .select('id, status')
       .eq('customer_id', user.id)
-      .in('status', ['placed', 'claimed', 'in_progress', 'ready_for_pickup']);
+      .in('status', ['placed', 'claimed', 'in_progress']);
 
     if (ordersError) {
       console.error('Error checking active orders:', ordersError);
