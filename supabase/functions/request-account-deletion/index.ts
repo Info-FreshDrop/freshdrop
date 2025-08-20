@@ -88,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Check if there's already a pending deletion request
     const { data: existingRequest, error: checkError } = await supabaseClient
       .from('account_deletion_requests')
-      .select('id, status')
+      .select('id, status, scheduled_deletion_at, data_export_requested')
       .eq('user_id', user.id)
       .eq('status', 'pending')
       .maybeSingle();
@@ -105,14 +105,46 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (existingRequest) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'You already have a pending account deletion request.',
-          requestId: existingRequest.id
-        }),
+      // If there's already a pending request, disable the account immediately and return success
+      console.log('Found existing deletion request, proceeding with account disable:', existingRequest.id);
+      
+      // Disable the account immediately
+      const { error: disableError } = await supabaseClient.auth.admin.updateUserById(
+        user.id,
         { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          user_metadata: { 
+            ...user.user_metadata,
+            account_disabled: true,
+            pending_deletion: true,
+            deletion_requested_at: new Date().toISOString()
+          }
+        }
+      );
+
+      if (disableError) {
+        console.error('Error disabling user account:', disableError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to disable account' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      console.log('User account disabled successfully for existing request:', user.id);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Account deletion request processed successfully',
+          scheduledDeletion: existingRequest.scheduled_deletion_at,
+          requestId: existingRequest.id,
+          dataExportRequested: existingRequest.data_export_requested
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
