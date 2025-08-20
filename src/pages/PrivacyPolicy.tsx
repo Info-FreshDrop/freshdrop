@@ -108,7 +108,53 @@ export default function PrivacyPolicy() {
                 </section>
 
                 <section>
-                  <h2 className="text-xl font-semibold mb-3">6. Your Rights</h2>
+                  <h2 className="text-xl font-semibold mb-3">6. Account Deletion and Data Retention</h2>
+                  <p className="text-muted-foreground mb-4">
+                    You have full control over your account and personal data. You can request account deletion 
+                    at any time through your account settings.
+                  </p>
+                  
+                  <h3 className="text-lg font-medium mb-2">Account Deletion Process:</h3>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li><strong>Request Submission:</strong> You can initiate account deletion from your profile settings</li>
+                    <li><strong>7-Day Waiting Period:</strong> Account deletion is scheduled for 7 days after your request to allow cancellation</li>
+                    <li><strong>Data Export Option:</strong> You can request a copy of your personal data before deletion</li>
+                    <li><strong>Confirmation Required:</strong> Multiple confirmation steps prevent accidental deletion</li>
+                    <li><strong>Final Processing:</strong> After the waiting period, deletion is processed and cannot be reversed</li>
+                  </ul>
+
+                  <h3 className="text-lg font-medium mb-2 mt-4">What Gets Deleted:</h3>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Personal profile information (name, email, phone, address)</li>
+                    <li>Account login credentials and authentication data</li>
+                    <li>Communication preferences and notification settings</li>
+                    <li>Stored payment methods and billing information</li>
+                    <li>Profile photos and uploaded images</li>
+                    <li>Chat messages and support conversations</li>
+                  </ul>
+
+                  <h3 className="text-lg font-medium mb-2 mt-4">What We Retain (Anonymized):</h3>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Order history for business records and tax compliance (without personal identifiers)</li>
+                    <li>Transaction records required by law (anonymized after deletion)</li>
+                    <li>Aggregated usage statistics for service improvement (no personal data)</li>
+                  </ul>
+
+                  <h3 className="text-lg font-medium mb-2 mt-4">Active Orders:</h3>
+                  <p className="text-muted-foreground">
+                    Account deletion cannot be processed while you have active orders. All orders must be 
+                    completed or cancelled before deletion can proceed.
+                  </p>
+
+                  <h3 className="text-lg font-medium mb-2 mt-4">Cancelling Deletion:</h3>
+                  <p className="text-muted-foreground">
+                    You can cancel your account deletion request at any time during the 7-day waiting period 
+                    by logging into your account or contacting support.
+                  </p>
+                </section>
+
+                <section>
+                  <h2 className="text-xl font-semibold mb-3">7. Your Rights</h2>
                   <p className="text-muted-foreground mb-4">You have the right to:</p>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                     <li>Access and update your personal information</li>
@@ -119,7 +165,7 @@ export default function PrivacyPolicy() {
                 </section>
 
                 <section>
-                  <h2 className="text-xl font-semibold mb-3">7. Contact Us</h2>
+                  <h2 className="text-xl font-semibold mb-3">8. Contact Us</h2>
                   <p className="text-muted-foreground">
                     If you have any questions about this Privacy Policy, please contact us at:
                   </p>

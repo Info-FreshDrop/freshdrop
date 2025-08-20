@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Save, X, LogOut, Mail, Calendar, Settings } from "lucide-react";
+import { Camera, Save, X, LogOut, Mail, Calendar, Settings, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AccountDeletionModal } from "@/components/customer/AccountDeletionModal";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [existingProfileId, setExistingProfileId] = useState<string | null>(null);
+  const [showDeletionModal, setShowDeletionModal] = useState(false);
   const [profile, setProfile] = useState({
     first_name: '',
     last_name: '',
@@ -314,12 +316,8 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-between gap-3 pt-3">
-            <Button variant="outline" onClick={signOut} className="text-destructive hover:text-destructive order-2 sm:order-1">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 order-1 sm:order-2">
+          <div className="flex flex-col gap-3 pt-3">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               <Button variant="outline" onClick={onClose} className="flex-1 sm:flex-none">
                 <X className="h-4 w-4 mr-2" />
                 Cancel
@@ -329,9 +327,33 @@ export function ProfileModal({ isOpen, onClose, onProfileUpdate }: ProfileModalP
                 {loading ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
+            
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 pt-2 border-t border-border">
+              <Button 
+                variant="outline" 
+                onClick={signOut} 
+                className="text-destructive hover:text-destructive flex-1 sm:flex-none"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDeletionModal(true)}
+                className="text-destructive hover:text-destructive border-destructive flex-1 sm:flex-none"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Account
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
+
+      <AccountDeletionModal 
+        isOpen={showDeletionModal}
+        onClose={() => setShowDeletionModal(false)}
+      />
     </Dialog>
   );
 }

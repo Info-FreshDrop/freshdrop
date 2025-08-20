@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ClothesShop } from "@/components/customer/ClothesShop";
+import { AccountDeletionModal } from "@/components/customer/AccountDeletionModal";
 import { 
   ArrowLeft,
   User,
@@ -19,7 +20,8 @@ import {
   ShoppingBag,
   Calendar,
   MessageSquare,
-  Settings
+  Settings,
+  Trash2
 } from "lucide-react";
 
 interface CustomerProfileProps {
@@ -32,6 +34,7 @@ export function CustomerProfile({ onBack }: CustomerProfileProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentView, setCurrentView] = useState<'profile' | 'shop'>('profile');
+  const [showDeletionModal, setShowDeletionModal] = useState(false);
   const [profile, setProfile] = useState({
     first_name: '',
     last_name: '',
@@ -338,7 +341,7 @@ export function CustomerProfile({ onBack }: CustomerProfileProps) {
                 Access additional features and services
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <Button
                 onClick={() => setCurrentView('shop')}
                 className="w-full"
@@ -349,7 +352,35 @@ export function CustomerProfile({ onBack }: CustomerProfileProps) {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Account Management */}
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="text-destructive">Account Management</CardTitle>
+              <CardDescription>
+                Manage your account settings and data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => setShowDeletionModal(true)}
+                variant="outline"
+                className="w-full text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Account
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Permanently delete your account and all associated data. This action cannot be undone.
+              </p>
+            </CardContent>
+          </Card>
         </div>
+
+        <AccountDeletionModal 
+          isOpen={showDeletionModal}
+          onClose={() => setShowDeletionModal(false)}
+        />
       </div>
     </div>
   );

@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          confirmation_token: string
+          created_at: string
+          data_export_requested: boolean
+          data_export_url: string | null
+          id: string
+          reason: string | null
+          requested_at: string
+          scheduled_deletion_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confirmation_token?: string
+          created_at?: string
+          data_export_requested?: boolean
+          data_export_url?: string | null
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          scheduled_deletion_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confirmation_token?: string
+          created_at?: string
+          data_export_requested?: boolean
+          data_export_url?: string | null
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          scheduled_deletion_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           created_at: string
@@ -375,6 +417,39 @@ export type Database = {
           is_featured?: boolean | null
           testimonial_text?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      data_export_logs: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          export_type: string
+          file_url: string | null
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          export_type?: string
+          file_url?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          export_type?: string
+          file_url?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
