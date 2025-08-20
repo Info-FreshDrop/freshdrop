@@ -204,11 +204,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    return { error };
+    
+    // Check if account is disabled/pending deletion
+    if (data?.user?.user_metadata?.account_disabled || data?.user?.user_metadata?.pending_deletion) {
+      await supabase.auth.signOut();
+      return { 
+        error: { 
+          message: "This account has been disabled due to a deletion request. Please contact support if you believe this is an error."
+        } 
+      };
+    }
+    
+    return { data, error };
   };
 
   const signOut = async () => {

@@ -18,7 +18,7 @@ interface AccountDeletionModalProps {
 }
 
 export function AccountDeletionModal({ isOpen, onClose }: AccountDeletionModalProps) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,10 +43,15 @@ export function AccountDeletionModal({ isOpen, onClose }: AccountDeletionModalPr
 
       toast({
         title: "Account Deletion Requested",
-        description: "We've received your request. You'll receive a confirmation email with next steps.",
+        description: "Your account has been disabled and scheduled for deletion. You will be logged out shortly.",
       });
 
+      // Close modal and sign out immediately
       onClose();
+      setTimeout(async () => {
+        await signOut();
+      }, 1500);
+      
       setStep(1);
       setConfirmationText("");
       setReason("");

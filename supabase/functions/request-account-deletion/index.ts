@@ -117,6 +117,30 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Immediately disable the user account
+    const { error: disableError } = await supabaseClient.auth.admin.updateUserById(
+      user.id,
+      { 
+        user_metadata: { 
+          ...user.user_metadata,
+          account_disabled: true,
+          pending_deletion: true,
+          deletion_requested_at: new Date().toISOString()
+        }
+      }
+    );
+
+    if (disableError) {
+      console.error('Error disabling user account:', disableError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to disable account' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Create deletion request
     const { data: deletionRequest, error: insertError } = await supabaseClient
       .from('account_deletion_requests')
