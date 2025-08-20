@@ -59,6 +59,9 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
   const sendMessage = async () => {
     if (!inputMessage.trim()) return;
 
+    console.log('Attempting to send message:', inputMessage.trim());
+    console.log('User ID:', user?.id || 'No user (unauthenticated)');
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -76,6 +79,12 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
         content: msg.content
       }));
 
+      console.log('Calling customer-chat function with:', {
+        message: userMessage.content,
+        conversationHistoryLength: conversationHistory.length,
+        userId: user?.id
+      });
+
       const { data, error } = await supabase.functions.invoke('customer-chat', {
         body: {
           message: userMessage.content,
@@ -84,7 +93,12 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
         }
       });
 
-      if (error) throw error;
+      console.log('Function response:', { data, error });
+
+      if (error) {
+        console.error('Function error:', error);
+        throw error;
+      }
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),

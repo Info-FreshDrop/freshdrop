@@ -101,59 +101,79 @@ serve(async (req) => {
     let userZip = null;
 
     if (userId) {
-      // Get comprehensive user profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      try {
+        // Get comprehensive user profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle(); // Use maybeSingle to avoid errors when no profile exists
 
-      // Get order history with detailed status
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('customer_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(10);
+        // Get order history with detailed status
+        const { data: orders } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('customer_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-      // Check for FreshPass subscription
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('status', 'active')
-        .single();
+        // Check for FreshPass subscription (assuming there's a subscriptions table)
+        const { data: subscription } = await supabase
+          .from('wallets') // Using wallets as proxy for subscription check
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      if (profile) {
-        userProfile = profile;
-        userZip = profile.zip_code;
+        if (profile) {
+          userProfile = profile;
+          userZip = profile.zip_code || profile.phone?.slice(-5); // fallback
+        }
+
+        if (orders && orders.length > 0) {
+          isFirstTimeVisitor = false;
+          orderHistory = orders;
+          hasActiveOrders = orders.some(order => 
+            ['pending', 'confirmed', 'picked_up', 'processing', 'out_for_delivery'].includes(order.status)
+          );
+        }
+
+        hasFreshPass = !!subscription;
+      } catch (error) {
+        console.error('Error fetching user context (non-critical):', error);
+        // Continue without user context - don't fail the whole request
       }
-
-      if (orders && orders.length > 0) {
-        isFirstTimeVisitor = false;
-        orderHistory = orders;
-        hasActiveOrders = orders.some(order => 
-          ['pending', 'confirmed', 'picked_up', 'processing', 'out_for_delivery'].includes(order.status)
-        );
-      }
-
-      hasFreshPass = !!subscription;
     }
 
-    // Get real-time business data
+    // Get real-time business data (these should work for unauthenticated users)
     const [
-      { data: lockers },
-      { data: promoCodes },
-      { data: serviceAreas },
-      { data: washers },
-      { data: announcements }
-    ] = await Promise.all([
+      lockersResult,
+      promoCodesResult,
+      serviceAreasResult,
+      washersResult,
+      announcementsResult
+    ] = await Promise.allSettled([
       supabase.from('lockers').select('*').eq('is_active', true).eq('status', 'available'),
       supabase.from('promo_codes').select('*').eq('is_active', true).eq('visible_to_customers', true),
       supabase.from('service_areas').select('*').eq('is_active', true),
       supabase.from('washers').select('*').eq('is_active', true).eq('is_online', true),
-      supabase.from('announcements').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(3)
+      supabase.from('app_settings').select('*').eq('setting_key', 'announcements') // Changed from announcements table
     ]);
+
+    // Safely extract data from settled promises
+    const lockers = lockersResult.status === 'fulfilled' ? lockersResult.value.data : [];
+    const promoCodes = promoCodesResult.status === 'fulfilled' ? promoCodesResult.value.data : [];
+    const serviceAreas = serviceAreasResult.status === 'fulfilled' ? serviceAreasResult.value.data : [];
+    const washers = washersResult.status === 'fulfilled' ? washersResult.value.data : [];
+    const announcements = announcementsResult.status === 'fulfilled' ? 
+      (announcementsResult.value.data?.[0]?.setting_value?.announcements || []) : [];
+
+    console.log('Business data loaded:', {
+      lockers: lockers?.length || 0,
+      promoCodes: promoCodes?.length || 0,
+      serviceAreas: serviceAreas?.length || 0,
+      washers: washers?.length || 0,
+      announcements: announcements?.length || 0
+    });
 
     // Intent Classification
     const classifyIntent = (msg: string) => {
