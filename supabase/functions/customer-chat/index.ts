@@ -72,6 +72,35 @@ serve(async (req) => {
       .select('*')
       .eq('is_active', true);
 
+    // Get service areas information
+    const { data: serviceAreas } = await supabase
+      .from('service_areas')
+      .select('zip_code, is_active, pickup_available, delivery_available')
+      .eq('is_active', true)
+      .limit(50);
+
+    // Get available operators count by area
+    const { data: operatorStats } = await supabase
+      .from('profiles')
+      .select('zip_codes_served, is_available')
+      .eq('user_type', 'operator')
+      .eq('is_available', true);
+
+    // Get recent announcements or service updates
+    const { data: announcements } = await supabase
+      .from('announcements')
+      .select('title, message, priority')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    // Get common order issues for better troubleshooting
+    const { data: commonIssues } = await supabase
+      .from('order_issues')
+      .select('issue_type, resolution_steps')
+      .eq('is_resolved', true)
+      .limit(10);
+
     const systemPrompt = `You are FreshDrop's helpful customer service AI assistant. You help customers with laundry service questions.
 
 IMPORTANT GUIDELINES:
@@ -93,18 +122,36 @@ ${lockers?.map(locker => `- ${locker.name}: ${locker.address}, ${locker.zip_code
 ACTIVE PROMO CODES:
 ${promoCodes?.map(code => `- ${code.code}: ${code.description} (${code.discount_type === 'percentage' ? code.discount_value + '%' : '$' + code.discount_value} off)`).join('\n') || 'No active promo codes'}
 
+SERVICE AREAS (Available zip codes):
+${serviceAreas?.map(area => `- ${area.zip_code}: Pickup: ${area.pickup_available ? 'Yes' : 'No'}, Delivery: ${area.delivery_available ? 'Yes' : 'No'}`).join('\n') || 'Service area information not available'}
+
+OPERATOR AVAILABILITY:
+${operatorStats && operatorStats.length > 0 ? `${operatorStats.length} operators currently available` : 'Limited operator availability - may experience longer wait times'}
+
+${announcements && announcements.length > 0 ? `CURRENT ANNOUNCEMENTS:
+${announcements.map(ann => `- ${ann.title}: ${ann.message}`).join('\n')}` : ''}
+
+COMMON TROUBLESHOOTING:
+${commonIssues?.map(issue => `- ${issue.issue_type}: ${issue.resolution_steps}`).join('\n') || 'Contact support for technical issues'}
+
 COMMON FAQS:
-- Service areas: Check by entering your zip code
+- Service areas: Check by entering your zip code (see service areas above)
 - Pickup times: Usually within 2 hours during business hours
 - Delivery: Next day delivery included
 - Payment: Secure online payment after service
 - Lost items: We take full responsibility and provide compensation
+- Business hours: Monday-Sunday 7AM-10PM
+- Holiday service: Limited availability on major holidays
 
 USER CONTEXT:${userContext}
 
-For order status questions, provide specific information from their order history above.
-For locker issues, help them find the nearest available locker.
-For promo codes, explain current offers and how to apply them.
+INSTRUCTIONS:
+- For order status questions, provide specific information from their order history above
+- For locker issues, help them find the nearest available locker from the list above
+- For promo codes, explain current offers and how to apply them
+- For service area questions, check the zip codes listed above
+- For common issues, use the troubleshooting steps provided
+- Always acknowledge announcements if they're relevant to the customer's question
 
 If the user seems frustrated or has a complex issue, offer: "I'd like to connect you with one of our human agents who can provide more personalized assistance. Would you like me to do that?"`;
 
