@@ -163,162 +163,182 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
               Apply Now
             </Button>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="firstName" className="ios-caption1">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName" className="ios-caption1">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="email" className="ios-caption1">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="phone" className="ios-caption1">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="address" className="ios-caption1">Address</Label>
-                <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  required
-                />
-              </div>
+            <div className="text-center space-y-4">
+              <p className="ios-body text-muted-foreground">
+                For the complete application with photo verification and detailed requirements, 
+                please visit our desktop site or contact us directly.
+              </p>
               
-              <div className="grid grid-cols-2 gap-3">
+              {/* Quick Basic Application */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="firstName" className="ios-caption1">First Name</Label>
+                    <Input
+                      id="firstName"
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName" className="ios-caption1">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <Label htmlFor="city" className="ios-caption1">City</Label>
+                  <Label htmlFor="email" className="ios-caption1">Email</Label>
                   <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
                     required
                   />
                 </div>
+
                 <div>
-                  <Label htmlFor="state" className="ios-caption1">State</Label>
+                  <Label htmlFor="phone" className="ios-caption1">Phone</Label>
                   <Input
-                    id="state"
-                    value={formData.state}
-                    onChange={(e) => handleInputChange('state', e.target.value)}
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
                     required
                   />
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
+
                 <div>
-                  <Label htmlFor="zipCode" className="ios-caption1">ZIP Code</Label>
+                  <Label htmlFor="address" className="ios-caption1">Address</Label>
                   <Input
-                    id="zipCode"
-                    value={formData.zipCode}
-                    onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
                     required
                   />
                 </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="city" className="ios-caption1">City</Label>
+                    <Input
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state" className="ios-caption1">State</Label>
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => handleInputChange('state', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="zipCode" className="ios-caption1">ZIP Code</Label>
+                    <Input
+                      id="zipCode"
+                      value={formData.zipCode}
+                      onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="driversLicense" className="ios-caption1">Driver's License</Label>
+                    <Input
+                      id="driversLicense"
+                      value={formData.driversLicense}
+                      onChange={(e) => handleInputChange('driversLicense', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <Label htmlFor="driversLicense" className="ios-caption1">Driver's License</Label>
-                  <Input
-                    id="driversLicense"
-                    value={formData.driversLicense}
-                    onChange={(e) => handleInputChange('driversLicense', e.target.value)}
-                    required
+                  <Label htmlFor="vehicleType" className="ios-caption1">Vehicle Type</Label>
+                  <Select value={formData.vehicleType} onValueChange={(value) => handleInputChange('vehicleType', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select vehicle type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="car">Car</SelectItem>
+                      <SelectItem value="suv">SUV</SelectItem>
+                      <SelectItem value="truck">Truck</SelectItem>
+                      <SelectItem value="van">Van</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="availability" className="ios-caption1">Availability</Label>
+                  <Select value={formData.availability} onValueChange={(value) => handleInputChange('availability', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select availability" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mornings">Mornings (7-11 AM)</SelectItem>
+                      <SelectItem value="afternoons">Afternoons (11 AM-3 PM)</SelectItem>
+                      <SelectItem value="evenings">Evenings (3-7 PM)</SelectItem>
+                      <SelectItem value="weekends">Weekends</SelectItem>
+                      <SelectItem value="flexible">Flexible</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="motivation" className="ios-caption1">Why do you want to be an operator?</Label>
+                  <Textarea
+                    id="motivation"
+                    value={formData.motivation}
+                    onChange={(e) => handleInputChange('motivation', e.target.value)}
+                    placeholder="Tell us about your motivation..."
+                    className="min-h-[80px]"
                   />
                 </div>
-              </div>
 
-              <div>
-                <Label htmlFor="vehicleType" className="ios-caption1">Vehicle Type</Label>
-                <Select value={formData.vehicleType} onValueChange={(value) => handleInputChange('vehicleType', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select vehicle type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="car">Car</SelectItem>
-                    <SelectItem value="suv">SUV</SelectItem>
-                    <SelectItem value="truck">Truck</SelectItem>
-                    <SelectItem value="van">Van</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="bg-muted/30 p-4 rounded-lg">
+                  <p className="ios-caption2 text-muted-foreground mb-2">
+                    <strong>Note:</strong> This is a preliminary application. If approved, you'll need to complete:
+                  </p>
+                  <ul className="ios-caption2 text-muted-foreground space-y-1">
+                    <li>• Photo verification of washer/dryer equipment</li>
+                    <li>• Laundry skills demonstration</li>
+                    <li>• Background check</li>
+                    <li>• Training completion</li>
+                  </ul>
+                </div>
 
-              <div>
-                <Label htmlFor="availability" className="ios-caption1">Availability</Label>
-                <Select value={formData.availability} onValueChange={(value) => handleInputChange('availability', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select availability" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mornings">Mornings (7-11 AM)</SelectItem>
-                    <SelectItem value="afternoons">Afternoons (11 AM-3 PM)</SelectItem>
-                    <SelectItem value="evenings">Evenings (3-7 PM)</SelectItem>
-                    <SelectItem value="weekends">Weekends</SelectItem>
-                    <SelectItem value="flexible">Flexible</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="motivation" className="ios-caption1">Why do you want to be an operator?</Label>
-                <Textarea
-                  id="motivation"
-                  value={formData.motivation}
-                  onChange={(e) => handleInputChange('motivation', e.target.value)}
-                  placeholder="Tell us about your motivation..."
-                  className="min-h-[80px]"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setShowForm(false)}
-                  className="flex-1"
-                >
-                  Back
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="flex-1"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                </Button>
-              </div>
-            </form>
+                <div className="flex gap-3">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowForm(false)}
+                    className="flex-1"
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Preliminary Application'}
+                  </Button>
+                </div>
+              </form>
+            </div>
           )}
         </div>
       </SheetContent>
