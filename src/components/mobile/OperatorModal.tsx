@@ -612,55 +612,59 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="max-h-[85vh] rounded-t-xl">
-        <SheetHeader className="text-left">
+      <SheetContent side="bottom" className="h-[95vh] rounded-t-xl flex flex-col">
+        <SheetHeader className="text-left flex-shrink-0">
           <SheetTitle className="ios-title2">Be Your Own Boss</SheetTitle>
           <p className="ios-body text-muted-foreground">Join our network of independent operators</p>
         </SheetHeader>
         
-        <div className="mt-6 space-y-6">
-          {currentStep === 1 && (
-            <>
-              <p className="ios-body text-muted-foreground">
-                Join our network of independent operators and start earning money with flexible hours. 
-                Perfect for students, part-time workers, or anyone looking for extra income.
-              </p>
+        <div className="flex-1 overflow-y-auto">
+          <div className="space-y-6 pb-6">
+            {currentStep === 1 && (
+              <>
+                <p className="ios-body text-muted-foreground">
+                  Join our network of independent operators and start earning money with flexible hours. 
+                  Perfect for students, part-time workers, or anyone looking for extra income.
+                </p>
 
-              {/* Benefits Grid */}
-              <div className="grid grid-cols-2 gap-3">
-                {benefits.map((benefit, index) => {
-                  const Icon = benefit.icon;
-                  return (
-                    <Card key={index} className="p-3 text-center">
-                      <Icon className="h-6 w-6 mx-auto mb-2 text-primary" />
-                      <h3 className="ios-caption1 font-semibold mb-1">{benefit.title}</h3>
-                      <p className="ios-caption2 text-muted-foreground">{benefit.description}</p>
-                    </Card>
-                  );
-                })}
+                {/* Benefits Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  {benefits.map((benefit, index) => {
+                    const Icon = benefit.icon;
+                    return (
+                      <Card key={index} className="p-3 text-center">
+                        <Icon className="h-6 w-6 mx-auto mb-2 text-primary" />
+                        <h3 className="ios-caption1 font-semibold mb-1">{benefit.title}</h3>
+                        <p className="ios-caption2 text-muted-foreground">{benefit.description}</p>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Progress indicator */}
+            <div className="flex items-center justify-between">
+              <span className="ios-caption2 text-muted-foreground">Step {currentStep} of 6</span>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5, 6].map((step) => (
+                  <div
+                    key={step}
+                    className={`w-2 h-2 rounded-full ${
+                      step <= currentStep ? 'bg-primary' : 'bg-muted'
+                    }`}
+                  />
+                ))}
               </div>
-            </>
-          )}
-
-          {/* Progress indicator */}
-          <div className="flex items-center justify-between mb-4">
-            <span className="ios-caption2 text-muted-foreground">Step {currentStep} of 6</span>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5, 6].map((step) => (
-                <div
-                  key={step}
-                  className={`w-2 h-2 rounded-full ${
-                    step <= currentStep ? 'bg-primary' : 'bg-muted'
-                  }`}
-                />
-              ))}
             </div>
+
+            {/* Step Content */}
+            {renderStepContent()}
           </div>
+        </div>
 
-          {/* Step Content */}
-          {renderStepContent()}
-
-          {/* Navigation */}
+        {/* Fixed Navigation Footer */}
+        <div className="flex-shrink-0 pt-4 border-t bg-background">
           <div className="flex gap-3">
             {currentStep > 1 && (
               <Button 
