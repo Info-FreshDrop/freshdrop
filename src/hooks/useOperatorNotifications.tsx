@@ -28,14 +28,22 @@ export function useOperatorNotifications() {
     if (!isNative || !user) return;
 
     try {
-      // Request permissions
+      console.log('Starting push notification registration...');
+      
+      // Request permissions first
       await requestPermissions();
       
       if (!permissions.notifications) {
         console.warn('Push notification permissions not granted');
+        toast({
+          title: "Notifications Disabled",
+          description: "Enable notifications in your device settings to receive order alerts.",
+          variant: "destructive"
+        });
         return;
       }
 
+      console.log('Permissions granted, registering with FCM/APNs...');
       // Register with FCM/APNs
       await PushNotifications.register();
 

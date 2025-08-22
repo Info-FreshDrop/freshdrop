@@ -182,7 +182,7 @@ export function OperatorDashboard() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { getCurrentLocation } = useCapacitor();
+  const { getCurrentLocation, isNative } = useCapacitor();
   const { setOperatorOnlineStatus, isRegistered } = useOperatorNotifications();
   const [activeTab, setActiveTab] = useState("live-orders");
   const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<Order | null>(null);
@@ -905,12 +905,14 @@ export function OperatorDashboard() {
                 <div className={`w-2 h-2 rounded-full ${washerData.is_online ? 'bg-green-500' : 'bg-gray-400'}`} />
                 {washerData.is_online ? 'Online' : 'Offline'}
               </div>
-              <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-                isRegistered ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${isRegistered ? 'bg-blue-500' : 'bg-yellow-500'}`} />
-                {isRegistered ? 'Push Enabled' : 'Push Pending'}
-              </div>
+              {isNative && (
+                <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                  isRegistered ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+                }`}>
+                  <div className={`w-2 h-2 rounded-full ${isRegistered ? 'bg-blue-500' : 'bg-gray-400'}`} />
+                  {isRegistered ? 'Push Enabled' : 'Push Disabled'}
+                </div>
+              )}
             </div>
           </div>
         </div>
