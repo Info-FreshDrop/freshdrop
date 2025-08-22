@@ -767,7 +767,25 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
                   onCheckedChange={(checked) => handleInputChange('agreesToTerms', checked)}
                 />
                 <Label htmlFor="agreesToTerms" className="ios-caption2 leading-relaxed">
-                  I agree to the Terms of Service and Privacy Policy *
+                  I agree to the{' '}
+                  <a 
+                    href="/terms-of-service" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary underline hover:text-primary/80"
+                  >
+                    Terms of Service
+                  </a>
+                  {' '}and{' '}
+                  <a 
+                    href="/privacy-policy" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary underline hover:text-primary/80"
+                  >
+                    Privacy Policy
+                  </a>
+                  {' '}*
                 </Label>
               </div>
             </div>
