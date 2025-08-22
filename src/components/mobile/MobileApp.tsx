@@ -8,6 +8,8 @@ import { IOSActionSheet } from '@/components/ui/ios-components';
 import { HowItWorksModal } from './HowItWorksModal';
 import { ServicesModal } from './ServicesModal';
 import { ContactModal } from './ContactModal';
+import { FAQModal } from './FAQModal';
+import { OperatorModal } from './OperatorModal';
 import { LogIn, Info, Phone } from 'lucide-react';
 import freshDropLogo from '@/assets/freshdrop-logo-transparent.png';
 
@@ -19,6 +21,8 @@ export function MobileApp() {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showServices, setShowServices] = useState(false);
   const [showContact, setShowContact] = useState(false);
+  const [showFAQ, setShowFAQ] = useState(false);
+  const [showOperator, setShowOperator] = useState(false);
 
   const tabs = [
     { id: 'auth' as const, label: 'Sign In', icon: LogIn },
@@ -79,13 +83,39 @@ export function MobileApp() {
               <Card className="responsive-padding border-border bg-card rounded-xl">
                 <h3 className="ios-headline mb-2 sm:mb-4">Our Services</h3>
                 <p className="ios-body text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Explore our wash & fold, express, and pickup services
+                  24-hour turnaround, express service, locker pickup & door-to-door
                 </p>
                 <IOSPrimaryButton 
                   onClick={() => setShowServices(true)}
                   className="w-full"
                 >
                   View Services
+                </IOSPrimaryButton>
+              </Card>
+
+              <Card className="responsive-padding border-border bg-card rounded-xl">
+                <h3 className="ios-headline mb-2 sm:mb-4">FAQ</h3>
+                <p className="ios-body text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Everything you need to know about FreshDrop's laundry service
+                </p>
+                <IOSPrimaryButton 
+                  onClick={() => setShowFAQ(true)}
+                  className="w-full"
+                >
+                  View FAQ
+                </IOSPrimaryButton>
+              </Card>
+
+              <Card className="responsive-padding border-border bg-card rounded-xl">
+                <h3 className="ios-headline mb-2 sm:mb-4">Become an Operator</h3>
+                <p className="ios-body text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Be your own boss! Join our network and start earning money
+                </p>
+                <IOSPrimaryButton 
+                  onClick={() => setShowOperator(true)}
+                  className="w-full"
+                >
+                  Apply Now
                 </IOSPrimaryButton>
               </Card>
             </div>
@@ -153,6 +183,14 @@ export function MobileApp() {
       <ContactModal 
         isOpen={showContact} 
         onClose={() => setShowContact(false)} 
+      />
+      <FAQModal 
+        isOpen={showFAQ} 
+        onClose={() => setShowFAQ(false)} 
+      />
+      <OperatorModal 
+        isOpen={showOperator} 
+        onClose={() => setShowOperator(false)} 
       />
     </IOSScreen>
   );

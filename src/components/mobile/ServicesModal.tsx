@@ -12,33 +12,33 @@ interface ServicesModalProps {
 export function ServicesModal({ isOpen, onClose }: ServicesModalProps) {
   const services = [
     {
-      icon: Package,
-      title: "Wash & Fold",
-      price: "From $1.50/lb",
-      description: "Professional washing, drying, and folding service",
-      features: ["Eco-friendly detergent", "24-48 hour turnaround", "Careful sorting"]
+      icon: Clock,
+      title: "24-Hour Turnaround",
+      price: "Standard Service",
+      description: "Standard orders processed and returned within 24 hours of pickup",
+      features: ["Professional cleaning", "Eco-friendly products", "Careful handling"]
     },
     {
       icon: Zap,
       title: "Express Service",
-      price: "From $2.00/lb",
-      description: "Same-day service for urgent laundry needs",
+      price: "Same Day",
+      description: "Place by 12 PM, get it back by 8 PM the same day",
       features: ["4-hour turnaround", "Priority processing", "Rush delivery"],
       badge: "POPULAR"
     },
     {
-      icon: Home,
-      title: "Door-to-Door",
-      price: "From $2.50/lb",
-      description: "Pickup and delivery right to your doorstep",
-      features: ["Free pickup & delivery", "Scheduled windows", "Contact-free option"]
+      icon: Package,
+      title: "Locker Pickup",
+      price: "24/7 Access",
+      description: "Drop off at any FreshDrop locker and pick up when ready",
+      features: ["Convenient locations", "Secure storage", "Mobile app access"]
     },
     {
-      icon: Clock,
-      title: "Locker Network",
-      price: "No extra fee",
-      description: "24/7 access to convenient pickup locations",
-      features: ["200+ locations", "Secure storage", "Mobile app access"]
+      icon: Home,
+      title: "Door-to-Door",
+      price: "Full Service",
+      description: "Pickup and delivery from your home, office, or dorm",
+      features: ["Free pickup & delivery", "Scheduled windows", "Contact-free option"]
     }
   ];
 
