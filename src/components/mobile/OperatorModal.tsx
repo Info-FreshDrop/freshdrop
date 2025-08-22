@@ -29,6 +29,7 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
     driversLicense: '',
     vehicleType: '',
     availability: '',
+    experience: '',
     motivation: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,7 +114,7 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
           vehicle_type: formData.vehicleType,
           availability: formData.availability,
           motivation: formData.motivation,
-          experience: 'No previous experience specified', // Default for mobile applications
+          experience: formData.experience || 'No previous experience specified',
           status: 'pending'
         }]);
 
@@ -142,7 +143,7 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
 
       toast({
         title: "Application Submitted!",
-        description: "We've received your preliminary application. You'll need to complete the full application with photo verification on our desktop site.",
+        description: "Thank you for your interest! We'll review your application and contact you within 2-3 business days.",
       });
 
       // Reset form
@@ -158,6 +159,7 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
         driversLicense: '',
         vehicleType: '',
         availability: '',
+        experience: '',
         motivation: ''
       });
       setShowForm(false);
@@ -210,12 +212,7 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
             </Button>
           ) : (
             <div className="text-center space-y-4">
-              <p className="ios-body text-muted-foreground">
-                For the complete application with photo verification and detailed requirements, 
-                please visit our desktop site or contact us directly.
-              </p>
-              
-              {/* Quick Basic Application */}
+              {/* Complete Application Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -344,6 +341,17 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
                 </div>
 
                 <div>
+                  <Label htmlFor="experience" className="ios-caption1">Previous Experience (Optional)</Label>
+                  <Textarea
+                    id="experience"
+                    value={formData.experience}
+                    onChange={(e) => handleInputChange('experience', e.target.value)}
+                    placeholder="Any relevant experience with laundry or customer service..."
+                    className="min-h-[60px]"
+                  />
+                </div>
+
+                <div>
                   <Label htmlFor="motivation" className="ios-caption1">Why do you want to be an operator?</Label>
                   <Textarea
                     id="motivation"
@@ -352,18 +360,6 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
                     placeholder="Tell us about your motivation..."
                     className="min-h-[80px]"
                   />
-                </div>
-
-                <div className="bg-muted/30 p-4 rounded-lg">
-                  <p className="ios-caption2 text-muted-foreground mb-2">
-                    <strong>Note:</strong> This is a preliminary application. If approved, you'll need to complete:
-                  </p>
-                  <ul className="ios-caption2 text-muted-foreground space-y-1">
-                    <li>• Photo verification of washer/dryer equipment</li>
-                    <li>• Laundry skills demonstration</li>
-                    <li>• Background check</li>
-                    <li>• Training completion</li>
-                  </ul>
                 </div>
 
                 <div className="flex gap-3">
@@ -380,7 +376,7 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
                     disabled={isSubmitting}
                     className="flex-1"
                   >
-                    {isSubmitting ? 'Submitting...' : 'Submit Preliminary Application'}
+                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
                   </Button>
                 </div>
               </form>
