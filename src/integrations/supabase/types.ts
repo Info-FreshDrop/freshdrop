@@ -1983,9 +1983,11 @@ export type Database = {
           is_online: boolean | null
           locker_access: string[] | null
           max_orders_per_day: number | null
+          notifications_enabled: boolean | null
           pay_updated_at: string | null
           pay_updated_by: string | null
           payment_notes: string | null
+          push_notification_token: string | null
           service_radius_miles: number | null
           signup_expires_at: string | null
           signup_token: string | null
@@ -2006,9 +2008,11 @@ export type Database = {
           is_online?: boolean | null
           locker_access?: string[] | null
           max_orders_per_day?: number | null
+          notifications_enabled?: boolean | null
           pay_updated_at?: string | null
           pay_updated_by?: string | null
           payment_notes?: string | null
+          push_notification_token?: string | null
           service_radius_miles?: number | null
           signup_expires_at?: string | null
           signup_token?: string | null
@@ -2029,9 +2033,11 @@ export type Database = {
           is_online?: boolean | null
           locker_access?: string[] | null
           max_orders_per_day?: number | null
+          notifications_enabled?: boolean | null
           pay_updated_at?: string | null
           pay_updated_by?: string | null
           payment_notes?: string | null
+          push_notification_token?: string | null
           service_radius_miles?: number | null
           signup_expires_at?: string | null
           signup_token?: string | null

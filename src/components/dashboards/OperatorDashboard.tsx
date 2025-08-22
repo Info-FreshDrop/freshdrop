@@ -45,6 +45,7 @@ import { OrderMessaging } from '../customer/OrderMessaging';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { OperatorProfileSettings } from './OperatorProfileSettings';
 import { ReviewsAndTips } from './ReviewsAndTips';
+import { useOperatorNotifications } from '@/hooks/useOperatorNotifications';
 
 // Simple map component for navigation
 function NavigationMap({ destination }: { destination?: string }) {
@@ -182,6 +183,7 @@ export function OperatorDashboard() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { getCurrentLocation } = useCapacitor();
+  const { setOperatorOnlineStatus, isRegistered } = useOperatorNotifications();
   const [activeTab, setActiveTab] = useState("live-orders");
   const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<Order | null>(null);
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
@@ -212,8 +214,15 @@ export function OperatorDashboard() {
     if (user) {
       loadDashboardData();
       getCurrentOperatorLocation();
+      // Set operator as online when dashboard loads
+      setOperatorOnlineStatus(true);
     }
-  }, [user]);
+    
+    // Set operator as offline when component unmounts
+    return () => {
+      setOperatorOnlineStatus(false);
+    };
+  }, [user, setOperatorOnlineStatus]);
 
   const getCurrentOperatorLocation = async () => {
     try {
@@ -852,7 +861,11 @@ export function OperatorDashboard() {
             <div className="text-center py-8">
               <h3 className="text-lg font-medium mb-2">Access Denied</h3>
               <p className="text-muted-foreground mb-4">You need operator privileges to access this dashboard.</p>
-              <Button onClick={signOut} variant="outline">
+              <Button onClick={async () => {
+                await setOperatorOnlineStatus(false);
+                await signOut();
+                navigate('/');
+              }} variant="outline">
                 Sign Out
               </Button>
             </div>
@@ -885,11 +898,19 @@ export function OperatorDashboard() {
               <Settings className="h-4 w-4" />
               Settings
             </Button>
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-              washerData.is_online ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-            }`}>
-              <div className={`w-2 h-2 rounded-full ${washerData.is_online ? 'bg-green-500' : 'bg-gray-400'}`} />
-              {washerData.is_online ? 'Online' : 'Offline'}
+            <div className="flex items-center gap-3">
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                washerData.is_online ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${washerData.is_online ? 'bg-green-500' : 'bg-gray-400'}`} />
+                {washerData.is_online ? 'Online' : 'Offline'}
+              </div>
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                isRegistered ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${isRegistered ? 'bg-blue-500' : 'bg-yellow-500'}`} />
+                {isRegistered ? 'Push Enabled' : 'Push Pending'}
+              </div>
             </div>
           </div>
         </div>
@@ -1271,7 +1292,11 @@ export function OperatorDashboard() {
                 <CardContent>
                   <Button 
                     variant="destructive" 
-                    onClick={signOut}
+                    onClick={async () => {
+                      await setOperatorOnlineStatus(false);
+                      await signOut();
+                      navigate('/');
+                    }}
                     className="w-full"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
