@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DollarSign, Clock, Car, Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
+import { DollarSign, Clock, Car, Briefcase, ChevronLeft, ChevronRight, Upload, CheckCircle, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -35,6 +35,16 @@ interface FormData {
   hasWasherDryer: boolean;
   washerLocation: string;
   washerBrand: string;
+  
+  // Photo Verification
+  washerPhoto: File | null;
+  washerInsidePhoto: File | null;
+  dryerPhoto: File | null;
+  dryerInsidePhoto: File | null;
+  towelPhoto: File | null;
+  tshirtPhoto: File | null;
+  laundryStackPhoto: File | null;
+  laundryAreaPhoto: File | null;
   
   // Availability & Service
   availability: string;
@@ -71,6 +81,14 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
     hasWasherDryer: false,
     washerLocation: '',
     washerBrand: '',
+    washerPhoto: null,
+    washerInsidePhoto: null,
+    dryerPhoto: null,
+    dryerInsidePhoto: null,
+    towelPhoto: null,
+    tshirtPhoto: null,
+    laundryStackPhoto: null,
+    laundryAreaPhoto: null,
     availability: '',
     availableDays: [],
     weeklyHours: '',
@@ -151,8 +169,17 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
       case 4:
         return !!(formData.hasWasherDryer && (formData.hasWasherDryer ? formData.washerLocation : true));
       case 5:
-        return !!(formData.availability && formData.availableDays.length > 0 && formData.weeklyHours && formData.serviceZipCodes.length > 0);
+        // Photo verification step - require equipment photos if has washer/dryer
+        if (formData.hasWasherDryer) {
+          return !!(formData.washerPhoto && formData.washerInsidePhoto && formData.dryerPhoto && formData.dryerInsidePhoto);
+        }
+        return true;
       case 6:
+        // Laundry skills photos (optional for mobile)
+        return true;
+      case 7:
+        return !!(formData.availability && formData.availableDays.length > 0 && formData.weeklyHours && formData.serviceZipCodes.length > 0);
+      case 8:
         return !!(formData.agreesToStandards && formData.agreesToTerms);
       default:
         return true;
@@ -161,7 +188,7 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 6));
+      setCurrentStep(prev => Math.min(prev + 1, 8));
     } else {
       toast({
         title: "Incomplete Section",
@@ -180,8 +207,34 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
     return emailRegex.test(email);
   };
 
+  const uploadPhoto = async (file: File, fileName: string): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const uniqueFileName = `${fileName}_${Date.now()}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('application-photos')
+        .upload(uniqueFileName, file);
+
+      if (error) {
+        console.error('Upload error:', error);
+        return null;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('application-photos')
+        .getPublicUrl(data.path);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      return null;
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!validateStep(6)) {
+    if (!validateStep(8)) {
       toast({
         title: "Incomplete Application",
         description: "Please complete all required fields and agreements.",
@@ -202,6 +255,18 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
     setIsSubmitting(true);
 
     try {
+      // Upload all photos if they exist
+      const photoUrls = {
+        washer_photo_url: formData.washerPhoto ? await uploadPhoto(formData.washerPhoto, 'washer') : null,
+        washer_inside_photo_url: formData.washerInsidePhoto ? await uploadPhoto(formData.washerInsidePhoto, 'washer_inside') : null,
+        dryer_photo_url: formData.dryerPhoto ? await uploadPhoto(formData.dryerPhoto, 'dryer') : null,
+        dryer_inside_photo_url: formData.dryerInsidePhoto ? await uploadPhoto(formData.dryerInsidePhoto, 'dryer_inside') : null,
+        towel_photo_url: formData.towelPhoto ? await uploadPhoto(formData.towelPhoto, 'towel') : null,
+        tshirt_photo_url: formData.tshirtPhoto ? await uploadPhoto(formData.tshirtPhoto, 'tshirt') : null,
+        laundry_stack_photo_url: formData.laundryStackPhoto ? await uploadPhoto(formData.laundryStackPhoto, 'laundry_stack') : null,
+        laundry_area_photo_url: formData.laundryAreaPhoto ? await uploadPhoto(formData.laundryAreaPhoto, 'laundry_area') : null,
+      };
+
       const { data, error } = await supabase
         .from('operator_applications')
         .insert([{
@@ -218,7 +283,8 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
           availability: `${formData.availability} - ${formData.weeklyHours}/week - Days: ${formData.availableDays.join(', ')} - Service areas: ${formData.serviceZipCodes.join(', ')}`,
           experience: `${formData.hasLaundryExperience ? 'Has laundry experience' : 'No laundry experience'} - ${formData.experience}`,
           motivation: `${formData.motivation} - Equipment: ${formData.hasWasherDryer ? `${formData.washerLocation} washer/dryer ${formData.washerBrand}` : 'No equipment'}`,
-          status: 'pending'
+          status: 'pending',
+          ...photoUrls
         }]);
 
       if (error) {
@@ -246,6 +312,8 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
       setFormData({
         firstName: '', lastName: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', driversLicense: '',
         hasVehicle: false, vehicleType: '', vehicleDetails: '', hasWasherDryer: false, washerLocation: '', washerBrand: '',
+        washerPhoto: null, washerInsidePhoto: null, dryerPhoto: null, dryerInsidePhoto: null,
+        towelPhoto: null, tshirtPhoto: null, laundryStackPhoto: null, laundryAreaPhoto: null,
         availability: '', availableDays: [], weeklyHours: '', canReturn24to48hrs: false, serviceZipCodes: [],
         experience: '', motivation: '', hasLaundryExperience: false, agreesToStandards: false, agreesToTerms: false
       });
@@ -262,6 +330,37 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
       setIsSubmitting(false);
     }
   };
+
+  const FileUploadBox = ({ label, file, onFileChange, required = true }: {
+    label: string;
+    file: File | null;
+    onFileChange: (file: File) => void;
+    required?: boolean;
+  }) => (
+    <div className="space-y-2">
+      <Label className="ios-caption1">{label} {required && "*"}</Label>
+      <div className="border-2 border-dashed border-border rounded-lg p-4 text-center relative">
+        {file ? (
+          <div className="flex items-center justify-center space-x-2 text-primary">
+            <CheckCircle className="h-5 w-5" />
+            <span className="ios-caption2">{file.name}</span>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Camera className="h-8 w-8 mx-auto text-muted-foreground" />
+            <div className="ios-caption2 text-muted-foreground">Tap to take photo</div>
+          </div>
+        )}
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => e.target.files?.[0] && onFileChange(e.target.files[0])}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        />
+      </div>
+    </div>
+  );
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -473,6 +572,87 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
       case 5:
         return (
           <div className="space-y-4">
+            <h3 className="ios-title3 font-semibold">Equipment Photo Verification</h3>
+            {formData.hasWasherDryer ? (
+              <>
+                <p className="ios-caption2 text-muted-foreground">
+                  Please provide photos of your washer and dryer equipment for verification.
+                </p>
+                <div className="grid grid-cols-1 gap-4">
+                  <FileUploadBox
+                    label="Washer Photo (front view)"
+                    file={formData.washerPhoto}
+                    onFileChange={(file) => handleInputChange('washerPhoto', file)}
+                  />
+                  <FileUploadBox
+                    label="Washer Photo (inside view)"
+                    file={formData.washerInsidePhoto}
+                    onFileChange={(file) => handleInputChange('washerInsidePhoto', file)}
+                  />
+                  <FileUploadBox
+                    label="Dryer Photo (front view)"
+                    file={formData.dryerPhoto}
+                    onFileChange={(file) => handleInputChange('dryerPhoto', file)}
+                  />
+                  <FileUploadBox
+                    label="Dryer Photo (inside view)"
+                    file={formData.dryerInsidePhoto}
+                    onFileChange={(file) => handleInputChange('dryerInsidePhoto', file)}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <p className="ios-body text-muted-foreground">
+                  No equipment photos required since you don't have washer/dryer access.
+                </p>
+                <p className="ios-caption2 text-muted-foreground mt-2">
+                  You'll be able to use customer pickup/delivery services or partner facilities.
+                </p>
+              </div>
+            )}
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-4">
+            <h3 className="ios-title3 font-semibold">Laundry Skills (Optional)</h3>
+            <p className="ios-caption2 text-muted-foreground">
+              These photos help us assess your laundry skills. They're optional for mobile applications.
+            </p>
+            <div className="grid grid-cols-1 gap-4">
+              <FileUploadBox
+                label="Folded Towel Photo"
+                file={formData.towelPhoto}
+                onFileChange={(file) => handleInputChange('towelPhoto', file)}
+                required={false}
+              />
+              <FileUploadBox
+                label="Folded T-Shirt Photo"
+                file={formData.tshirtPhoto}
+                onFileChange={(file) => handleInputChange('tshirtPhoto', file)}
+                required={false}
+              />
+              <FileUploadBox
+                label="Laundry Stack Photo"
+                file={formData.laundryStackPhoto}
+                onFileChange={(file) => handleInputChange('laundryStackPhoto', file)}
+                required={false}
+              />
+              <FileUploadBox
+                label="Laundry Area Photo"
+                file={formData.laundryAreaPhoto}
+                onFileChange={(file) => handleInputChange('laundryAreaPhoto', file)}
+                required={false}
+              />
+            </div>
+          </div>
+        );
+
+      case 7:
+        return (
+          <div className="space-y-4">
             <h3 className="ios-title3 font-semibold">Availability & Service</h3>
             <div>
               <Label htmlFor="availability" className="ios-caption1">Preferred Time Slots *</Label>
@@ -565,7 +745,7 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
           </div>
         );
 
-      case 6:
+      case 8:
         return (
           <div className="space-y-4">
             <h3 className="ios-title3 font-semibold">Terms & Agreements</h3>
@@ -587,19 +767,20 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
                   onCheckedChange={(checked) => handleInputChange('agreesToTerms', checked)}
                 />
                 <Label htmlFor="agreesToTerms" className="ios-caption2 leading-relaxed">
-                  I agree to the Terms of Service and understand this is a preliminary application *
+                  I agree to the Terms of Service and Privacy Policy *
                 </Label>
               </div>
             </div>
             
             <div className="bg-muted/30 p-4 rounded-lg">
               <p className="ios-caption2 text-muted-foreground mb-2">
-                <strong>Next Steps:</strong> If your preliminary application is approved, you may need to:
+                <strong>Application Complete!</strong> After submission:
               </p>
               <ul className="ios-caption2 text-muted-foreground space-y-1">
-                <li>• Complete a detailed desktop application with photo verification</li>
-                <li>• Provide equipment photos and demonstrate laundry skills</li>
-                <li>• Complete background check and training</li>
+                <li>• We'll review your application within 2-3 business days</li>
+                <li>• Background check and verification process</li>
+                <li>• Training and onboarding if approved</li>
+                <li>• Start earning money as an independent operator!</li>
               </ul>
             </div>
           </div>
@@ -645,9 +826,9 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
 
             {/* Progress indicator */}
             <div className="flex items-center justify-between">
-              <span className="ios-caption2 text-muted-foreground">Step {currentStep} of 6</span>
+              <span className="ios-caption2 text-muted-foreground">Step {currentStep} of 8</span>
               <div className="flex gap-1">
-                {[1, 2, 3, 4, 5, 6].map((step) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((step) => (
                   <div
                     key={step}
                     className={`w-2 h-2 rounded-full ${
@@ -677,7 +858,7 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
                 Back
               </Button>
             )}
-            {currentStep < 6 ? (
+            {currentStep < 8 ? (
               <Button 
                 onClick={nextStep}
                 className="flex-1"
