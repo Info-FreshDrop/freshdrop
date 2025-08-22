@@ -61,45 +61,91 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      // Validate email format
+      if (!validateEmail(formData.email)) {
+        toast({
+          title: "Invalid email",
+          description: "Please enter a valid email address.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Check for required fields
+      const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'state', 'zipCode', 'driversLicense', 'vehicleType', 'availability'];
+      const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]?.trim());
+      
+      if (missingFields.length > 0) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all required fields.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       console.log('Submitting operator application:', formData);
+      
       const { data, error } = await supabase
         .from('operator_applications')
-        .insert([
-          {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            email: formData.email,
-            phone: formData.phone,
-            address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            zip_code: formData.zipCode,
-            drivers_license: formData.driversLicense,
-            vehicle_type: formData.vehicleType,
-            availability: formData.availability,
-            motivation: formData.motivation,
-            experience: '', // Add default empty string for required field
-            status: 'pending'
-          }
-        ]);
+        .insert([{
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zip_code: formData.zipCode,
+          drivers_license: formData.driversLicense,
+          vehicle_type: formData.vehicleType,
+          availability: formData.availability,
+          motivation: formData.motivation,
+          experience: 'No previous experience specified', // Default for mobile applications
+          status: 'pending'
+        }]);
 
       console.log('Supabase response:', { data, error });
 
       if (error) {
         console.error('Database error:', error);
-        throw error;
+        
+        // Provide specific error messages based on the error type
+        let errorMessage = "There was an error submitting your application. Please try again.";
+        if (error.message.includes('duplicate')) {
+          errorMessage = "An application with this email already exists. Please use a different email or contact support.";
+        } else if (error.message.includes('invalid')) {
+          errorMessage = "Please check your information and try again.";
+        } else if (error.message.includes('policy')) {
+          errorMessage = "Application submission failed. Please ensure all information is correct.";
+        }
+        
+        toast({
+          title: "Application failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
       }
 
       toast({
         title: "Application Submitted!",
-        description: "We'll review your application and contact you within 2-3 business days.",
+        description: "We've received your preliminary application. You'll need to complete the full application with photo verification on our desktop site.",
       });
 
+      // Reset form
       setFormData({
         firstName: '',
         lastName: '',
@@ -115,11 +161,11 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
         motivation: ''
       });
       setShowForm(false);
-    } catch (error) {
-      console.error('Error submitting application:', error);
+    } catch (error: any) {
+      console.error('Unexpected error:', error);
       toast({
-        title: "Submission Failed",
-        description: "Please try again.",
+        title: "Application failed",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
