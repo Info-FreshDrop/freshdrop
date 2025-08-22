@@ -66,7 +66,8 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
+      console.log('Submitting operator application:', formData);
+      const { data, error } = await supabase
         .from('operator_applications')
         .insert([
           {
@@ -82,11 +83,17 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
             vehicle_type: formData.vehicleType,
             availability: formData.availability,
             motivation: formData.motivation,
+            experience: '', // Add default empty string for required field
             status: 'pending'
           }
         ]);
 
-      if (error) throw error;
+      console.log('Supabase response:', { data, error });
+
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
       toast({
         title: "Application Submitted!",
@@ -125,6 +132,7 @@ export function OperatorModal({ isOpen, onClose }: OperatorModalProps) {
       <SheetContent side="bottom" className="max-h-[80vh] rounded-t-xl">
         <SheetHeader className="text-left">
           <SheetTitle className="ios-title2">Be Your Own Boss</SheetTitle>
+          <p className="ios-body text-muted-foreground">Join our network of independent operators</p>
         </SheetHeader>
         
         <div className="mt-6 space-y-6">

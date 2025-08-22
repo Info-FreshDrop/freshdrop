@@ -32,6 +32,7 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
       <SheetContent side="bottom" className="max-h-[80vh] rounded-t-xl">
         <SheetHeader className="text-left">
           <SheetTitle className="ios-title2">How It Works</SheetTitle>
+          <p className="ios-body text-muted-foreground">Our simple 3-step process</p>
         </SheetHeader>
         
         <div className="mt-6 space-y-4">

@@ -66,57 +66,107 @@ export function MobileApp() {
           <div className="mobile-spacing responsive-padding responsive-gap">
             <h2 className="ios-title2 text-foreground mb-6 sm:mb-8 text-center">Learn More</h2>
             
-            <div className="responsive-grid max-w-4xl mx-auto">
-              <Card className="responsive-padding border-border bg-card rounded-xl">
-                <h3 className="ios-headline mb-2 sm:mb-4">How It Works</h3>
-                <p className="ios-body text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Discover our simple 3-step process for fresh, clean laundry
-                </p>
-                <IOSPrimaryButton 
-                  onClick={() => setShowHowItWorks(true)}
-                  className="w-full"
-                >
-                  Learn How It Works
-                </IOSPrimaryButton>
-              </Card>
+            <div className="space-y-6 max-w-4xl mx-auto">
+              {/* Hero Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Card className="responsive-padding border-0 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-lg">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                      <Info className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="ios-headline text-foreground">How It Works</h3>
+                  </div>
+                  <p className="ios-body text-muted-foreground mb-4 leading-relaxed">
+                    Discover our simple 3-step process for fresh, clean laundry
+                  </p>
+                  <IOSPrimaryButton 
+                    onClick={() => setShowHowItWorks(true)}
+                    className="w-full bg-primary hover:bg-primary/90"
+                  >
+                    Learn How It Works
+                  </IOSPrimaryButton>
+                </Card>
 
-              <Card className="responsive-padding border-border bg-card rounded-xl">
-                <h3 className="ios-headline mb-2 sm:mb-4">Our Services</h3>
-                <p className="ios-body text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  24-hour turnaround, express service, locker pickup & door-to-door
-                </p>
-                <IOSPrimaryButton 
-                  onClick={() => setShowServices(true)}
-                  className="w-full"
-                >
-                  View Services
-                </IOSPrimaryButton>
-              </Card>
+                <Card className="responsive-padding border-0 bg-gradient-to-br from-secondary/10 via-secondary/5 to-background shadow-lg">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
+                      <LogIn className="h-5 w-5 text-secondary" />
+                    </div>
+                    <h3 className="ios-headline text-foreground">Our Services</h3>
+                  </div>
+                  <p className="ios-body text-muted-foreground mb-4 leading-relaxed">
+                    24-hour turnaround, express service, locker pickup & door-to-door
+                  </p>
+                  <IOSPrimaryButton 
+                    onClick={() => setShowServices(true)}
+                    className="w-full bg-secondary hover:bg-secondary/90"
+                    variant="secondary"
+                  >
+                    View Services
+                  </IOSPrimaryButton>
+                </Card>
 
-              <Card className="responsive-padding border-border bg-card rounded-xl">
-                <h3 className="ios-headline mb-2 sm:mb-4">FAQ</h3>
-                <p className="ios-body text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Everything you need to know about FreshDrop's laundry service
-                </p>
-                <IOSPrimaryButton 
-                  onClick={() => setShowFAQ(true)}
-                  className="w-full"
-                >
-                  View FAQ
-                </IOSPrimaryButton>
-              </Card>
+                <Card className="responsive-padding border-0 bg-gradient-to-br from-accent/10 via-accent/5 to-background shadow-lg">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center">
+                      <Phone className="h-5 w-5 text-accent" />
+                    </div>
+                    <h3 className="ios-headline text-foreground">FAQ</h3>
+                  </div>
+                  <p className="ios-body text-muted-foreground mb-4 leading-relaxed">
+                    Everything you need to know about FreshDrop's laundry service
+                  </p>
+                  <IOSPrimaryButton 
+                    onClick={() => setShowFAQ(true)}
+                    className="w-full bg-accent hover:bg-accent/90"
+                    variant="outline"
+                  >
+                    View FAQ
+                  </IOSPrimaryButton>
+                </Card>
 
-              <Card className="responsive-padding border-border bg-card rounded-xl">
-                <h3 className="ios-headline mb-2 sm:mb-4">Become an Operator</h3>
-                <p className="ios-body text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Be your own boss! Join our network and start earning money
-                </p>
-                <IOSPrimaryButton 
-                  onClick={() => setShowOperator(true)}
-                  className="w-full"
-                >
-                  Apply Now
-                </IOSPrimaryButton>
+                <Card className="responsive-padding border-0 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-lg">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                      <Info className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="ios-headline text-foreground">Become an Operator</h3>
+                  </div>
+                  <p className="ios-body text-muted-foreground mb-4 leading-relaxed">
+                    Be your own boss! Join our network and start earning money
+                  </p>
+                  <IOSPrimaryButton 
+                    onClick={() => setShowOperator(true)}
+                    className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                  >
+                    Apply Now
+                  </IOSPrimaryButton>
+                </Card>
+              </div>
+
+              {/* Why Choose FreshDrop Section */}
+              <Card className="responsive-padding border-0 bg-gradient-to-r from-primary/5 to-secondary/5 shadow-lg">
+                <h3 className="ios-title3 text-center mb-4 text-primary">Why Choose FreshDrop?</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    </div>
+                    <span className="ios-body text-muted-foreground">Professional-grade cleaning</span>
+                  </div>
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                    </div>
+                    <span className="ios-body text-muted-foreground">Real-time order tracking</span>
+                  </div>
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-accent rounded-full"></div>
+                    </div>
+                    <span className="ios-body text-muted-foreground">Satisfaction guaranteed</span>
+                  </div>
+                </div>
               </Card>
             </div>
           </div>

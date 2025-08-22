@@ -57,6 +57,7 @@ export function FAQModal({ isOpen, onClose }: FAQModalProps) {
       <SheetContent side="bottom" className="max-h-[80vh] rounded-t-xl">
         <SheetHeader className="text-left">
           <SheetTitle className="ios-title2">Frequently Asked Questions</SheetTitle>
+          <p className="ios-body text-muted-foreground">Everything you need to know about FreshDrop</p>
         </SheetHeader>
         
         <div className="mt-6">

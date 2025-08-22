@@ -47,6 +47,7 @@ export function ServicesModal({ isOpen, onClose }: ServicesModalProps) {
       <SheetContent side="bottom" className="max-h-[80vh] rounded-t-xl">
         <SheetHeader className="text-left">
           <SheetTitle className="ios-title2">Our Services</SheetTitle>
+          <p className="ios-body text-muted-foreground">Professional laundry solutions for your lifestyle</p>
         </SheetHeader>
         
         <div className="mt-6 space-y-4">
