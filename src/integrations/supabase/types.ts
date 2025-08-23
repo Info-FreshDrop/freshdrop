@@ -1382,8 +1382,46 @@ export type Database = {
           },
         ]
       }
+      payout_schedules: {
+        Row: {
+          created_at: string | null
+          id: string
+          processed_at: string | null
+          status: string | null
+          total_amount_cents: number | null
+          total_contractors: number | null
+          updated_at: string | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          processed_at?: string | null
+          status?: string | null
+          total_amount_cents?: number | null
+          total_contractors?: number | null
+          updated_at?: string | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          processed_at?: string | null
+          status?: string | null
+          total_amount_cents?: number | null
+          total_contractors?: number | null
+          updated_at?: string | null
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       payouts: {
         Row: {
+          ach_transfer_id: string | null
+          bank_account_last4: string | null
           created_at: string
           earnings_count: number
           external_payout_id: string | null
@@ -1393,13 +1431,17 @@ export type Database = {
           payout_method: string
           payout_period_end: string
           payout_period_start: string
+          payout_schedule_id: string | null
           processed_at: string | null
           processed_by: string | null
+          processing_fee_cents: number | null
           status: string
           total_amount_cents: number
           updated_at: string
         }
         Insert: {
+          ach_transfer_id?: string | null
+          bank_account_last4?: string | null
           created_at?: string
           earnings_count?: number
           external_payout_id?: string | null
@@ -1409,13 +1451,17 @@ export type Database = {
           payout_method?: string
           payout_period_end: string
           payout_period_start: string
+          payout_schedule_id?: string | null
           processed_at?: string | null
           processed_by?: string | null
+          processing_fee_cents?: number | null
           status?: string
           total_amount_cents: number
           updated_at?: string
         }
         Update: {
+          ach_transfer_id?: string | null
+          bank_account_last4?: string | null
           created_at?: string
           earnings_count?: number
           external_payout_id?: string | null
@@ -1425,13 +1471,23 @@ export type Database = {
           payout_method?: string
           payout_period_end?: string
           payout_period_start?: string
+          payout_schedule_id?: string | null
           processed_at?: string | null
           processed_by?: string | null
+          processing_fee_cents?: number | null
           status?: string
           total_amount_cents?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payouts_payout_schedule_id_fkey"
+            columns: ["payout_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "payout_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pending_orders: {
         Row: {
@@ -1464,44 +1520,65 @@ export type Database = {
         Row: {
           avatar_url: string | null
           birthday: string | null
+          business_name: string | null
+          contractor_start_date: string | null
           created_at: string
           email: string | null
           first_name: string | null
           id: string
+          is_contractor: boolean | null
           last_name: string | null
           opt_in_email: boolean | null
           opt_in_sms: boolean | null
           phone: string | null
+          tax_address: Json | null
+          tax_id: string | null
           updated_at: string
           user_id: string
+          w9_completed: boolean | null
+          w9_file_url: string | null
         }
         Insert: {
           avatar_url?: string | null
           birthday?: string | null
+          business_name?: string | null
+          contractor_start_date?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
           id?: string
+          is_contractor?: boolean | null
           last_name?: string | null
           opt_in_email?: boolean | null
           opt_in_sms?: boolean | null
           phone?: string | null
+          tax_address?: Json | null
+          tax_id?: string | null
           updated_at?: string
           user_id: string
+          w9_completed?: boolean | null
+          w9_file_url?: string | null
         }
         Update: {
           avatar_url?: string | null
           birthday?: string | null
+          business_name?: string | null
+          contractor_start_date?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
           id?: string
+          is_contractor?: boolean | null
           last_name?: string | null
           opt_in_email?: boolean | null
           opt_in_sms?: boolean | null
           phone?: string | null
+          tax_address?: Json | null
+          tax_id?: string | null
           updated_at?: string
           user_id?: string
+          w9_completed?: boolean | null
+          w9_file_url?: string | null
         }
         Relationships: []
       }
@@ -1922,6 +1999,48 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_documents: {
+        Row: {
+          contractor_id: string
+          created_at: string | null
+          document_type: string
+          document_url: string | null
+          generated_at: string | null
+          id: string
+          sent_at: string | null
+          status: string | null
+          tax_year: number
+          total_earnings_cents: number
+          updated_at: string | null
+        }
+        Insert: {
+          contractor_id: string
+          created_at?: string | null
+          document_type?: string
+          document_url?: string | null
+          generated_at?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string | null
+          tax_year: number
+          total_earnings_cents?: number
+          updated_at?: string | null
+        }
+        Update: {
+          contractor_id?: string
+          created_at?: string | null
+          document_type?: string
+          document_url?: string | null
+          generated_at?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string | null
+          tax_year?: number
+          total_earnings_cents?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tips: {
         Row: {
           amount_cents: number
@@ -2097,9 +2216,11 @@ export type Database = {
       }
       washers: {
         Row: {
+          ach_verified: boolean | null
           approval_status: string | null
           availability_schedule: Json | null
           available_time_slots: string[] | null
+          bank_account_info: Json | null
           created_at: string
           id: string
           is_active: boolean | null
@@ -2118,9 +2239,11 @@ export type Database = {
           zip_codes: string[] | null
         }
         Insert: {
+          ach_verified?: boolean | null
           approval_status?: string | null
           availability_schedule?: Json | null
           available_time_slots?: string[] | null
+          bank_account_info?: Json | null
           created_at?: string
           id?: string
           is_active?: boolean | null
@@ -2139,9 +2262,11 @@ export type Database = {
           zip_codes?: string[] | null
         }
         Update: {
+          ach_verified?: boolean | null
           approval_status?: string | null
           availability_schedule?: Json | null
           available_time_slots?: string[] | null
+          bank_account_info?: Json | null
           created_at?: string
           id?: string
           is_active?: boolean | null
@@ -2209,6 +2334,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_weekly_payout_schedule: {
+        Args: { p_week_end: string; p_week_start: string }
+        Returns: string
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -2240,6 +2369,15 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: undefined
+      }
+      process_weekly_payouts: {
+        Args: { p_schedule_id: string }
+        Returns: {
+          contractor_id: string
+          earnings_count: number
+          payout_id: string
+          total_earnings_cents: number
+        }[]
       }
       send_order_notification: {
         Args: {
