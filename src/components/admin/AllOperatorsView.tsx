@@ -17,8 +17,10 @@ import {
   Star,
   FileText,
   Eye,
-  ArrowLeft
+  ArrowLeft,
+  Building2
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { OperatorDetailModal } from "./OperatorDetailModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +68,7 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
   const [operatorStats, setOperatorStats] = useState<Record<string, OperatorStats>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'pending' | 'rejected'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'contractors'>('all');
   const [loading, setLoading] = useState(true);
   const [selectedOperator, setSelectedOperator] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -108,7 +111,7 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
 
   useEffect(() => {
     filterAndSortOperators();
-  }, [operators, searchTerm, statusFilter]);
+  }, [operators, searchTerm, statusFilter, activeTab]);
 
   const loadOperators = async () => {
     setLoading(true);
@@ -219,6 +222,11 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
   const filterAndSortOperators = () => {
     let filtered = [...operators];
 
+    // Filter by tab
+    if (activeTab === 'contractors') {
+      filtered = filtered.filter(operator => operator.profiles?.is_contractor === true);
+    }
+
     if (searchTerm) {
       filtered = filtered.filter(operator => {
         const fullName = `${operator.profiles?.first_name || ''} ${operator.profiles?.last_name || ''}`.toLowerCase();
@@ -294,9 +302,21 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
           Back to Dashboard
         </Button>
 
-        <h1 className="text-3xl font-bold mb-6">All Operators</h1>
+        <h1 className="text-3xl font-bold mb-6">Operator Management</h1>
 
-        <div className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'contractors')} className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="all" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              All Operators ({operators.length})
+            </TabsTrigger>
+            <TabsTrigger value="contractors" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Contractors Only ({operators.filter(op => op.profiles?.is_contractor).length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={activeTab} className="space-y-6">
           {filteredOperators.map((operator: any) => (
             <Card key={operator.id} className="p-6">
               <div className="space-y-6">
@@ -494,7 +514,8 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
               </div>
             </Card>
           ))}
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
       
       {/* Operator Detail Modal */}

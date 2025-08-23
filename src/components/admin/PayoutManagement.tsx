@@ -297,8 +297,7 @@ export const PayoutManagement: React.FC = () => {
             earnings_count: operatorPayout.earnings_count,
             payout_period_start: periodStart.toISOString(),
             payout_period_end: periodEnd.toISOString(),
-            status: 'completed', // For now, mark as completed. In production, this would be 'pending' until payment processor confirms
-            processed_at: new Date().toISOString(),
+            status: 'pending', // Start as pending for real Stripe processing
             notes: `Batch payout for ${operatorPayout.earnings_count} orders`
           })
           .select()
@@ -309,7 +308,7 @@ export const PayoutManagement: React.FC = () => {
           continue;
         }
 
-        // Create payout_earnings junction records and mark earnings as paid
+        // Create payout_earnings junction records
         const earningIds = operatorPayout.earnings.map(e => e.id);
         
         // Insert junction records
@@ -322,16 +321,49 @@ export const PayoutManagement: React.FC = () => {
           .from('payout_earnings')
           .insert(junctionRecords);
 
-        // Mark earnings as paid
-        await supabase
-          .from('operator_earnings')
-          .update({ status: 'paid' })
-          .in('id', earningIds);
+        // Process real Stripe payout
+        try {
+          const { data: stripeResult, error: stripeError } = await supabase.functions.invoke(
+            'create-stripe-payout',
+            {
+              body: { payout_id: payout.id }
+            }
+          );
+
+          if (stripeError) {
+            console.error('Stripe payout error:', stripeError);
+            // Mark payout as failed
+            await supabase
+              .from('payouts')
+              .update({ 
+                status: 'failed',
+                notes: `Stripe payout failed: ${stripeError.message}`
+              })
+              .eq('id', payout.id);
+          } else {
+            console.log('Stripe payout initiated:', stripeResult);
+            // Mark earnings as paid only after successful Stripe processing
+            await supabase
+              .from('operator_earnings')
+              .update({ status: 'paid' })
+              .in('id', earningIds);
+          }
+        } catch (stripeError) {
+          console.error('Error calling Stripe payout function:', stripeError);
+          // Mark payout as failed
+          await supabase
+            .from('payouts')
+            .update({ 
+              status: 'failed',
+              notes: `Stripe payout failed: ${stripeError}`
+            })
+            .eq('id', payout.id);
+        }
       }
 
       toast({
         title: "Payouts Processed",
-        description: `Successfully processed payouts for ${selectedOperatorPayouts.length} operators`,
+        description: `Successfully initiated payouts for ${selectedOperatorPayouts.length} operators`,
       });
 
       setSelectedOperatorPayouts([]);
