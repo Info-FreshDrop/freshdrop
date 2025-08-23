@@ -35,9 +35,9 @@ export function MobileApp() {
       case 'auth':
         return (
           <div className="relative min-h-screen">
-            {/* Background Image - Full Screen */}
+            {/* Background Image - Contained to show full photo */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              className="absolute inset-0 bg-contain bg-center bg-no-repeat"
               style={{
                 backgroundImage: `url('/lovable-uploads/efb21ff1-6eb6-47f0-b000-a1e8ee6ff1e2.png')`
               }}
@@ -54,12 +54,12 @@ export function MobileApp() {
                 </p>
               </div>
 
-              {/* Spacer to position form at crossed arms level */}
-              <div style={{ height: '45vh' }}></div>
+              {/* Spacer to position form below her arms */}
+              <div style={{ height: '50vh' }}></div>
 
-              {/* Very Compact Auth Forms positioned at the lady's crossed arms */}
-              <div className="px-12 pb-20">
-                <Card className="bg-white/98 backdrop-blur-sm border-0 rounded-xl shadow-lg max-w-48 w-full mx-auto p-1">
+              {/* Auth Forms positioned below the lady's arms */}
+              <div className="px-8 pb-20">
+                <Card className="bg-white/98 backdrop-blur-sm border-0 rounded-2xl shadow-xl max-w-sm w-full mx-auto">
                   {showOperatorLogin ? (
                     <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
                   ) : (
