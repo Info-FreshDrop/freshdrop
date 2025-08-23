@@ -34,7 +34,8 @@ import {
   Settings,
   User,
   LogOut,
-  ExternalLink
+  ExternalLink,
+  FileText
 } from "lucide-react";
 import { ServiceAreaModal } from './ServiceAreaModal';
 import { LiveOrderMap } from '../orders/LiveOrderMap';
@@ -965,6 +966,16 @@ export function OperatorDashboard() {
             >
               <Settings className="h-4 w-4" />
               Settings
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowContractorPrompt(true)}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Tax Info
             </Button>
             <div className="flex items-center gap-3">
               <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${

@@ -1,31 +1,27 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { 
-  ArrowLeft, 
-  Users, 
-  Search, 
-  Filter,
-  User,
-  MapPin,
-  Calendar,
-  UserCheck,
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  CheckCircle, 
+  X, 
+  UserCheck, 
   UserX,
-  Phone,
-  Mail,
-  CheckCircle,
-  X,
+  Package,
   DollarSign,
-  Star,
   Clock,
+  Star,
   FileText,
-  Package
+  Eye,
+  ArrowLeft
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { OperatorDetailModal } from "./OperatorDetailModal";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AllOperatorsViewProps {
   onBack: () => void;
@@ -71,6 +67,8 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'pending' | 'rejected'>('all');
   const [loading, setLoading] = useState(true);
+  const [selectedOperator, setSelectedOperator] = useState<any>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -330,6 +328,17 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
                         )}
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedOperator(operator);
+                        setShowDetailModal(true);
+                      }}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View Details
+                    </Button>
                   </div>
                 </div>
 
@@ -454,6 +463,19 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
           ))}
         </div>
       </div>
+      
+      {/* Operator Detail Modal */}
+      {selectedOperator && (
+        <OperatorDetailModal
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedOperator(null);
+          }}
+          operator={selectedOperator}
+          stats={operatorStats[selectedOperator.id]}
+        />
+      )}
     </div>
   );
 }
