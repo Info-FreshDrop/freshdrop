@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Calendar, Clock, TrendingUp, Wallet } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { DollarSign, Calendar, Clock, TrendingUp, Wallet, RefreshCw } from 'lucide-react';
+import { formatDistanceToNow, startOfWeek, endOfWeek, subWeeks, format } from 'date-fns';
 
 interface Earning {
   id: string;
@@ -55,12 +56,31 @@ export const OperatorEarnings: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'earnings' | 'payouts'>('earnings');
+  const [selectedWeek, setSelectedWeek] = useState<string>('current');
+  const [calculatingEarnings, setCalculatingEarnings] = useState(false);
 
   useEffect(() => {
     if (user) {
       loadEarningsData();
     }
-  }, [user]);
+  }, [user, selectedWeek]);
+
+  const getWeekRange = (weekSelection: string) => {
+    const now = new Date();
+    switch (weekSelection) {
+      case 'current':
+        return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
+      case 'last':
+        const lastWeek = subWeeks(now, 1);
+        return { start: startOfWeek(lastWeek, { weekStartsOn: 1 }), end: endOfWeek(lastWeek, { weekStartsOn: 1 }) };
+      case 'two':
+        const twoWeeksAgo = subWeeks(now, 2);
+        return { start: startOfWeek(twoWeeksAgo, { weekStartsOn: 1 }), end: endOfWeek(twoWeeksAgo, { weekStartsOn: 1 }) };
+      case 'all':
+      default:
+        return null;
+    }
+  };
 
   const loadEarningsData = async () => {
     try {
@@ -80,11 +100,20 @@ export const OperatorEarnings: React.FC = () => {
         return;
       }
 
-      // Load earnings with order details - simplified query
-      const { data: earningsData, error: earningsError } = await supabase
+      // Build earnings query with date filter
+      const weekRange = getWeekRange(selectedWeek);
+      let earningsQuery = supabase
         .from('operator_earnings')
         .select('*')
-        .eq('operator_id', washer.id)
+        .eq('operator_id', washer.id);
+
+      if (weekRange) {
+        earningsQuery = earningsQuery
+          .gte('earned_at', weekRange.start.toISOString())
+          .lte('earned_at', weekRange.end.toISOString());
+      }
+
+      const { data: earningsData, error: earningsError } = await earningsQuery
         .order('earned_at', { ascending: false });
 
       if (earningsError) {
@@ -137,6 +166,58 @@ export const OperatorEarnings: React.FC = () => {
     }
   };
 
+  const calculateMissingEarnings = async () => {
+    try {
+      setCalculatingEarnings(true);
+      
+      // Get operator ID
+      const { data: washer, error: washerError } = await supabase
+        .from('washers')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (washerError || !washer) return;
+
+      // Get completed orders without earnings
+      const { data: completedOrders, error: ordersError } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('washer_id', washer.id)
+        .eq('status', 'completed');
+
+      if (ordersError) throw ordersError;
+
+      // Calculate earnings for each order
+      for (const order of completedOrders || []) {
+        try {
+          await supabase.functions.invoke('calculate-operator-earnings', {
+            body: { order_id: order.id }
+          });
+        } catch (error) {
+          console.error(`Error calculating earnings for order ${order.id}:`, error);
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: "Earnings calculated successfully"
+      });
+
+      // Reload data
+      loadEarningsData();
+    } catch (error) {
+      console.error('Error calculating earnings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to calculate earnings",
+        variant: "destructive"
+      });
+    } finally {
+      setCalculatingEarnings(false);
+    }
+  };
+
   const formatCurrency = (cents: number): string => {
     return `$${(cents / 100).toFixed(2)}`;
   };
@@ -170,8 +251,49 @@ export const OperatorEarnings: React.FC = () => {
     );
   }
 
+  const getWeekOptions = () => [
+    { value: 'all', label: 'All Time' },
+    { value: 'current', label: 'Current Week' },
+    { value: 'last', label: 'Last Week' },
+    { value: 'two', label: '2 Weeks Ago' }
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Week Selection and Actions */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold">Earnings Dashboard</h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <Select value={selectedWeek} onValueChange={setSelectedWeek}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {getWeekOptions().map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        
+        <Button 
+          onClick={calculateMissingEarnings}
+          disabled={calculatingEarnings}
+          variant="outline"
+          size="sm"
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${calculatingEarnings ? 'animate-spin' : ''}`} />
+          {calculatingEarnings ? 'Calculating...' : 'Sync Earnings'}
+        </Button>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
