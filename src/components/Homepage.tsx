@@ -101,14 +101,30 @@ export function Homepage() {
       {/* Hero Section */}
       <HeroSection />
       
-      {/* Login Section */}
-      <section id="auth-section" className="py-8 sm:py-16 bg-background">
-        <div className="max-w-md mx-auto px-4 sm:px-6">
+      {/* Login Section with Background */}
+      <section 
+        id="auth-section" 
+        className="py-8 sm:py-16 min-h-screen flex items-center justify-center relative overflow-hidden"
+        style={{
+          backgroundImage: 'url(/lovable-uploads/9bbbac90-33e2-4882-8177-e5c85194e319.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        <div className="max-w-md mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold mb-2">Sign in to Order</h2>
-            <p className="text-sm sm:text-base text-muted-foreground">Create an account or sign in to place your laundry order</p>
+            <h2 className="text-xl sm:text-2xl font-bold mb-2 text-primary bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2">
+              Welcome Back
+            </h2>
+            <p className="text-sm sm:text-base text-slate-700 bg-white/80 backdrop-blur-sm rounded-lg px-4 py-2">
+              Sign in to your FreshDrop account
+            </p>
           </div>
-          <Card className="shadow-glow">
+          <Card className="shadow-glow bg-white/95 backdrop-blur-sm border-0">
             {showOperatorLogin ? (
               <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
             ) : (
