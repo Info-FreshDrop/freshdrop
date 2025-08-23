@@ -239,7 +239,51 @@ export function OperatorDashboard() {
   const checkContractorSetup = async () => {
     if (!user) return;
     try {
-      const needsSetup = await needsContractorSetup();
+      console.log('Checking contractor setup for user:', user.id);
+      
+      // Check if user is an operator
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+      
+      console.log('User roles:', userRoles);
+      const isOperator = userRoles?.some(r => r.role === 'operator' || r.role === 'washer');
+      
+      if (!isOperator) {
+        console.log('User is not an operator, skipping contractor setup');
+        return;
+      }
+
+      // Check current profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tax_id, tax_address, w9_completed, is_contractor')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      console.log('Current profile contractor data:', profile);
+
+      // Check washer banking info
+      const { data: washer } = await supabase
+        .from('washers')
+        .select('bank_account_info')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      console.log('Current washer banking info:', washer);
+
+      const needsSetup = !(
+        profile?.tax_id && 
+        profile?.tax_address && 
+        profile?.w9_completed &&
+        profile?.is_contractor &&
+        washer?.bank_account_info &&
+        Object.keys(washer.bank_account_info).length > 0
+      );
+
+      console.log('Needs contractor setup:', needsSetup);
+      
       if (needsSetup) {
         setShowContractorPrompt(true);
       }

@@ -88,37 +88,53 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
       const { data: operators, error } = await supabase
         .from('washers')
         .select(`
-          *,
-          profiles!washers_user_id_profiles_fkey (
-            first_name,
-            last_name,
-            email,
-            phone,
-            business_name,
-            tax_id,
-            tax_address,
-            w9_completed,
-            is_contractor,
-            contractor_start_date
-          )
+          id,
+          user_id,
+          zip_codes,
+          is_active,
+          approval_status,
+          created_at,
+          bank_account_info,
+          ach_verified,
+          availability_schedule,
+          service_radius_miles
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Load stats for each operator
-      const operatorsWithStats = await Promise.all(
+      // Load profiles separately for each operator
+      const operatorsWithProfiles = await Promise.all(
         (operators || []).map(async (operator: any) => {
-          const stats = await loadOperatorStats(operator.id);
-          return operator;
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select(`
+              first_name,
+              last_name,
+              email,
+              phone,
+              business_name,
+              tax_id,
+              tax_address,
+              w9_completed,
+              is_contractor,
+              contractor_start_date
+            `)
+            .eq('user_id', operator.user_id)
+            .maybeSingle();
+
+          return {
+            ...operator,
+            profiles: profile
+          };
         })
       );
 
-      setOperators(operatorsWithStats);
+      setOperators(operatorsWithProfiles);
       
       // Load all stats
       const statsMap: Record<string, OperatorStats> = {};
-      for (const operator of operatorsWithStats) {
+      for (const operator of operatorsWithProfiles) {
         statsMap[operator.id] = await loadOperatorStats(operator.id);
       }
       setOperatorStats(statsMap);
