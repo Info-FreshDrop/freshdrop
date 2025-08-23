@@ -37,35 +37,36 @@ export function MobileApp() {
           <div 
             className="mobile-spacing responsive-padding responsive-gap min-h-screen relative overflow-hidden"
             style={{
-              backgroundImage: 'url(/lovable-uploads/9bbbac90-33e2-4882-8177-e5c85194e319.png)',
+              backgroundImage: 'url(/lovable-uploads/d2cddd67-0038-4918-ae26-4ceae0259e39.png)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
             }}
           >
             {/* Overlay for better text readability */}
-            <div className="absolute inset-0 bg-black/20"></div>
+            <div className="absolute inset-0 bg-black/10"></div>
             
             <div className="relative z-10">
-              {/* Logo Section */}
-              <div className="text-center mb-6 sm:mb-8 lg:mb-12">
-                <img 
-                  src="/lovable-uploads/400d5514-59e3-4714-8281-fc739cf00f88.png" 
-                  alt="FreshDrop" 
-                  className="h-16 sm:h-20 lg:h-24 xl:h-28 w-auto mx-auto mb-4 sm:mb-6"
-                />
-                <h1 className="ios-title1 text-primary bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 inline-block mb-2 sm:mb-4">
-                  Laundry made easy
-                </h1>
-                <p className="ios-body text-slate-700 bg-white/80 backdrop-blur-sm rounded-lg px-4 py-2 max-w-lg mx-auto leading-relaxed">
-                  Professional laundry service with 24-hour turnaround. 
-                  Drop off at any locker or schedule pickup & delivery. 
+              {/* Logo and Header Text */}
+              <div className="text-center mb-8">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.9 1 3 1.9 3 3V21C3 22.1 3.9 23 5 23H19C20.1 23 21 22.1 21 21V9Z"/>
+                    </svg>
+                  </div>
+                  <h1 className="text-2xl font-bold text-foreground">FreshDrop</h1>
+                </div>
+                <h2 className="text-3xl font-bold text-foreground mb-4">Laundry made easy</h2>
+                <p className="text-base text-muted-foreground leading-relaxed">
+                  Professional laundry service with 24-hour turnaround.<br />
+                  Drop off at any locker or schedule pickup & delivery.<br />
                   Eco-friendly, secure, and contactless.
                 </p>
               </div>
 
               {/* Auth Forms */}
-              <Card className="border-0 bg-white/95 backdrop-blur-sm rounded-xl overflow-hidden max-w-md mx-auto w-full shadow-glow">
+              <Card className="border-0 bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden max-w-md mx-auto w-full shadow-glow">
                 {showOperatorLogin ? (
                   <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
                 ) : (

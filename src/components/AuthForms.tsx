@@ -217,12 +217,12 @@ export function AuthForms({ onOperatorLogin }: AuthFormsProps) {
         </TabsList>
         
         <TabsContent value="signin">
-          <Card className="border-0 shadow-soft">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent">
+          <Card className="border-0 shadow-none bg-transparent">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-3xl font-bold text-primary mb-2">
                 Welcome Back
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-lg text-muted-foreground">
                 Sign in to your FreshDrop account
               </CardDescription>
             </CardHeader>
