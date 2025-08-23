@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="FreshDrop" />
+    <title>FreshDrop - Laundry Made Easy</title>
+    <meta name="description" content="Professional laundry service with 24-hour turnaround. Drop off at lockers or schedule pickup & delivery. Eco-friendly, secure, and contactless." />
+    <meta name="author" content="FreshDrop" />
+
+    <meta property="og:title" content="FreshDrop - Laundry Made Easy" />
+    <meta property="og:description" content="Professional laundry service with 24-hour turnaround. Drop off at lockers or schedule pickup & delivery." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@lovable_dev" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx?t=1755991372042"></script>
+  </body>
+</html>
