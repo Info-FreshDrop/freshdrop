@@ -39,7 +39,7 @@ export function MobileApp() {
             <div 
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{
-                backgroundImage: `url('/lovable-uploads/387307f1-7ac8-49fb-b3fc-31a3054a8ab1.png')`
+                backgroundImage: `url('/lovable-uploads/mobile-background-woman.png')`
               }}
             />
             
@@ -63,9 +63,12 @@ export function MobileApp() {
                 </p>
               </div>
 
-              {/* Auth Forms positioned over the woman's torso area */}
-              <div className="flex-1 flex items-center justify-center px-6 pb-8">
-                <Card className="bg-white/95 backdrop-blur-sm border-0 rounded-2xl shadow-xl max-w-sm w-full">
+              {/* Spacer to push form down to torso area */}
+              <div className="flex-1"></div>
+
+              {/* Auth Forms positioned below the woman's arms/torso area */}
+              <div className="px-6 pb-16">
+                <Card className="bg-white/95 backdrop-blur-sm border-0 rounded-2xl shadow-xl max-w-sm w-full mx-auto">
                   {showOperatorLogin ? (
                     <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
                   ) : (
