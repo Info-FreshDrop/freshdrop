@@ -35,9 +35,9 @@ export function MobileApp() {
       case 'auth':
         return (
           <div className="relative min-h-screen">
-            {/* Background Image */}
+            {/* Background Image - Full Screen */}
             <div 
-              className="absolute inset-0 bg-contain bg-center bg-no-repeat"
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{
                 backgroundImage: `url('/lovable-uploads/efb21ff1-6eb6-47f0-b000-a1e8ee6ff1e2.png')`
               }}
@@ -45,31 +45,22 @@ export function MobileApp() {
             
             {/* Content Overlay */}
             <div className="relative z-10 min-h-screen flex flex-col">
-              {/* Logo and Header Section */}
-              <div className="text-center pt-12 pb-6 px-6">
-                <div className="flex items-center justify-center mb-6">
-                  <img 
-                    src={freshDropLogo} 
-                    alt="FreshDrop Logo" 
-                    className="h-12 w-auto mr-3"
-                  />
-                  <h1 className="text-3xl font-bold text-white drop-shadow-lg">FreshDrop</h1>
-                </div>
+              {/* Header Text - Above the lady's head */}
+              <div className="text-center pt-16 pb-4 px-6">
+                <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-3">Laundry made easy</h2>
                 
-                <h2 className="text-4xl font-bold text-white drop-shadow-lg mb-4">Laundry made easy</h2>
-                
-                <p className="text-white/90 text-base leading-relaxed max-w-xs mx-auto drop-shadow-md">
+                <p className="text-white/90 text-sm leading-relaxed max-w-xs mx-auto drop-shadow-md">
                   Professional laundry service with 24-hour turnaround.
                   Drop off at any locker or schedule pickup & delivery.
                 </p>
               </div>
 
-              {/* Spacer to position form at torso level */}
-              <div style={{ height: '30vh' }}></div>
+              {/* Spacer to position form at crossed arms level */}
+              <div style={{ height: '40vh' }}></div>
 
-              {/* Auth Forms positioned at the woman's torso area */}
-              <div className="px-6 pb-20">
-                <Card className="bg-white/98 backdrop-blur-sm border-0 rounded-3xl shadow-2xl max-w-sm w-full mx-auto">
+              {/* Compact Auth Forms positioned at the lady's crossed arms */}
+              <div className="px-8 pb-20">
+                <Card className="bg-white/98 backdrop-blur-sm border-0 rounded-2xl shadow-xl max-w-xs w-full mx-auto">
                   {showOperatorLogin ? (
                     <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
                   ) : (
