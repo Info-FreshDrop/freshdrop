@@ -2174,6 +2174,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_missing_earnings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          processed_order_id: string
+          result_message: string
+        }[]
+      }
       calculate_order_splits: {
         Args: { order_total_cents: number }
         Returns: {
