@@ -34,30 +34,45 @@ export function MobileApp() {
     switch (activeTab) {
       case 'auth':
         return (
-          <div className="mobile-spacing responsive-padding responsive-gap">
-            {/* Logo Section */}
-            <div className="text-center mb-6 sm:mb-8 lg:mb-12">
-              <img 
-                src="/lovable-uploads/400d5514-59e3-4714-8281-fc739cf00f88.png" 
-                alt="FreshDrop" 
-                className="h-16 sm:h-20 lg:h-24 xl:h-28 w-auto mx-auto mb-4 sm:mb-6"
-              />
-              <h1 className="ios-title1 text-foreground mb-2 sm:mb-4">Laundry made easy</h1>
-              <p className="ios-body text-muted-foreground max-w-lg mx-auto leading-relaxed">
-                Professional laundry service with 24-hour turnaround. 
-                Drop off at any locker or schedule pickup & delivery. 
-                Eco-friendly, secure, and contactless.
-              </p>
-            </div>
+          <div 
+            className="mobile-spacing responsive-padding responsive-gap min-h-screen relative overflow-hidden"
+            style={{
+              backgroundImage: 'url(/lovable-uploads/9bbbac90-33e2-4882-8177-e5c85194e319.png)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          >
+            {/* Overlay for better text readability */}
+            <div className="absolute inset-0 bg-black/20"></div>
+            
+            <div className="relative z-10">
+              {/* Logo Section */}
+              <div className="text-center mb-6 sm:mb-8 lg:mb-12">
+                <img 
+                  src="/lovable-uploads/400d5514-59e3-4714-8281-fc739cf00f88.png" 
+                  alt="FreshDrop" 
+                  className="h-16 sm:h-20 lg:h-24 xl:h-28 w-auto mx-auto mb-4 sm:mb-6"
+                />
+                <h1 className="ios-title1 text-primary bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 inline-block mb-2 sm:mb-4">
+                  Laundry made easy
+                </h1>
+                <p className="ios-body text-slate-700 bg-white/80 backdrop-blur-sm rounded-lg px-4 py-2 max-w-lg mx-auto leading-relaxed">
+                  Professional laundry service with 24-hour turnaround. 
+                  Drop off at any locker or schedule pickup & delivery. 
+                  Eco-friendly, secure, and contactless.
+                </p>
+              </div>
 
-            {/* Auth Forms */}
-            <Card className="border-border bg-card rounded-xl overflow-hidden max-w-md mx-auto w-full">
-              {showOperatorLogin ? (
-                <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
-              ) : (
-                <AuthForms onOperatorLogin={() => setShowOperatorLogin(true)} />
-              )}
-            </Card>
+              {/* Auth Forms */}
+              <Card className="border-0 bg-white/95 backdrop-blur-sm rounded-xl overflow-hidden max-w-md mx-auto w-full shadow-glow">
+                {showOperatorLogin ? (
+                  <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
+                ) : (
+                  <AuthForms onOperatorLogin={() => setShowOperatorLogin(true)} />
+                )}
+              </Card>
+            </div>
           </div>
         );
 
