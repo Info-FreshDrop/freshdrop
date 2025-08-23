@@ -45,22 +45,21 @@ export function MobileApp() {
             
             {/* Content Overlay */}
             <div className="relative z-10 min-h-screen flex flex-col">
-              {/* Header Text - Above the lady's head */}
-              <div className="text-center pt-16 pb-4 px-6">
-                <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-3">Laundry made easy</h2>
+              {/* Compact Header Text - Above the lady's head */}
+              <div className="text-center pt-8 pb-2 px-6">
+                <h2 className="text-xl font-bold text-white drop-shadow-lg mb-2">Laundry made easy</h2>
                 
-                <p className="text-white/90 text-sm leading-relaxed max-w-xs mx-auto drop-shadow-md">
-                  Professional laundry service with 24-hour turnaround.
-                  Drop off at any locker or schedule pickup & delivery.
+                <p className="text-white/90 text-xs leading-tight max-w-48 mx-auto drop-shadow-md">
+                  Professional laundry service with 24-hour turnaround. Drop off at any locker.
                 </p>
               </div>
 
               {/* Spacer to position form at crossed arms level */}
-              <div style={{ height: '40vh' }}></div>
+              <div style={{ height: '45vh' }}></div>
 
-              {/* Compact Auth Forms positioned at the lady's crossed arms */}
-              <div className="px-8 pb-20">
-                <Card className="bg-white/98 backdrop-blur-sm border-0 rounded-2xl shadow-xl max-w-xs w-full mx-auto">
+              {/* Very Compact Auth Forms positioned at the lady's crossed arms */}
+              <div className="px-12 pb-20">
+                <Card className="bg-white/98 backdrop-blur-sm border-0 rounded-xl shadow-lg max-w-48 w-full mx-auto p-1">
                   {showOperatorLogin ? (
                     <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
                   ) : (
