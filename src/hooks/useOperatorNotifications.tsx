@@ -117,10 +117,32 @@ export function useOperatorNotifications() {
 
   // Show notification for new order
   const showNewOrderNotification = useCallback(async (orderData: OperatorNotificationData) => {
+    // Calculate operator earnings (40% of total amount based on business settings)
+    const operatorEarnings = Math.round(orderData.totalAmount * 0.40);
+    
     const title = '🧺 New Order Available!';
-    const body = `${orderData.serviceName} in ${orderData.zipCode} - $${(orderData.totalAmount / 100).toFixed(2)}${orderData.isExpress ? ' (Express)' : ''}`;
+    const body = `Claim it now to make $${(operatorEarnings / 100).toFixed(2)}! ${orderData.serviceName} in ${orderData.zipCode}${orderData.isExpress ? ' (Express)' : ''}`;
 
     try {
+      // Call backend notification service for SMS and email
+      await supabase.functions.invoke('notify-operators', {
+        body: {
+          type: 'new_order',
+          zipCodes: [orderData.zipCode],
+          orderId: orderData.orderId,
+          title: 'New Order Available!',
+          message: 'A new order is available in your area!',
+          orderData: {
+            zipCode: orderData.zipCode,
+            serviceName: orderData.serviceName,
+            totalAmount: orderData.totalAmount,
+            operatorEarnings: operatorEarnings,
+            isExpress: orderData.isExpress,
+            pickupAddress: orderData.pickupAddress
+          }
+        }
+      });
+
       if (isNative && permissions.notifications) {
         // Show native notification
         await sendLocalNotification(title, body);
@@ -145,7 +167,7 @@ export function useOperatorNotifications() {
         duration: 8000,
       });
     }
-  }, [isNative, permissions.notifications, sendLocalNotification, triggerHaptic, toast]);
+  }, [isNative, permissions.notifications, sendLocalNotification, triggerHaptic, toast, supabase]);
 
   // Set up real-time order notifications for operator's service areas
   useEffect(() => {

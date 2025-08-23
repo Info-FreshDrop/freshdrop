@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +16,7 @@ interface NotificationRequest {
     zipCode: string;
     serviceName: string;
     totalAmount: number;
+    operatorEarnings: number;
     isExpress: boolean;
     customerName?: string;
     pickupAddress?: string;
@@ -36,6 +38,9 @@ serve(async (req) => {
     
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.39.3')
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    // Initialize Resend for email notifications
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY"))
 
     let targetOperators: any[] = []
 
@@ -48,7 +53,7 @@ serve(async (req) => {
           user_id,
           push_notification_token,
           notifications_enabled,
-          profiles!washers_user_id_profiles_fkey(first_name, last_name, phone, opt_in_sms)
+          profiles!washers_user_id_profiles_fkey(first_name, last_name, phone, opt_in_sms, email)
         `)
         .eq('is_active', true)
         .eq('is_online', true)
@@ -104,7 +109,7 @@ serve(async (req) => {
 
           if (twilioAccountSid && twilioAuthToken && twilioPhoneNumber) {
             const smsBody = orderData 
-              ? `🧺 ${title}\n${orderData.serviceName} in ${orderData.zipCode}\n$${(orderData.totalAmount / 100).toFixed(2)}${orderData.isExpress ? ' (Express)' : ''}\nOpen FreshDrop app to claim!`
+              ? `🧺 New order available in your area! Claim it now to make $${(orderData.operatorEarnings / 100).toFixed(2)}!\n${orderData.serviceName} in ${orderData.zipCode}${orderData.isExpress ? ' (Express)' : ''}\nOpen FreshDrop app to claim!`
               : `🧺 ${title}\n${message}`
 
             const response = await fetch(
@@ -151,6 +156,77 @@ serve(async (req) => {
           }
         } catch (error) {
           console.error('SMS sending error:', error)
+        }
+      }
+
+      // Send Email notification
+      if (operator.profiles?.email && orderData) {
+        try {
+          const operatorName = `${operator.profiles.first_name || 'Operator'} ${operator.profiles.last_name || ''}`.trim();
+          const emailSubject = '🧺 New Order Available - Claim Now!';
+          const emailBody = `
+            <h2>Hi ${operatorName}!</h2>
+            <p><strong>A new order is available in your area!</strong></p>
+            
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3>📋 Order Details</h3>
+              <p><strong>Service:</strong> ${orderData.serviceName}</p>
+              <p><strong>Location:</strong> ${orderData.zipCode}</p>
+              <p><strong>Type:</strong> ${orderData.isExpress ? 'Express Service ⚡' : 'Standard Service'}</p>
+              <p style="font-size: 18px; color: #059669; font-weight: bold;">
+                💰 Your Earnings: $${(orderData.operatorEarnings / 100).toFixed(2)}
+              </p>
+            </div>
+            
+            <p><strong>📱 Open the FreshDrop app now to claim this order!</strong></p>
+            <p style="color: #6b7280; font-size: 14px;">
+              Remember: Orders are claimed on a first-come, first-served basis.
+            </p>
+            
+            <p>Best regards,<br>The FreshDrop Team</p>
+          `;
+
+          const emailResponse = await resend.emails.send({
+            from: 'FreshDrop <orders@freshdrop.com>',
+            to: [operator.profiles.email],
+            subject: emailSubject,
+            html: emailBody,
+          });
+
+          if (emailResponse.error) {
+            console.error('Email sending error:', emailResponse.error);
+            await supabase.from('notification_logs').insert({
+              notification_type: 'email',
+              customer_id: operator.user_id,
+              order_id: orderId,
+              status: 'failed',
+              message_content: emailBody,
+              recipient: operator.profiles.email,
+              error_message: emailResponse.error.message
+            });
+          } else {
+            await supabase.from('notification_logs').insert({
+              notification_type: 'email',
+              customer_id: operator.user_id,
+              order_id: orderId,
+              status: 'sent',
+              message_content: emailBody,
+              recipient: operator.profiles.email
+            });
+            notifications.push('email');
+            console.log(`Email sent to operator ${operator.user_id}: ${operator.profiles.email}`);
+          }
+        } catch (error) {
+          console.error('Email sending error:', error);
+          await supabase.from('notification_logs').insert({
+            notification_type: 'email',
+            customer_id: operator.user_id,
+            order_id: orderId,
+            status: 'failed',
+            message_content: 'Error occurred while sending email',
+            recipient: operator.profiles.email,
+            error_message: error.message
+          });
         }
       }
 
