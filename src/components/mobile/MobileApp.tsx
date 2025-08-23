@@ -46,29 +46,30 @@ export function MobileApp() {
             {/* Content Overlay */}
             <div className="relative z-10 min-h-screen flex flex-col">
               {/* Logo and Header Section */}
-              <div className="text-center pt-8 pb-4 px-6">
-                <div className="flex items-center justify-center mb-4">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full mr-3 flex items-center justify-center">
-                    <div className="w-4 h-4 bg-white rounded-full"></div>
-                  </div>
-                  <h1 className="text-2xl font-bold text-blue-900">FreshDrop</h1>
+              <div className="text-center pt-12 pb-6 px-6">
+                <div className="flex items-center justify-center mb-6">
+                  <img 
+                    src={freshDropLogo} 
+                    alt="FreshDrop Logo" 
+                    className="h-12 w-auto mr-3"
+                  />
+                  <h1 className="text-3xl font-bold text-white drop-shadow-lg">FreshDrop</h1>
                 </div>
                 
-                <h2 className="text-3xl font-bold text-blue-900 mb-4">Laundry made easy</h2>
+                <h2 className="text-4xl font-bold text-white drop-shadow-lg mb-4">Laundry made easy</h2>
                 
-                <p className="text-blue-800 text-sm leading-relaxed max-w-sm mx-auto">
+                <p className="text-white/90 text-base leading-relaxed max-w-xs mx-auto drop-shadow-md">
                   Professional laundry service with 24-hour turnaround.
                   Drop off at any locker or schedule pickup & delivery.
-                  Eco-friendly, secure, and contactless.
                 </p>
               </div>
 
-              {/* Spacer to push form down to torso area */}
-              <div className="flex-1"></div>
+              {/* Spacer to position form at torso level */}
+              <div style={{ height: '30vh' }}></div>
 
-              {/* Auth Forms positioned below the woman's arms/torso area */}
-              <div className="px-6 pb-16">
-                <Card className="bg-white/95 backdrop-blur-sm border-0 rounded-2xl shadow-xl max-w-sm w-full mx-auto">
+              {/* Auth Forms positioned at the woman's torso area */}
+              <div className="px-6 pb-20">
+                <Card className="bg-white/98 backdrop-blur-sm border-0 rounded-3xl shadow-2xl max-w-sm w-full mx-auto">
                   {showOperatorLogin ? (
                     <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
                   ) : (
