@@ -73,6 +73,37 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
 
   useEffect(() => {
     loadOperators();
+
+    // Set up real-time subscription for washers table
+    const channel = supabase
+      .channel('washers-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'washers'
+        },
+        () => {
+          loadOperators(); // Reload when any washer data changes
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          loadOperators(); // Reload when profile data changes
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -335,9 +366,11 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
                         setSelectedOperator(operator);
                         setShowDetailModal(true);
                       }}
+                      className="sm:px-4 px-2"
                     >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View Details
+                      <Eye className="w-4 h-4 sm:mr-1" />
+                      <span className="hidden sm:inline">View Details</span>
+                      <span className="sm:hidden">View</span>
                     </Button>
                   </div>
                 </div>

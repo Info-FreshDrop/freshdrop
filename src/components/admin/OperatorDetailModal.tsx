@@ -209,13 +209,20 @@ export const OperatorDetailModal = ({ isOpen, onClose, operator, stats }: Operat
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Banking Status</label>
                   <div className="flex items-center gap-2">
-                    {operator.ach_verified ? (
-                      <CheckCircle className="w-3 h-3 text-green-600" />
+                    {operator.bank_account_info && Object.keys(operator.bank_account_info).length > 0 ? (
+                      operator.ach_verified ? (
+                        <CheckCircle className="w-3 h-3 text-green-600" />
+                      ) : (
+                        <Clock className="w-3 h-3 text-orange-600" />
+                      )
                     ) : (
                       <X className="w-3 h-3 text-red-600" />
                     )}
                     <span className="text-sm">
-                      {operator.ach_verified ? 'Verified' : 'Pending Verification'}
+                      {operator.bank_account_info && Object.keys(operator.bank_account_info).length > 0 
+                        ? (operator.ach_verified ? 'Verified' : 'Pending Verification')
+                        : 'Not Set Up'
+                      }
                     </span>
                   </div>
                 </div>
