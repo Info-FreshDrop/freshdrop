@@ -18,9 +18,9 @@ export function HeroSection() {
             Laundry made easy
           </h2>
           
-          <p className="text-base text-white/90 drop-shadow-md mb-12 max-w-lg leading-relaxed md:text-base">Professional laundry service with 
-24-hour turnaround.
- Drop off at any locker or schedule pickup & delivery.
+          <p className="text-base text-white/90 drop-shadow-md mb-12 max-w-lg leading-relaxed md:text-sm">Professional laundry service
+ with  24-hour turnaround.  
+Drop off at any locker or schedule pickup & delivery.
 
         </p>
         </div>
