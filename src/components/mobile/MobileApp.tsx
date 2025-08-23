@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card } from '@/components/ui/card';
 import { AuthForms } from '@/components/AuthForms';
 import { OperatorLogin } from '@/components/OperatorLogin';
 import { IOSScreen, IOSContent } from '@/components/ui/ios-layout';
@@ -14,7 +10,7 @@ import { ServicesModal } from './ServicesModal';
 import { ContactModal } from './ContactModal';
 import { FAQModal } from './FAQModal';
 import { OperatorModal } from './OperatorModal';
-import { LogIn, Info, Phone, Mail, Lock, Eye } from 'lucide-react';
+import { LogIn, Info, Phone } from 'lucide-react';
 import freshDropLogo from '@/assets/freshdrop-logo-transparent.png';
 
 type BottomTab = 'auth' | 'learn' | 'contact';
@@ -38,88 +34,30 @@ export function MobileApp() {
     switch (activeTab) {
       case 'auth':
         return (
-          <div 
-            className="relative min-h-screen bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url('/lovable-uploads/mobile-background.png')`
-            }}
-          >
-            {/* Top Logo and Text Section */}
-            <div className="relative z-10 pt-12 px-4 text-center">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center">
-                  <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                    <div className="w-3 h-4 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full"></div>
-                  </div>
-                </div>
-                <h1 className="text-2xl font-bold text-blue-900">FreshDrop</h1>
-              </div>
-              <h2 className="text-3xl font-bold text-blue-900 mb-4">Laundry made easy</h2>
-              <p className="text-gray-700 text-lg leading-relaxed max-w-sm mx-auto">
-                Professional laundry service with 24-hour turnaround.
-                Drop off at any locker or schedule pickup & delivery.
+          <div className="mobile-spacing responsive-padding responsive-gap">
+            {/* Logo Section */}
+            <div className="text-center mb-6 sm:mb-8 lg:mb-12">
+              <img 
+                src="/lovable-uploads/400d5514-59e3-4714-8281-fc739cf00f88.png" 
+                alt="FreshDrop" 
+                className="h-16 sm:h-20 lg:h-24 xl:h-28 w-auto mx-auto mb-4 sm:mb-6"
+              />
+              <h1 className="ios-title1 text-foreground mb-2 sm:mb-4">Laundry made easy</h1>
+              <p className="ios-body text-muted-foreground max-w-lg mx-auto leading-relaxed">
+                Professional laundry service with 24-hour turnaround. 
+                Drop off at any locker or schedule pickup & delivery. 
                 Eco-friendly, secure, and contactless.
               </p>
             </div>
 
-            {/* Sign In Form positioned below the woman's face */}
-            <div className="absolute bottom-20 left-4 right-4 z-10">
-              <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl rounded-2xl overflow-hidden max-w-sm mx-auto">
-                <CardHeader className="text-center pb-2">
-                  <h3 className="text-2xl font-semibold text-cyan-500">Welcome Back</h3>
-                  <p className="text-gray-600 text-sm">Sign in to your FreshDrop account</p>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <form className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="mobile-email" className="text-gray-800 font-medium">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                        <Input
-                          id="mobile-email"
-                          type="email"
-                          placeholder="Enter your email"
-                          className="pl-10 border-gray-200 rounded-xl h-12 text-gray-800"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="mobile-password" className="text-gray-800 font-medium">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                        <Input
-                          id="mobile-password"
-                          type="password"
-                          placeholder="Enter your password"
-                          className="pl-10 pr-10 border-gray-200 rounded-xl h-12 text-gray-800"
-                        />
-                        <button
-                          type="button"
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="mobile-remember" className="rounded" />
-                      <Label htmlFor="mobile-remember" className="text-sm text-gray-600">
-                        Remember me
-                      </Label>
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-white font-semibold py-3 rounded-xl h-12"
-                    >
-                      Sign In
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Auth Forms */}
+            <Card className="border-border bg-card rounded-xl overflow-hidden max-w-md mx-auto w-full">
+              {showOperatorLogin ? (
+                <OperatorLogin onBack={() => setShowOperatorLogin(false)} />
+              ) : (
+                <AuthForms onOperatorLogin={() => setShowOperatorLogin(true)} />
+              )}
+            </Card>
           </div>
         );
 
