@@ -125,7 +125,23 @@ export function useOperatorNotifications() {
 
     try {
       // Call backend notification service for SMS and email
-      await supabase.functions.invoke('notify-operators', {
+      console.log('Calling notify-operators function with data:', {
+        type: 'new_order',
+        zipCodes: [orderData.zipCode],
+        orderId: orderData.orderId,
+        title: 'New Order Available!',
+        message: 'A new order is available in your area!',
+        orderData: {
+          zipCode: orderData.zipCode,
+          serviceName: orderData.serviceName,
+          totalAmount: orderData.totalAmount,
+          operatorEarnings: operatorEarnings,
+          isExpress: orderData.isExpress,
+          pickupAddress: orderData.pickupAddress
+        }
+      });
+
+      const { data: notificationResult, error: notificationError } = await supabase.functions.invoke('notify-operators', {
         body: {
           type: 'new_order',
           zipCodes: [orderData.zipCode],
@@ -142,6 +158,12 @@ export function useOperatorNotifications() {
           }
         }
       });
+
+      if (notificationError) {
+        console.error('Error calling notify-operators function:', notificationError);
+      } else {
+        console.log('Notification function called successfully:', notificationResult);
+      }
 
       if (isNative && permissions.notifications) {
         // Show native notification
@@ -167,7 +189,7 @@ export function useOperatorNotifications() {
         duration: 8000,
       });
     }
-  }, [isNative, permissions.notifications, sendLocalNotification, triggerHaptic, toast, supabase]);
+  }, [isNative, permissions.notifications, sendLocalNotification, triggerHaptic, toast]);
 
   // Set up real-time order notifications for operator's service areas
   useEffect(() => {
