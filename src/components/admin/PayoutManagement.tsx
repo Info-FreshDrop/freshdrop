@@ -102,8 +102,8 @@ export const PayoutManagement: React.FC = () => {
         washersData?.map(w => [
           w.id, 
           {
-            name: w.profiles && Array.isArray(w.profiles) && w.profiles.length > 0 && w.profiles[0].first_name && w.profiles[0].last_name 
-              ? `${w.profiles[0].first_name} ${w.profiles[0].last_name}`
+            name: w.profiles?.first_name && w.profiles?.last_name 
+              ? `${w.profiles.first_name} ${w.profiles.last_name}`
               : 'Unknown Operator',
             email: ''
           }
@@ -220,8 +220,8 @@ export const PayoutManagement: React.FC = () => {
         washersData?.map(w => [
           w.id, 
           {
-            name: w.profiles && Array.isArray(w.profiles) && w.profiles.length > 0 && w.profiles[0].first_name && w.profiles[0].last_name 
-              ? `${w.profiles[0].first_name} ${w.profiles[0].last_name}`
+            name: w.profiles?.first_name && w.profiles?.last_name 
+              ? `${w.profiles.first_name} ${w.profiles.last_name}`
               : 'Unknown Operator',
             email: ''
           }
