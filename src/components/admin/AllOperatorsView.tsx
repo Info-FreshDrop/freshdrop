@@ -21,6 +21,8 @@ import {
   Building2
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WeeklyPayoutSchedule } from "./WeeklyPayoutSchedule";
+import { TaxDocumentManagement } from "./TaxDocumentManagement";
 import { useToast } from "@/hooks/use-toast";
 import { OperatorDetailModal } from "./OperatorDetailModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -316,204 +318,395 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value={activeTab} className="space-y-6">
-          {filteredOperators.map((operator: any) => (
-            <Card key={operator.id} className="p-6">
-              <div className="space-y-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">
-                        {getDisplayName(operator.profiles)}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        {operator.profiles?.email && (
-                          <span className="text-sm text-muted-foreground">
-                            {operator.profiles.email}
-                          </span>
-                        )}
+          <TabsContent value="all" className="space-y-6">
+            {filteredOperators.map((operator: any) => (
+              <Card key={operator.id} className="p-6">
+                <div className="space-y-6">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <User className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg">
+                          {getDisplayName(operator.profiles)}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          {operator.profiles?.email && (
+                            <span className="text-sm text-muted-foreground">
+                              {operator.profiles.email}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {operator.approval_status === 'pending' && (
-                      <>
+                    <div className="flex gap-2">
+                      {operator.approval_status === 'pending' && (
+                        <>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => updateApprovalStatus(operator.id, 'approved')}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => updateApprovalStatus(operator.id, 'rejected')}
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      {operator.approval_status === 'approved' && (
                         <Button
-                          variant="default"
+                          variant={operator.is_active ? "destructive" : "default"}
                           size="sm"
-                          onClick={() => updateApprovalStatus(operator.id, 'approved')}
+                          onClick={() => toggleOperatorStatus(operator.id, operator.is_active)}
                         >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Approve
+                          {operator.is_active ? (
+                            <>
+                              <UserX className="w-4 h-4 mr-1" />
+                              Deactivate
+                            </>
+                          ) : (
+                            <>
+                              <UserCheck className="w-4 h-4 mr-1" />
+                              Activate
+                            </>
+                          )}
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => updateApprovalStatus(operator.id, 'rejected')}
-                        >
-                          <X className="w-4 h-4 mr-1" />
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                    {operator.approval_status === 'approved' && (
+                      )}
                       <Button
-                        variant={operator.is_active ? "destructive" : "default"}
+                        variant="outline"
                         size="sm"
-                        onClick={() => toggleOperatorStatus(operator.id, operator.is_active)}
+                        onClick={() => {
+                          setSelectedOperator(operator);
+                          setShowDetailModal(true);
+                        }}
+                        className="sm:px-4 px-2"
                       >
-                        {operator.is_active ? (
-                          <>
-                            <UserX className="w-4 h-4 mr-1" />
-                            Deactivate
-                          </>
-                        ) : (
-                          <>
-                            <UserCheck className="w-4 h-4 mr-1" />
-                            Activate
-                          </>
-                        )}
+                        <Eye className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">View Details</span>
+                        <span className="sm:hidden">View</span>
                       </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedOperator(operator);
-                        setShowDetailModal(true);
-                      }}
-                      className="sm:px-4 px-2"
-                    >
-                      <Eye className="w-4 h-4 sm:mr-1" />
-                      <span className="hidden sm:inline">View Details</span>
-                      <span className="sm:hidden">View</span>
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Performance Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Package className="w-4 h-4 text-blue-600" />
-                      <span className="text-xs font-medium">Orders</span>
-                    </div>
-                    <div className="text-xl font-bold">
-                      {operatorStats[operator.id]?.completed_orders || 0}
-                    </div>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <DollarSign className="w-4 h-4 text-green-600" />
-                      <span className="text-xs font-medium">Total Earned</span>
-                    </div>
-                    <div className="text-xl font-bold">
-                      ${((operatorStats[operator.id]?.total_earnings || 0) / 100).toFixed(0)}
-                    </div>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock className="w-4 h-4 text-orange-600" />
-                      <span className="text-xs font-medium">Pending</span>
-                    </div>
-                    <div className="text-xl font-bold">
-                      ${((operatorStats[operator.id]?.pending_payout || 0) / 100).toFixed(0)}
-                    </div>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CheckCircle className="w-4 h-4 text-green-700" />
-                      <span className="text-xs font-medium">Paid Out</span>
-                    </div>
-                    <div className="text-xl font-bold">
-                      ${((operatorStats[operator.id]?.paid_payout || 0) / 100).toFixed(0)}
-                    </div>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Star className="w-4 h-4 text-yellow-600" />
-                      <span className="text-xs font-medium">Rating</span>
-                    </div>
-                    <div className="text-xl font-bold">
-                      {operatorStats[operator.id]?.average_rating || 0}/5
-                    </div>
-                  </div>
-                </div>
-
-                {/* Contractor Info */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <h4 className="font-medium mb-3 flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      Contact Information
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      {operator.profiles?.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-3 h-3 text-muted-foreground" />
-                          {operator.profiles.phone}
-                        </div>
-                      )}
-                      {operator.profiles?.email && (
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-3 h-3 text-muted-foreground" />
-                          {operator.profiles.email}
-                        </div>
-                      )}
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="font-medium mb-3 flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      Contractor Status
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        {operator.profiles?.is_contractor ? (
-                          <CheckCircle className="w-3 h-3 text-green-600" />
-                        ) : (
-                          <X className="w-3 h-3 text-red-600" />
-                        )}
-                        <span>1099 Contractor</span>
+                  {/* Performance Stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Package className="w-4 h-4 text-blue-600" />
+                        <span className="text-xs font-medium">Orders</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {operator.profiles?.w9_completed ? (
-                          <CheckCircle className="w-3 h-3 text-green-600" />
-                        ) : (
-                          <X className="w-3 h-3 text-red-600" />
-                        )}
-                        <span>W-9 Completed</span>
+                      <div className="text-xl font-bold">
+                        {operatorStats[operator.id]?.completed_orders || 0}
+                      </div>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <DollarSign className="w-4 h-4 text-green-600" />
+                        <span className="text-xs font-medium">Total Earned</span>
+                      </div>
+                      <div className="text-xl font-bold">
+                        ${((operatorStats[operator.id]?.total_earnings || 0) / 100).toFixed(0)}
+                      </div>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className="w-4 h-4 text-orange-600" />
+                        <span className="text-xs font-medium">Pending</span>
+                      </div>
+                      <div className="text-xl font-bold">
+                        ${((operatorStats[operator.id]?.pending_payout || 0) / 100).toFixed(0)}
+                      </div>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle className="w-4 h-4 text-green-700" />
+                        <span className="text-xs font-medium">Paid Out</span>
+                      </div>
+                      <div className="text-xl font-bold">
+                        ${((operatorStats[operator.id]?.paid_payout || 0) / 100).toFixed(0)}
+                      </div>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Star className="w-4 h-4 text-yellow-600" />
+                        <span className="text-xs font-medium">Rating</span>
+                      </div>
+                      <div className="text-xl font-bold">
+                        {operatorStats[operator.id]?.average_rating || 0}/5
                       </div>
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="font-medium mb-3 flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      Service Areas
-                    </h4>
-                    <div className="flex flex-wrap gap-1">
-                      {operator.zip_codes?.slice(0, 4).map((zip: string) => (
-                        <Badge key={zip} variant="outline" className="text-xs">
-                          {zip}
-                        </Badge>
-                      ))}
-                      {operator.zip_codes?.length > 4 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{operator.zip_codes.length - 4} more
-                        </Badge>
-                      )}
+                  {/* Contractor Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Contact Information
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        {operator.profiles?.phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-3 h-3 text-muted-foreground" />
+                            {operator.profiles.phone}
+                          </div>
+                        )}
+                        {operator.profiles?.email && (
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-3 h-3 text-muted-foreground" />
+                            {operator.profiles.email}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        Contractor Status
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          {operator.profiles?.is_contractor ? (
+                            <CheckCircle className="w-3 h-3 text-green-600" />
+                          ) : (
+                            <X className="w-3 h-3 text-red-600" />
+                          )}
+                          <span>1099 Contractor</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {operator.profiles?.w9_completed ? (
+                            <CheckCircle className="w-3 h-3 text-green-600" />
+                          ) : (
+                            <X className="w-3 h-3 text-red-600" />
+                          )}
+                          <span>W-9 Completed</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        Service Areas
+                      </h4>
+                      <div className="flex flex-wrap gap-1">
+                        {operator.zip_codes?.slice(0, 4).map((zip: string) => (
+                          <Badge key={zip} variant="outline" className="text-xs">
+                            {zip}
+                          </Badge>
+                        ))}
+                        {operator.zip_codes?.length > 4 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{operator.zip_codes.length - 4} more
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="contractors" className="space-y-6">
+            <Tabs defaultValue="list" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="list">Contractor List</TabsTrigger>
+                <TabsTrigger value="payouts">Weekly Payouts</TabsTrigger>
+                <TabsTrigger value="tax-docs">Tax Documents</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="list" className="space-y-6">
+                {filteredOperators.map((operator: any) => (
+                  <Card key={operator.id} className="p-6 border-2 border-primary/20">
+                    <div className="space-y-6">
+                      {/* Enhanced contractor header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                            <Building2 className="w-6 h-6 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg flex items-center gap-2">
+                              {getDisplayName(operator.profiles)}
+                              <Badge variant="secondary" className="bg-primary/10 text-primary">
+                                Contractor
+                              </Badge>
+                            </h3>
+                            <div className="flex items-center gap-2">
+                              {operator.profiles?.business_name && (
+                                <span className="text-sm text-muted-foreground">
+                                  {operator.profiles.business_name}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOperator(operator);
+                              setShowDetailModal(true);
+                            }}
+                            className="sm:px-4 px-2"
+                          >
+                            <Eye className="w-4 h-4 sm:mr-1" />
+                            <span className="hidden sm:inline">View Details</span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Contractor-specific stats */}
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Package className="w-4 h-4 text-green-600" />
+                            <span className="text-xs font-medium text-green-700">Orders</span>
+                          </div>
+                          <div className="text-xl font-bold text-green-900">
+                            {operatorStats[operator.id]?.completed_orders || 0}
+                          </div>
+                        </div>
+                        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <DollarSign className="w-4 h-4 text-blue-600" />
+                            <span className="text-xs font-medium text-blue-700">Total Earned</span>
+                          </div>
+                          <div className="text-xl font-bold text-blue-900">
+                            ${((operatorStats[operator.id]?.total_earnings || 0) / 100).toFixed(0)}
+                          </div>
+                        </div>
+                        <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-4 h-4 text-orange-600" />
+                            <span className="text-xs font-medium text-orange-700">Pending</span>
+                          </div>
+                          <div className="text-xl font-bold text-orange-900">
+                            ${((operatorStats[operator.id]?.pending_payout || 0) / 100).toFixed(0)}
+                          </div>
+                        </div>
+                        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span className="text-xs font-medium text-green-700">Paid Out</span>
+                          </div>
+                          <div className="text-xl font-bold text-green-900">
+                            ${((operatorStats[operator.id]?.paid_payout || 0) / 100).toFixed(0)}
+                          </div>
+                        </div>
+                        <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Star className="w-4 h-4 text-yellow-600" />
+                            <span className="text-xs font-medium text-yellow-700">Rating</span>
+                          </div>
+                          <div className="text-xl font-bold text-yellow-900">
+                            {operatorStats[operator.id]?.average_rating || 0}/5
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Enhanced contractor information */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-muted/50 rounded-lg p-4">
+                          <h4 className="font-medium mb-3 flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Tax Information
+                          </h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              {operator.profiles?.w9_completed ? (
+                                <CheckCircle className="w-3 h-3 text-green-600" />
+                              ) : (
+                                <X className="w-3 h-3 text-red-600" />
+                              )}
+                              <span>W-9 Form</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {operator.ach_verified ? (
+                                <CheckCircle className="w-3 h-3 text-green-600" />
+                              ) : (
+                                <X className="w-3 h-3 text-red-600" />
+                              )}
+                              <span>ACH Verified</span>
+                            </div>
+                            {operator.profiles?.tax_id && (
+                              <div className="text-xs text-muted-foreground">
+                                TIN: {operator.profiles.tax_id.replace(/\d(?=\d{4})/g, "*")}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="bg-muted/50 rounded-lg p-4">
+                          <h4 className="font-medium mb-3 flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Contact Information
+                          </h4>
+                          <div className="space-y-2 text-sm">
+                            {operator.profiles?.phone && (
+                              <div className="flex items-center gap-2">
+                                <Phone className="w-3 h-3 text-muted-foreground" />
+                                {operator.profiles.phone}
+                              </div>
+                            )}
+                            {operator.profiles?.email && (
+                              <div className="flex items-center gap-2">
+                                <Mail className="w-3 h-3 text-muted-foreground" />
+                                {operator.profiles.email}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="bg-muted/50 rounded-lg p-4">
+                          <h4 className="font-medium mb-3 flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            Service Areas
+                          </h4>
+                          <div className="flex flex-wrap gap-1">
+                            {operator.zip_codes?.slice(0, 4).map((zip: string) => (
+                              <Badge key={zip} variant="outline" className="text-xs">
+                                {zip}
+                              </Badge>
+                            ))}
+                            {operator.zip_codes?.length > 4 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{operator.zip_codes.length - 4} more
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </TabsContent>
+
+              <TabsContent value="payouts">
+                <WeeklyPayoutSchedule 
+                  contractors={filteredOperators.filter(op => op.profiles?.is_contractor)} 
+                  onPayoutProcessed={loadOperators} 
+                />
+              </TabsContent>
+
+              <TabsContent value="tax-docs">
+                <TaxDocumentManagement 
+                  contractors={filteredOperators.filter(op => op.profiles?.is_contractor)} 
+                />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </div>
