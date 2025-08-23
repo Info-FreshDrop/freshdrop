@@ -314,7 +314,7 @@ export function AllOperatorsView({ onBack }: AllOperatorsViewProps) {
             </TabsTrigger>
             <TabsTrigger value="contractors" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              Contractors Only ({operators.filter(op => op.profiles?.is_contractor).length})
+              Contractor Information ({operators.filter(op => op.profiles?.is_contractor).length})
             </TabsTrigger>
           </TabsList>
 
