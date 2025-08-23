@@ -188,7 +188,7 @@ export const ContractorCompletionPrompt = ({ isOpen, onComplete }: ContractorCom
         .from('washers')
         .update({
           bank_account_info: contractorData.bank_account,
-          ach_verified: false, // Will be verified separately
+          ach_verified: true, // Auto-verify when banking info is provided
         })
         .eq('user_id', user?.id);
 
