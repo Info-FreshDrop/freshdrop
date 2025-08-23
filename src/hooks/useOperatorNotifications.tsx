@@ -22,6 +22,34 @@ export function useOperatorNotifications() {
   const { user } = useAuth();
   const [isRegistered, setIsRegistered] = useState(false);
   const [pushToken, setPushToken] = useState<string | null>(null);
+  const [isOperator, setIsOperator] = useState(false);
+
+  // Check if user is an operator on mount
+  useEffect(() => {
+    const checkOperatorRole = async () => {
+      if (!user) {
+        setIsOperator(false);
+        return;
+      }
+
+      try {
+        const { data: userRole, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+
+        const isOp = userRole && ['operator', 'washer'].includes(userRole.role);
+        console.log(`User ${user.id} is operator:`, isOp, 'Role:', userRole?.role);
+        setIsOperator(!!isOp);
+      } catch (error) {
+        console.error('Error checking operator role:', error);
+        setIsOperator(false);
+      }
+    };
+
+    checkOperatorRole();
+  }, [user]);
 
   // Register for push notifications
   const registerForPushNotifications = useCallback(async () => {
@@ -117,11 +145,20 @@ export function useOperatorNotifications() {
 
   // Show notification for new order
   const showNewOrderNotification = useCallback(async (orderData: OperatorNotificationData) => {
+    console.log('showNewOrderNotification called with data:', orderData);
+    
     // Calculate operator earnings (40% of total amount based on business settings)
     const operatorEarnings = Math.round(orderData.totalAmount * 0.40);
+    console.log(`Calculated operator earnings: ${operatorEarnings} cents from total: ${orderData.totalAmount} cents`);
     
     const title = '🧺 New Order Available!';
-    const body = `Claim it now to make $${(operatorEarnings / 100).toFixed(2)}! ${orderData.serviceName} in ${orderData.zipCode}${orderData.isExpress ? ' (Express)' : ''}`;
+    let body: string;
+    
+    if (orderData.totalAmount === 0) {
+      body = `TEST ORDER - Free order in ${orderData.zipCode}! ${orderData.serviceName}${orderData.isExpress ? ' (Express)' : ''}`;
+    } else {
+      body = `Claim it now to make $${(operatorEarnings / 100).toFixed(2)}! ${orderData.serviceName} in ${orderData.zipCode}${orderData.isExpress ? ' (Express)' : ''}`;
+    }
 
     try {
       // Call backend notification service for SMS and email
@@ -193,13 +230,18 @@ export function useOperatorNotifications() {
 
   // Set up real-time order notifications for operator's service areas
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isOperator) {
+      console.log('Skipping notification setup - not an operator or no user');
+      return;
+    }
 
     let washerData: any = null;
 
     // First get the operator's service areas
     const setupOrderNotifications = async () => {
       try {
+        console.log('Setting up operator notifications for user:', user.id);
+
         const { data: washer, error: washerError } = await supabase
           .from('washers')
           .select('id, zip_codes, is_active, is_online')
@@ -213,9 +255,9 @@ export function useOperatorNotifications() {
 
         washerData = washer;
 
-        // Only listen for notifications if operator is active and online
-        if (!washer.is_active || !washer.is_online) {
-          console.log('Operator is not active or online, skipping notification setup');
+        // Listen for notifications if operator is active (remove online requirement as per user request)
+        if (!washer.is_active) {
+          console.log('Operator is not active, skipping notification setup');
           return;
         }
 
@@ -234,10 +276,13 @@ export function useOperatorNotifications() {
             },
             (payload) => {
               const newOrder = payload.new;
-              console.log('New order detected:', newOrder);
+              console.log('New order detected in real-time:', newOrder);
+              console.log('Current washer data:', washerData);
+              console.log('User ID:', user.id);
 
               // Only notify for unclaimed orders (payment confirmed)
               if (newOrder.status === 'unclaimed') {
+                console.log('Order is unclaimed, showing notification...');
                 showNewOrderNotification({
                   orderId: newOrder.id,
                   zipCode: newOrder.zip_code,
@@ -246,6 +291,8 @@ export function useOperatorNotifications() {
                   isExpress: newOrder.is_express || false,
                   pickupAddress: newOrder.pickup_address
                 });
+              } else {
+                console.log('Order status is not unclaimed:', newOrder.status);
               }
             }
           )
@@ -265,7 +312,7 @@ export function useOperatorNotifications() {
               if (
                 oldOrder.status !== 'unclaimed' && updatedOrder.status === 'unclaimed'
               ) {
-                console.log('Order became available:', updatedOrder);
+                console.log('Order became available (status changed to unclaimed):', updatedOrder);
                 showNewOrderNotification({
                   orderId: updatedOrder.id,
                   zipCode: updatedOrder.zip_code,
@@ -273,6 +320,11 @@ export function useOperatorNotifications() {
                   totalAmount: updatedOrder.total_amount_cents || 0,
                   isExpress: updatedOrder.is_express || false,
                   pickupAddress: updatedOrder.pickup_address
+                });
+              } else {
+                console.log('Order update did not trigger notification:', {
+                  oldStatus: oldOrder.status,
+                  newStatus: updatedOrder.status
                 });
               }
             }
@@ -288,7 +340,7 @@ export function useOperatorNotifications() {
     };
 
     setupOrderNotifications();
-  }, [user, showNewOrderNotification]);
+  }, [user, isOperator, showNewOrderNotification]);
 
   // Register for push notifications when component mounts
   useEffect(() => {
