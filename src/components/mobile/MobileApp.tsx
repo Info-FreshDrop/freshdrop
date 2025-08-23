@@ -45,11 +45,11 @@ export function MobileApp() {
             
             {/* Content Overlay */}
             <div className="relative z-10 min-h-screen flex flex-col">
-              {/* Compact Header Text - Above the lady's head */}
-              <div className="text-center pt-8 pb-2 px-6">
+              {/* Compact Header Text - Left aligned above the lady's head */}
+              <div className="text-left pt-8 pb-2 px-6">
                 <h2 className="text-xl font-bold text-white drop-shadow-lg mb-2">Laundry made easy</h2>
                 
-                <p className="text-white/90 text-xs leading-tight max-w-48 mx-auto drop-shadow-md">
+                <p className="text-white/90 text-xs leading-tight max-w-48 drop-shadow-md">
                   Professional laundry service with 24-hour turnaround. Drop off at any locker.
                 </p>
               </div>
