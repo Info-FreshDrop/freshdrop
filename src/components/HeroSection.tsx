@@ -1,17 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Droplets, Clock, Shield, Smartphone } from "lucide-react";
 import freshDropLogo from "@/assets/freshdrop-logo.png";
-
 export function HeroSection() {
-  return (
-    <section className="relative min-h-screen flex flex-col justify-start bg-gradient-hero overflow-hidden">
+  return <section className="relative min-h-screen flex flex-col justify-start bg-gradient-hero overflow-hidden">
       {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-contain bg-top bg-no-repeat"
-        style={{
-          backgroundImage: `url('/lovable-uploads/efb21ff1-6eb6-47f0-b000-a1e8ee6ff1e2.png')`
-        }}
-      />
+      <div className="absolute inset-0 bg-contain bg-top bg-no-repeat" style={{
+      backgroundImage: `url('/lovable-uploads/efb21ff1-6eb6-47f0-b000-a1e8ee6ff1e2.png')`
+    }} />
       
       {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-black/20"></div>
@@ -19,45 +14,42 @@ export function HeroSection() {
       <div className="relative z-10 px-6 max-w-4xl mx-auto">
         {/* Header Text - Left aligned */}
         <div className="text-left pt-12 pb-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg mb-4">
+          <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-4 md:text-2xl">
             Laundry made easy
           </h2>
           
-          <p className="text-base md:text-lg text-white/90 drop-shadow-md mb-12 max-w-lg leading-relaxed">
-            Professional laundry service with 24-hour turnaround. 
-            Drop off at any locker or schedule pickup & delivery.
-          </p>
+          <p className="text-base text-white/90 drop-shadow-md mb-12 max-w-lg leading-relaxed md:text-base">Professional laundry service with 
+24-hour turnaround.
+ Drop off at any locker or schedule pickup & delivery.
+
+        </p>
         </div>
 
         {/* Spacer to push content down */}
-        <div style={{ height: '40vh' }}></div>
+        <div style={{
+        height: '40vh'
+      }}></div>
 
         {/* Call to Action Buttons */}
         <div className="flex flex-col gap-4 justify-start items-start mb-16 px-4">
-          <Button 
-            variant="hero" 
-            size="xl" 
-            className="max-w-sm"
-            onClick={() => {
-              const authSection = document.querySelector('#auth-section');
-              if (authSection) {
-                authSection.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-          >
+          <Button variant="hero" size="xl" className="max-w-sm" onClick={() => {
+          const authSection = document.querySelector('#auth-section');
+          if (authSection) {
+            authSection.scrollIntoView({
+              behavior: 'smooth'
+            });
+          }
+        }}>
             Schedule a Pickup
           </Button>
-          <Button 
-            variant="default" 
-            size="xl" 
-            className="max-w-sm bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={() => {
-              const authSection = document.querySelector('#auth-section');
-              if (authSection) {
-                authSection.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-          >
+          <Button variant="default" size="xl" className="max-w-sm bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => {
+          const authSection = document.querySelector('#auth-section');
+          if (authSection) {
+            authSection.scrollIntoView({
+              behavior: 'smooth'
+            });
+          }
+        }}>
             Find a Locker
           </Button>
         </div>
@@ -86,6 +78,5 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
