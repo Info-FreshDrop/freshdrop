@@ -56,8 +56,6 @@ serve(async (req) => {
           profiles!washers_user_id_profiles_fkey(first_name, last_name, phone, opt_in_sms, email)
         `)
         .eq('is_active', true)
-        .eq('is_online', true)
-        .eq('notifications_enabled', true)
         .overlaps('zip_codes', zipCodes)
 
       if (error) {

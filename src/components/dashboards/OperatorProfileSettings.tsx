@@ -26,6 +26,7 @@ interface OperatorProfile {
   first_name: string;
   last_name: string;
   phone: string;
+  email: string;
   avatar_url?: string;
 }
 
@@ -75,7 +76,8 @@ export function OperatorProfileSettings({ isOpen, onClose, onSave }: OperatorPro
   const [profile, setProfile] = useState<OperatorProfile>({
     first_name: '',
     last_name: '',
-    phone: ''
+    phone: '',
+    email: ''
   });
 
   // Washer data
@@ -297,6 +299,16 @@ export function OperatorProfileSettings({ isOpen, onClose, onSave }: OperatorPro
                     value={profile.phone}
                     onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
                     placeholder="Enter phone number"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profile.email}
+                    onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="Enter email address for notifications"
                   />
                 </div>
               </CardContent>
