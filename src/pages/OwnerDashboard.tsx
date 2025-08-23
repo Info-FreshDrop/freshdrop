@@ -22,10 +22,12 @@ import {
   BarChart3,
   Users,
   TrendingUp,
-  FileText
+  FileText,
+  Calculator
 } from "lucide-react";
 import { ServiceAreasManagement } from "@/components/admin/ServiceAreasManagement";
 import { ContentManagement } from "@/components/admin/ContentManagement";
+import { ContractorManagement } from "@/components/admin/ContractorManagement";
 
 export default function OwnerDashboard() {
   const [isLoading, setIsLoading] = useState(false);
@@ -179,7 +181,7 @@ export default function OwnerDashboard() {
         </div>
 
         <Tabs defaultValue="pricing" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-0.5">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-0.5">
             <TabsTrigger value="pricing" className="flex items-center gap-1 px-2 py-2 text-xs">
               <DollarSign className="h-3 w-3" />
               Pricing
@@ -187,6 +189,10 @@ export default function OwnerDashboard() {
             <TabsTrigger value="locations" className="flex items-center gap-1 px-2 py-2 text-xs">
               <MapPin className="h-3 w-3" />
               Locations
+            </TabsTrigger>
+            <TabsTrigger value="contractors" className="flex items-center gap-1 px-2 py-2 text-xs">
+              <Calculator className="h-3 w-3" />
+              Contractors
             </TabsTrigger>
             <TabsTrigger value="service-areas" onClick={() => setCurrentView('service-areas')} className="flex items-center gap-1 px-2 py-2 text-xs">
               <BarChart3 className="h-3 w-3" />
@@ -338,6 +344,10 @@ export default function OwnerDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="contractors">
+            <ContractorManagement />
           </TabsContent>
 
           <TabsContent value="content">
