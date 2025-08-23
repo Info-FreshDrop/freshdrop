@@ -46,6 +46,9 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { OperatorProfileSettings } from './OperatorProfileSettings';
 import { ReviewsAndTips } from './ReviewsAndTips';
 import { useOperatorNotifications } from '@/hooks/useOperatorNotifications';
+import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { ProfileCompletionPrompt } from '@/components/ProfileCompletionPrompt';
+import { ContractorCompletionPrompt } from '@/components/operator/ContractorCompletionPrompt';
 
 // Simple map component for navigation
 function NavigationMap({ destination }: { destination?: string }) {
@@ -184,6 +187,12 @@ export function OperatorDashboard() {
   const navigate = useNavigate();
   const { getCurrentLocation, isNative } = useCapacitor();
   const { setOperatorOnlineStatus, isRegistered } = useOperatorNotifications();
+  const { 
+    shouldShowPrompt: shouldShowProfilePrompt, 
+    markPromptCompleted: markProfileCompleted,
+    needsContractorSetup,
+    refreshProfile 
+  } = useProfileCompletion();
   const [activeTab, setActiveTab] = useState("live-orders");
   const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<Order | null>(null);
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
@@ -208,6 +217,7 @@ export function OperatorDashboard() {
   const [operatorLocation, setOperatorLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [showZipCodeEdit, setShowZipCodeEdit] = useState(false);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
+  const [showContractorPrompt, setShowContractorPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -216,6 +226,8 @@ export function OperatorDashboard() {
       getCurrentOperatorLocation();
       // Set operator as online when dashboard loads
       setOperatorOnlineStatus(true);
+      // Check if contractor setup is needed
+      checkContractorSetup();
     }
     
     // Set operator as offline when component unmounts
@@ -223,6 +235,18 @@ export function OperatorDashboard() {
       setOperatorOnlineStatus(false);
     };
   }, [user, setOperatorOnlineStatus]);
+
+  const checkContractorSetup = async () => {
+    if (!user) return;
+    try {
+      const needsSetup = await needsContractorSetup();
+      if (needsSetup) {
+        setShowContractorPrompt(true);
+      }
+    } catch (error) {
+      console.error('Error checking contractor setup:', error);
+    }
+  };
 
   const getCurrentOperatorLocation = async () => {
     try {
@@ -1695,6 +1719,28 @@ export function OperatorDashboard() {
           onSave={loadDashboardData}
         />
       </div>
+
+      {/* Profile Completion Prompts */}
+      {shouldShowProfilePrompt && !showContractorPrompt && (
+        <ProfileCompletionPrompt
+          isOpen={shouldShowProfilePrompt}
+          onComplete={() => {
+            markProfileCompleted();
+            refreshProfile();
+          }}
+          onSkip={() => markProfileCompleted()}
+        />
+      )}
+
+      {showContractorPrompt && (
+        <ContractorCompletionPrompt
+          isOpen={showContractorPrompt}
+          onComplete={() => {
+            setShowContractorPrompt(false);
+            refreshProfile();
+          }}
+        />
+      )}
     </div>
   );
 }

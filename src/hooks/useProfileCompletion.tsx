@@ -9,6 +9,12 @@ interface Profile {
   phone?: string;
   email?: string;
   created_at: string;
+  tax_id?: string;
+  tax_address?: any;
+  w9_completed?: boolean;
+  is_contractor?: boolean;
+  business_name?: string;
+  contractor_start_date?: string;
 }
 
 export function useProfileCompletion() {
@@ -120,13 +126,42 @@ export function useProfileCompletion() {
            data.email?.trim();
   };
 
+  // Check if user needs contractor setup
+  const needsContractorSetup = async () => {
+    if (!user || !profile) return false;
+    
+    const { data: userRoles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+    
+    const isOperator = userRoles?.some(r => r.role === 'operator' || r.role === 'washer');
+    
+    if (!isOperator) return false;
+    
+    const { data: washer } = await supabase
+      .from('washers')
+      .select('bank_account_info')
+      .eq('user_id', user.id)
+      .maybeSingle();
+      
+    return !(
+      profile?.tax_id && 
+      profile?.tax_address && 
+      profile?.w9_completed &&
+      profile?.is_contractor &&
+      washer?.bank_account_info
+    );
+  };
+
   return {
     profile,
     shouldShowPrompt,
     profileLoading,
-    isProfileComplete: isProfileComplete(),
+    isProfileComplete,
     markPromptCompleted,
     dismissPrompt,
-    refreshProfile: checkProfileCompletion
+    refreshProfile: checkProfileCompletion,
+    needsContractorSetup
   };
 }
