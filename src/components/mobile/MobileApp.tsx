@@ -35,9 +35,9 @@ export function MobileApp() {
       case 'auth':
         return (
           <div className="relative min-h-screen">
-            {/* Background Image - Contained to show full photo */}
+            {/* Background Image - Positioned at top */}
             <div 
-              className="absolute inset-0 bg-contain bg-center bg-no-repeat"
+              className="absolute inset-0 bg-contain bg-top bg-no-repeat"
               style={{
                 backgroundImage: `url('/lovable-uploads/efb21ff1-6eb6-47f0-b000-a1e8ee6ff1e2.png')`
               }}
