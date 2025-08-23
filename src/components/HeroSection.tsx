@@ -4,53 +4,40 @@ import freshDropLogo from "@/assets/freshdrop-logo.png";
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-hero overflow-hidden">
-      {/* Animated wave background */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0 bg-gradient-wave animate-wave"></div>
-        <div className="absolute inset-0 bg-gradient-wave animate-wave" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute inset-0 bg-gradient-wave animate-wave" style={{ animationDelay: '2s' }}></div>
-      </div>
+    <section className="relative min-h-screen flex flex-col justify-start bg-gradient-hero overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-contain bg-top bg-no-repeat"
+        style={{
+          backgroundImage: `url('/lovable-uploads/efb21ff1-6eb6-47f0-b000-a1e8ee6ff1e2.png')`
+        }}
+      />
       
-      {/* Floating elements */}
-      <div className="absolute top-20 left-20 animate-float">
-        <Droplets className="h-8 w-8 text-primary-lighter opacity-60" />
-      </div>
-      <div className="absolute top-40 right-20 animate-float" style={{ animationDelay: '1s' }}>
-        <Droplets className="h-12 w-12 text-primary-light opacity-40" />
-      </div>
-      <div className="absolute bottom-40 left-40 animate-float" style={{ animationDelay: '2s' }}>
-        <Droplets className="h-6 w-6 text-primary-lighter opacity-80" />
-      </div>
+      {/* Overlay for better text readability */}
+      <div className="absolute inset-0 bg-black/20"></div>
 
-      <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-        {/* Logo section - Enhanced */}
-        <div className="mb-8 flex items-center justify-center">
-          <img 
-            src={freshDropLogo} 
-            alt="FreshDrop Logo" 
-            className="h-48 md:h-72 w-auto drop-shadow-lg bg-primary/90 rounded-2xl p-4"
-            style={{ 
-              filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))'
-            }}
-          />
+      <div className="relative z-10 px-6 max-w-4xl mx-auto">
+        {/* Header Text - Left aligned */}
+        <div className="text-left pt-12 pb-4">
+          <h2 className="text-3xl md:text-5xl font-bold text-white drop-shadow-lg mb-6">
+            Laundry made easy
+          </h2>
+          
+          <p className="text-lg md:text-xl text-white/90 drop-shadow-md mb-12 max-w-xl leading-relaxed">
+            Professional laundry service with 24-hour turnaround. 
+            Drop off at any locker or schedule pickup & delivery.
+          </p>
         </div>
 
-        <h2 className="text-2xl md:text-4xl font-semibold text-white/90 mb-6">
-          Laundry made easy
-        </h2>
-        
-        <p className="text-lg md:text-xl text-white/80 mb-12 max-w-2xl mx-auto leading-relaxed">
-          Professional laundry service with 24-hour turnaround. 
-          Drop off at any locker or schedule pickup & delivery. 
-          Eco-friendly, secure, and contactless.
-        </p>
+        {/* Spacer to push content down */}
+        <div style={{ height: '40vh' }}></div>
 
-        <div className="flex flex-col gap-4 justify-center items-center mb-16 px-4">
+        {/* Call to Action Buttons */}
+        <div className="flex flex-col gap-4 justify-start items-start mb-16 px-4">
           <Button 
             variant="hero" 
             size="xl" 
-            className="w-full max-w-sm"
+            className="max-w-sm"
             onClick={() => {
               const authSection = document.querySelector('#auth-section');
               if (authSection) {
@@ -63,7 +50,7 @@ export function HeroSection() {
           <Button 
             variant="default" 
             size="xl" 
-            className="w-full max-w-sm bg-primary text-primary-foreground hover:bg-primary/90"
+            className="max-w-sm bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => {
               const authSection = document.querySelector('#auth-section');
               if (authSection) {
