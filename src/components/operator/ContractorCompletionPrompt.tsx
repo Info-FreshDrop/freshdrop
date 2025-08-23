@@ -248,62 +248,86 @@ export const ContractorCompletionPrompt = ({ isOpen, onComplete }: ContractorCom
           <TabsContent value="business" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Tax Information (W-9)</CardTitle>
+                <CardTitle className="text-lg">W-9 Tax Form</CardTitle>
                 <CardDescription>
-                  This information is required for 1099 tax reporting
+                  Complete the official IRS W-9 form for tax reporting. Please fill out the form fields below which correspond to the official W-9.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="business_name">Business Name (Optional)</Label>
-                  <Input
-                    id="business_name"
-                    value={contractorData.business_name}
-                    onChange={(e) => updateField("business_name", e.target.value)}
-                    placeholder="Leave blank for individual contractor"
-                  />
+                <div className="mb-4 p-4 border rounded-lg bg-muted/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium">Official IRS W-9 Form</h4>
+                    <Button variant="outline" size="sm" asChild>
+                      <a href="/forms/fw9.pdf" target="_blank" rel="noopener noreferrer">
+                        View PDF
+                      </a>
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Reference the official W-9 form while completing the fields below. You can download and print the PDF for your records.
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="tax_id">Tax ID (SSN or EIN) *</Label>
-                  <Input
-                    id="tax_id"
-                    value={contractorData.tax_id}
-                    onChange={(e) => updateField("tax_id", e.target.value)}
-                    placeholder="XXX-XX-XXXX or XX-XXXXXXX"
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-base font-medium">Tax Address *</Label>
+                <div className="space-y-4 border p-4 rounded-lg">
+                  <h4 className="font-medium text-base">Part I: Taxpayer Identification Number (TIN)</h4>
                   
                   <div className="space-y-2">
+                    <Label htmlFor="business_name">Name (as shown on your income tax return) / Business Name</Label>
                     <Input
-                      placeholder="Street Address *"
-                      value={contractorData.tax_address.street}
-                      onChange={(e) => updateNestedField("tax_address", "street", e.target.value)}
+                      id="business_name"
+                      value={contractorData.business_name}
+                      onChange={(e) => updateField("business_name", e.target.value)}
+                      placeholder="Individual name or business name"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      If individual contractor, enter your full name. If business, enter registered business name.
+                    </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="tax_id">Taxpayer Identification Number (SSN or EIN) *</Label>
                     <Input
-                      placeholder="City *"
-                      value={contractorData.tax_address.city}
-                      onChange={(e) => updateNestedField("tax_address", "city", e.target.value)}
+                      id="tax_id"
+                      value={contractorData.tax_id}
+                      onChange={(e) => updateField("tax_id", e.target.value)}
+                      placeholder="XXX-XX-XXXX (SSN) or XX-XXXXXXX (EIN)"
                     />
-                    <Input
-                      placeholder="State *"
-                      value={contractorData.tax_address.state}
-                      onChange={(e) => updateNestedField("tax_address", "state", e.target.value)}
-                      maxLength={2}
-                    />
+                    <p className="text-xs text-muted-foreground">
+                      For individuals: Social Security Number. For businesses: Employer Identification Number.
+                    </p>
                   </div>
 
-                  <Input
-                    placeholder="ZIP Code *"
-                    value={contractorData.tax_address.zip_code}
-                    onChange={(e) => updateNestedField("tax_address", "zip_code", e.target.value)}
-                  />
+                  <div className="space-y-4">
+                    <Label className="text-base font-medium">Address (number, street, and apt. or suite no.)</Label>
+                    
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Street Address *"
+                        value={contractorData.tax_address.street}
+                        onChange={(e) => updateNestedField("tax_address", "street", e.target.value)}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        placeholder="City *"
+                        value={contractorData.tax_address.city}
+                        onChange={(e) => updateNestedField("tax_address", "city", e.target.value)}
+                      />
+                      <Input
+                        placeholder="State *"
+                        value={contractorData.tax_address.state}
+                        onChange={(e) => updateNestedField("tax_address", "state", e.target.value)}
+                        maxLength={2}
+                      />
+                    </div>
+
+                    <Input
+                      placeholder="ZIP Code *"
+                      value={contractorData.tax_address.zip_code}
+                      onChange={(e) => updateNestedField("tax_address", "zip_code", e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end">
@@ -385,6 +409,20 @@ export const ContractorCompletionPrompt = ({ isOpen, onComplete }: ContractorCom
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                <div className="mb-4 p-4 border rounded-lg bg-muted/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium">Form 1099-MISC Reference</h4>
+                    <Button variant="outline" size="sm" asChild>
+                      <a href="/forms/f1099msc.pdf" target="_blank" rel="noopener noreferrer">
+                        View 1099 PDF
+                      </a>
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    This is the form that will be generated for you at year-end for tax reporting. Review it to understand how your earnings will be reported.
+                  </p>
+                </div>
+
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
                     <Checkbox
@@ -394,10 +432,10 @@ export const ContractorCompletionPrompt = ({ isOpen, onComplete }: ContractorCom
                     />
                     <div className="space-y-1">
                       <Label htmlFor="w9_agreement" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        W-9 Form Completion *
+                        W-9 Form Certification *
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        I certify that the tax information provided is accurate and complete. I understand this information will be used for 1099 tax reporting.
+                        Under penalties of perjury, I certify that: (1) The number shown on this form is my correct taxpayer identification number, (2) I am not subject to backup withholding, (3) I am a U.S. citizen or other U.S. person, and (4) The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.
                       </p>
                     </div>
                   </div>
@@ -413,7 +451,7 @@ export const ContractorCompletionPrompt = ({ isOpen, onComplete }: ContractorCom
                         Independent Contractor Agreement *
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        I agree to work as an independent contractor, understand I am responsible for my own taxes, and acknowledge the terms of service for weekly payouts.
+                        I agree to work as an independent contractor. I understand that I am responsible for my own taxes and that I will receive Form 1099-MISC for earnings of $600 or more per year. I acknowledge the terms of service for weekly payouts and understand this is not an employee relationship.
                       </p>
                     </div>
                   </div>
