@@ -374,7 +374,7 @@ export function OperatorDashboard() {
       setWasherData(washer);
       console.log('Loaded washer data:', washer);
 
-      // Load available orders - include both 'placed' and 'unclaimed' orders
+      // Load available orders - only show 'unclaimed' orders (payment confirmed)
       const { data: available, error: availableError } = await supabase
         .from('orders')
         .select(`
@@ -384,7 +384,7 @@ export function OperatorDashboard() {
           dry_temp_preference:laundry_preferences!orders_dry_temp_preference_id_fkey(name),
           soap_preference:laundry_preferences!orders_soap_preference_id_fkey(name)
         `)
-        .in('status', ['placed', 'unclaimed'])
+        .eq('status', 'unclaimed')
         .in('zip_code', washer.zip_codes)
         .order('created_at', { ascending: true });
 

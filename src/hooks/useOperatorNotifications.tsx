@@ -192,8 +192,8 @@ export function useOperatorNotifications() {
               const newOrder = payload.new;
               console.log('New order detected:', newOrder);
 
-              // Only notify for placed/unclaimed orders
-              if (newOrder.status === 'placed' || newOrder.status === 'unclaimed') {
+              // Only notify for unclaimed orders (payment confirmed)
+              if (newOrder.status === 'unclaimed') {
                 showNewOrderNotification({
                   orderId: newOrder.id,
                   zipCode: newOrder.zip_code,
@@ -217,10 +217,9 @@ export function useOperatorNotifications() {
               const updatedOrder = payload.new;
               const oldOrder = payload.old;
 
-              // Notify when order status changes to 'placed' or 'unclaimed' (order becomes available)
+              // Notify when order status changes to 'unclaimed' (order becomes available after payment)
               if (
-                (oldOrder.status !== 'placed' && updatedOrder.status === 'placed') ||
-                (oldOrder.status !== 'unclaimed' && updatedOrder.status === 'unclaimed')
+                oldOrder.status !== 'unclaimed' && updatedOrder.status === 'unclaimed'
               ) {
                 console.log('Order became available:', updatedOrder);
                 showNewOrderNotification({
