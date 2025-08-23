@@ -5,15 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { 
   DollarSign, 
   Edit,
   Percent,
   TrendingUp,
-  Users
+  Users,
+  CalendarIcon,
+  Eye,
+  Clock
 } from "lucide-react";
 
 interface OperatorEarnings {
@@ -30,6 +37,17 @@ interface OperatorEarnings {
   total_tips_cents: number;
 }
 
+interface EarningDetail {
+  id: string;
+  order_id: string;
+  revenue_share_cents: number;
+  tips_cents: number;
+  total_earnings_cents: number;
+  status: string;
+  earned_at: string;
+  order_total_cents: number;
+}
+
 interface RevenueSplit {
   business_percentage: number;
   operator_percentage: number;
@@ -43,11 +61,20 @@ export function OperatorPaymentManagement() {
   const [loading, setLoading] = useState(false);
   const [editingRevenue, setEditingRevenue] = useState(false);
   const [newOperatorPercentage, setNewOperatorPercentage] = useState(50);
+  
+  // Date range filtering
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  
+  // Operator details modal
+  const [selectedOperator, setSelectedOperator] = useState<OperatorEarnings | null>(null);
+  const [operatorDetails, setOperatorDetails] = useState<EarningDetail[]>([]);
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   useEffect(() => {
     loadOperators();
     loadRevenueSplit();
-  }, []);
+  }, [startDate, endDate]);
 
   const loadOperators = async () => {
     try {
@@ -77,11 +104,22 @@ export function OperatorPaymentManagement() {
       for (const washer of washersData || []) {
         const profile = Array.isArray(washer.profiles) ? washer.profiles[0] : washer.profiles;
         
-        // Get total earnings
-        const { data: earnings, error: earningsError } = await supabase
+        // Get earnings for each operator with date filtering
+        let earningsQuery = supabase
           .from('operator_earnings')
-          .select('revenue_share_cents, tips_cents, status')
+          .select('revenue_share_cents, tips_cents, status, earned_at')
           .eq('operator_id', washer.id);
+          
+        if (startDate) {
+          earningsQuery = earningsQuery.gte('earned_at', startDate.toISOString());
+        }
+        if (endDate) {
+          const endOfDay = new Date(endDate);
+          endOfDay.setHours(23, 59, 59, 999);
+          earningsQuery = earningsQuery.lte('earned_at', endOfDay.toISOString());
+        }
+        
+        const { data: earnings, error: earningsError } = await earningsQuery;
 
         if (earningsError) {
           console.error('Error loading earnings:', earningsError);
@@ -197,6 +235,74 @@ export function OperatorPaymentManagement() {
     return operator.email || "Unknown Operator";
   };
 
+  const loadOperatorDetails = async (operatorId: string) => {
+    try {
+      setDetailsLoading(true);
+      
+      let detailsQuery = supabase
+        .from('operator_earnings')
+        .select(`
+          id,
+          order_id,
+          revenue_share_cents,
+          tips_cents,
+          total_earnings_cents,
+          status,
+          earned_at
+        `)
+        .eq('operator_id', operatorId)
+        .order('earned_at', { ascending: false });
+        
+      if (startDate) {
+        detailsQuery = detailsQuery.gte('earned_at', startDate.toISOString());
+      }
+      if (endDate) {
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        detailsQuery = detailsQuery.lte('earned_at', endOfDay.toISOString());
+      }
+      
+      const { data, error } = await detailsQuery;
+      
+      if (error) throw error;
+      
+      const details: EarningDetail[] = (data || []).map(item => ({
+        id: item.id,
+        order_id: item.order_id,
+        revenue_share_cents: item.revenue_share_cents,
+        tips_cents: item.tips_cents,
+        total_earnings_cents: item.total_earnings_cents,
+        status: item.status,
+        earned_at: item.earned_at,
+        order_total_cents: 0 // We'll get this separately if needed
+      }));
+      
+      setOperatorDetails(details);
+    } catch (error) {
+      console.error('Error loading operator details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load operator details",
+        variant: "destructive"
+      });
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const handleOperatorClick = (operator: OperatorEarnings) => {
+    setSelectedOperator(operator);
+    loadOperatorDetails(operator.id);
+  };
+
+  const getDateRangeText = () => {
+    if (!startDate && !endDate) return "All Time";
+    if (startDate && endDate) return `${format(startDate, "MMM d")} - ${format(endDate, "MMM d, yyyy")}`;
+    if (startDate) return `Since ${format(startDate, "MMM d, yyyy")}`;
+    if (endDate) return `Until ${format(endDate, "MMM d, yyyy")}`;
+    return "All Time";
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -260,11 +366,87 @@ export function OperatorPaymentManagement() {
             <DollarSign className="h-5 w-5 text-primary" />
             Operator Earnings Overview
           </CardTitle>
-          <CardDescription>
-            View earnings and performance for all active operators
+          <CardDescription className="flex items-center justify-between flex-wrap gap-4">
+            <div>View earnings and performance for all active operators</div>
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="h-4 w-4" />
+              <span className="font-medium">{getDateRangeText()}</span>
+            </div>
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Date Range Filters */}
+          <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium">Filter Period:</Label>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">From:</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal text-xs",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-3 w-3" />
+                    {startDate ? format(startDate, "MMM d, yyyy") : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">To:</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal text-xs",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-3 w-3" />
+                    {endDate ? format(endDate, "MMM d, yyyy") : "End date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                setStartDate(undefined);
+                setEndDate(undefined);
+              }}
+              className="text-xs"
+            >
+              Clear Dates
+            </Button>
+          </div>
           {operators.length === 0 ? (
             <div className="text-center py-8">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -275,7 +457,8 @@ export function OperatorPaymentManagement() {
               {operators.map((operator) => (
                 <div
                   key={operator.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => handleOperatorClick(operator)}
                 >
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
@@ -311,8 +494,22 @@ export function OperatorPaymentManagement() {
                       </div>
                     </div>
 
-                    <div className="text-xs text-muted-foreground">
-                      Revenue Share: {revenueSplit.operator_percentage}% • Tips: {formatCurrency(operator.total_tips_cents)}
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-muted-foreground">
+                        Revenue Share: {revenueSplit.operator_percentage}% • Tips: {formatCurrency(operator.total_tips_cents)}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOperatorClick(operator);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Details
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -383,6 +580,91 @@ export function OperatorPaymentManagement() {
               Update Split
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Operator Details Dialog */}
+      <Dialog open={!!selectedOperator} onOpenChange={() => setSelectedOperator(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-[800px] max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-primary" />
+              {selectedOperator ? getOperatorName(selectedOperator) : "Operator"} - Earnings Details
+            </DialogTitle>
+            <DialogDescription>
+              Detailed breakdown of earnings for the selected time period: {getDateRangeText()}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-hidden">
+            {selectedOperator && (
+              <>
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-lg font-bold text-primary">{formatCurrency(selectedOperator.total_earnings_cents)}</div>
+                    <div className="text-xs text-muted-foreground">Total Earnings</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-lg font-bold text-orange-600">{formatCurrency(selectedOperator.pending_earnings_cents)}</div>
+                    <div className="text-xs text-muted-foreground">Pending</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-lg font-bold text-green-600">{formatCurrency(selectedOperator.paid_earnings_cents)}</div>
+                    <div className="text-xs text-muted-foreground">Paid</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-lg font-bold text-primary">{selectedOperator.total_orders}</div>
+                    <div className="text-xs text-muted-foreground">Orders</div>
+                  </div>
+                </div>
+
+                {/* Earnings List */}
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  <div className="text-sm font-medium mb-2">Individual Earnings</div>
+                  {detailsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="text-sm text-muted-foreground">Loading earnings details...</div>
+                    </div>
+                  ) : operatorDetails.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="text-sm text-muted-foreground">No earnings found for selected period</div>
+                    </div>
+                  ) : (
+                    operatorDetails.map((detail) => (
+                      <div
+                        key={detail.id}
+                        className="flex items-center justify-between p-3 border rounded-lg text-sm"
+                      >
+                        <div className="space-y-1">
+                          <div className="font-medium">Order #{detail.order_id.slice(0, 8)}...</div>
+                          <div className="text-xs text-muted-foreground">
+                            {format(new Date(detail.earned_at), "MMM d, yyyy 'at' h:mm a")}
+                          </div>
+                        </div>
+                        
+                        <div className="text-right space-y-1">
+                          <div className="font-medium">{formatCurrency(detail.total_earnings_cents)}</div>
+                          <div className="text-xs text-muted-foreground">
+                            Revenue: {formatCurrency(detail.revenue_share_cents)}
+                            {detail.tips_cents > 0 && ` + Tips: ${formatCurrency(detail.tips_cents)}`}
+                          </div>
+                          <div className="text-xs">
+                            <Badge 
+                              variant={detail.status === 'paid' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {detail.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
