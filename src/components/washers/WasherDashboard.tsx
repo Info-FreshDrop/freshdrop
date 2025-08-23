@@ -277,10 +277,31 @@ export function WasherDashboard({ onBack }: WasherDashboardProps) {
         console.error('Order not found for notification');
       }
 
-      toast({
-        title: "Status Updated",
-        description: `Order status updated to ${newStatus.replace('_', ' ')}.`,
-      });
+      // If order is completed, calculate operator earnings
+      if (newStatus === 'completed') {
+        const { error: earningsError } = await supabase.functions.invoke('calculate-operator-earnings', {
+          body: { order_id: orderId }
+        });
+
+        if (earningsError) {
+          console.error('Error calculating earnings:', earningsError);
+          toast({
+            title: "Warning",
+            description: "Order completed but earnings calculation failed. Please contact admin.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Order Completed!",
+            description: "Order completed and earnings calculated successfully.",
+          });
+        }
+      } else {
+        toast({
+          title: "Status Updated",
+          description: `Order status updated to ${newStatus.replace('_', ' ')}.`,
+        });
+      }
 
       loadOrders();
       if (selectedOrder?.id === orderId) {

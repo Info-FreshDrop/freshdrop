@@ -940,6 +940,45 @@ export type Database = {
         }
         Relationships: []
       }
+      operator_earnings: {
+        Row: {
+          created_at: string
+          earned_at: string
+          id: string
+          operator_id: string
+          order_id: string
+          revenue_share_cents: number
+          status: string
+          tips_cents: number
+          total_earnings_cents: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          earned_at?: string
+          id?: string
+          operator_id: string
+          order_id: string
+          revenue_share_cents?: number
+          status?: string
+          tips_cents?: number
+          total_earnings_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          earned_at?: string
+          id?: string
+          operator_id?: string
+          order_id?: string
+          revenue_share_cents?: number
+          status?: string
+          tips_cents?: number
+          total_earnings_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       operator_invites: {
         Row: {
           application_id: string | null
@@ -1304,6 +1343,93 @@ export type Database = {
           stripe_payment_method_id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      payout_earnings: {
+        Row: {
+          created_at: string
+          earning_id: string
+          id: string
+          payout_id: string
+        }
+        Insert: {
+          created_at?: string
+          earning_id: string
+          id?: string
+          payout_id: string
+        }
+        Update: {
+          created_at?: string
+          earning_id?: string
+          id?: string
+          payout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_earnings_earning_id_fkey"
+            columns: ["earning_id"]
+            isOneToOne: false
+            referencedRelation: "operator_earnings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_earnings_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payouts: {
+        Row: {
+          created_at: string
+          earnings_count: number
+          external_payout_id: string | null
+          id: string
+          notes: string | null
+          operator_id: string
+          payout_method: string
+          payout_period_end: string
+          payout_period_start: string
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          total_amount_cents: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          earnings_count?: number
+          external_payout_id?: string | null
+          id?: string
+          notes?: string | null
+          operator_id: string
+          payout_method?: string
+          payout_period_end: string
+          payout_period_start: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          total_amount_cents: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          earnings_count?: number
+          external_payout_id?: string | null
+          id?: string
+          notes?: string | null
+          operator_id?: string
+          payout_method?: string
+          payout_period_end?: string
+          payout_period_start?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          total_amount_cents?: number
+          updated_at?: string
         }
         Relationships: []
       }
