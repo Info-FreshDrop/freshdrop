@@ -681,6 +681,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                   orderId={orderId}
                   onPaymentSuccess={handlePaymentSuccess}
                   onPaymentError={handlePaymentError}
+                  amount={calculateTotal() + tipAmount}
                 />
               </Elements>
             </CardContent>
@@ -1449,7 +1450,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                 disabled={isLoading}
                 className="w-full h-10 md:h-11 text-sm md:text-base font-semibold"
               >
-                {isLoading ? "Processing..." : `Pay $${(calculateTotal() / 100).toFixed(2)}`}
+                {isLoading ? "Processing..." : `Pay $${((calculateTotal() + tipAmount) / 100).toFixed(2)}`}
               </Button>
             )}
           </div>

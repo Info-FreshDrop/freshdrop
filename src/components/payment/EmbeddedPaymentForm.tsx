@@ -13,6 +13,7 @@ interface EmbeddedPaymentFormProps {
   orderId: string; // This is now the payment intent ID
   onPaymentSuccess: (confirmedOrderId: string) => void;
   onPaymentError: (error: string) => void;
+  amount?: number; // Amount in cents
 }
 
 export const EmbeddedPaymentForm: React.FC<EmbeddedPaymentFormProps> = ({
@@ -20,6 +21,7 @@ export const EmbeddedPaymentForm: React.FC<EmbeddedPaymentFormProps> = ({
   orderId,
   onPaymentSuccess,
   onPaymentError,
+  amount,
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -119,7 +121,12 @@ export const EmbeddedPaymentForm: React.FC<EmbeddedPaymentFormProps> = ({
         className="w-full"
         size="lg"
       >
-        {isProcessing ? 'Processing...' : 'Complete Payment'}
+        {isProcessing 
+          ? 'Processing...' 
+          : amount 
+            ? `Pay $${(amount / 100).toFixed(2)}` 
+            : 'Complete Payment'
+        }
       </Button>
     </form>
   );
