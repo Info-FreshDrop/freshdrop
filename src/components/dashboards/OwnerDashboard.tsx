@@ -36,13 +36,14 @@ import {
   UserPlus,
   Bell,
   MessageSquare,
-  DollarSign
+  DollarSign,
+  GraduationCap
 } from "lucide-react";
 
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'order-history' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'notification-system' | 'operator-notifications' | 'notification-testing' | 'customer-management' | 'operator-payments' | 'business-cut'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'order-history' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'notification-system' | 'operator-notifications' | 'notification-testing' | 'customer-management' | 'operator-payments' | 'business-cut' | 'onboarding-content'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [liveOrders, setLiveOrders] = useState<any[]>([]);
   const [completedOrders, setCompletedOrders] = useState<any[]>([]);
@@ -426,6 +427,29 @@ export function OwnerDashboard() {
 
   if (currentView === 'customer-management') {
     return <CustomerManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'onboarding-content') {
+    const OnboardingContentManagement = lazy(() => import('@/components/admin/OnboardingContentManagement'));
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentView('dashboard')}
+              className="p-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          <Suspense fallback={<div>Loading...</div>}>
+            <OnboardingContentManagement />
+          </Suspense>
+        </div>
+      </div>
+    );
   }
 
   if (currentView === 'live-orders') {
@@ -1003,6 +1027,33 @@ export function OwnerDashboard() {
                 </Button>
                 <Button variant="outline" className="w-full">
                   Revenue Analytics
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-purple-600" />
+                Onboarding Content
+              </CardTitle>
+              <CardDescription>
+                Manage operator training materials and quiz questions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Button 
+                  variant="hero" 
+                  className="w-full"
+                  onClick={() => setCurrentView('onboarding-content')}
+                >
+                  <GraduationCap className="h-4 w-4 mr-2" />
+                  Edit Training Content
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Preview Onboarding
                 </Button>
               </div>
             </CardContent>

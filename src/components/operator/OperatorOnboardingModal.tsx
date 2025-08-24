@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,11 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, FileText, User, CreditCard, Shield } from 'lucide-react';
+import { CheckCircle, FileText, User, CreditCard, Shield, GraduationCap, Play, Image as ImageIcon } from 'lucide-react';
 
 interface OperatorOnboardingModalProps {
   isOpen: boolean;
@@ -50,14 +52,84 @@ export default function OperatorOnboardingModal({ isOpen, onComplete }: Operator
   });
 
   const [w9FileUrl, setW9FileUrl] = useState<string | null>(null);
+  
+  // Training and quiz states
+  const [trainingContent, setTrainingContent] = useState<any[]>([]);
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
+  const [quizScore, setQuizScore] = useState<number | null>(null);
+  const [showQuizResults, setShowQuizResults] = useState(false);
 
   const steps = [
     { id: 1, title: "Welcome", icon: User },
     { id: 2, title: "Security", icon: Shield },
     { id: 3, title: "Profile", icon: FileText },
     { id: 4, title: "Tax Documents", icon: CreditCard },
-    { id: 5, title: "Agreements", icon: CheckCircle }
+    { id: 5, title: "Agreements", icon: CheckCircle },
+    { id: 6, title: "Training", icon: GraduationCap }
   ];
+
+  // Load training content
+  useEffect(() => {
+    async function loadTrainingContent() {
+      try {
+        const { data: training } = await supabase
+          .from('onboarding_content')
+          .select('*')
+          .eq('section_type', 'training_text')
+          .eq('is_active', true)
+          .order('display_order');
+
+        const { data: quiz } = await supabase
+          .from('onboarding_content')
+          .select('*')
+          .eq('section_type', 'quiz_question')
+          .eq('is_active', true)
+          .order('display_order');
+
+        setTrainingContent(training || []);
+        setQuizQuestions(quiz || []);
+      } catch (error) {
+        console.error('Error loading training content:', error);
+      }
+    }
+
+    if (isOpen) {
+      loadTrainingContent();
+    }
+  }, [isOpen]);
+
+  const calculateQuizScore = () => {
+    let correct = 0;
+    quizQuestions.forEach((question) => {
+      const userAnswer = quizAnswers[question.id];
+      const correctAnswer = question.quiz_data?.correct_answer;
+      if (userAnswer === correctAnswer) {
+        correct++;
+      }
+    });
+    return Math.round((correct / quizQuestions.length) * 100);
+  };
+
+  const handleQuizSubmit = () => {
+    const score = calculateQuizScore();
+    setQuizScore(score);
+    setShowQuizResults(true);
+    
+    if (score >= 80) {
+      toast.success(`🎉 Great job! You scored ${score}% on the training quiz!`);
+    } else {
+      toast.error(`You scored ${score}%. You need at least 80% to pass. Please review the training materials and try again.`);
+    }
+  };
+
+  const resetQuiz = () => {
+    setQuizAnswers({});
+    setQuizScore(null);
+    setShowQuizResults(false);
+    setCurrentQuizIndex(0);
+  };
 
   const handlePasswordUpdate = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -192,12 +264,22 @@ export default function OperatorOnboardingModal({ isOpen, onComplete }: Operator
       canProceed = await handlePasswordUpdate();
     } else if (currentStep === 3) {
       canProceed = await handleProfileUpdate();
+    } else if (currentStep === 6) {
+      // Validate training completion
+      if (quizScore === null || quizScore < 80) {
+        toast.error("Please complete the training quiz with at least 80% to proceed");
+        return;
+      }
+      // Complete onboarding after training
+      await handleComplete();
+      return;
     }
 
-    if (canProceed && currentStep < 5) {
+    if (canProceed && currentStep < 6) {
       setCurrentStep(currentStep + 1);
     } else if (currentStep === 5) {
-      await handleComplete();
+      // Move to training step
+      setCurrentStep(6);
     }
   };
 
@@ -543,6 +625,164 @@ export default function OperatorOnboardingModal({ isOpen, onComplete }: Operator
               </CardContent>
             </Card>
           )}
+
+          {/* Step 6: Training and Quiz */}
+          {currentStep === 6 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Operator Training & Certification
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-2">📚 Training Materials</h3>
+                  <p className="text-sm">
+                    Please review all training materials carefully. You'll need to pass a quiz with at least 80% to complete your certification.
+                  </p>
+                </div>
+
+                {/* Training Content */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-lg">Training Content</h4>
+                  {trainingContent.map((content, index) => (
+                    <div key={content.id} className="border rounded-lg p-4">
+                      <h5 className="font-semibold mb-2 flex items-center gap-2">
+                        {content.section_type === 'training_video' && <Play className="h-4 w-4" />}
+                        {content.section_type === 'training_image' && <ImageIcon className="h-4 w-4" />}
+                        {content.section_type === 'training_text' && <FileText className="h-4 w-4" />}
+                        {content.title}
+                      </h5>
+                      {content.content && (
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{content.content}</p>
+                      )}
+                      {content.media_url && content.section_type === 'training_video' && (
+                        <video controls className="w-full mt-2 rounded">
+                          <source src={content.media_url} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                      )}
+                      {content.media_url && content.section_type === 'training_image' && (
+                        <img src={content.media_url} alt={content.title} className="w-full mt-2 rounded" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Quiz Section */}
+                {quizQuestions.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-lg">Certification Quiz</h4>
+                      {quizScore !== null && (
+                        <Badge variant={quizScore >= 80 ? "secondary" : "destructive"} className={quizScore >= 80 ? "bg-green-100 text-green-800" : ""}>
+                          Score: {quizScore}%
+                        </Badge>
+                      )}
+                    </div>
+
+                    {!showQuizResults ? (
+                      <div className="space-y-4">
+                        <Progress value={(Object.keys(quizAnswers).length / quizQuestions.length) * 100} className="w-full" />
+                        <p className="text-sm text-muted-foreground">
+                          Progress: {Object.keys(quizAnswers).length} of {quizQuestions.length} questions completed
+                        </p>
+
+                        {quizQuestions.map((question, index) => (
+                          <div key={question.id} className="border rounded-lg p-4 space-y-3">
+                            <h5 className="font-medium">
+                              {index + 1}. {question.quiz_data?.question}
+                            </h5>
+                            <RadioGroup
+                              value={quizAnswers[question.id] || ''}
+                              onValueChange={(value) => 
+                                setQuizAnswers(prev => ({ ...prev, [question.id]: value }))
+                              }
+                            >
+                              {question.quiz_data?.options?.map((option: string, optIndex: number) => (
+                                <div key={optIndex} className="flex items-center space-x-2">
+                                  <RadioGroupItem 
+                                    value={String.fromCharCode(97 + optIndex)} 
+                                    id={`${question.id}-${optIndex}`} 
+                                  />
+                                  <Label 
+                                    htmlFor={`${question.id}-${optIndex}`} 
+                                    className="text-sm cursor-pointer"
+                                  >
+                                    {String.fromCharCode(97 + optIndex).toUpperCase()}. {option}
+                                  </Label>
+                                </div>
+                              ))}
+                            </RadioGroup>
+                          </div>
+                        ))}
+
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={handleQuizSubmit}
+                            disabled={Object.keys(quizAnswers).length < quizQuestions.length}
+                            className="flex-1"
+                          >
+                            Submit Quiz
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className={`p-4 rounded-lg ${quizScore! >= 80 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}>
+                          <h5 className="font-semibold mb-2">
+                            {quizScore! >= 80 ? '🎉 Congratulations!' : '📚 More Study Needed'}
+                          </h5>
+                          <p className="text-sm">
+                            {quizScore! >= 80 
+                              ? `You scored ${quizScore}% and passed the certification quiz!`
+                              : `You scored ${quizScore}%. You need at least 80% to pass. Please review the training materials and try again.`
+                            }
+                          </p>
+                        </div>
+
+                        {/* Quiz Results */}
+                        <div className="space-y-3">
+                          <h5 className="font-medium">Quiz Results:</h5>
+                          {quizQuestions.map((question, index) => {
+                            const userAnswer = quizAnswers[question.id];
+                            const correctAnswer = question.quiz_data?.correct_answer;
+                            const isCorrect = userAnswer === correctAnswer;
+                            
+                            return (
+                              <div key={question.id} className={`border rounded-lg p-3 ${isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                                <p className="font-medium text-sm mb-2">
+                                  {index + 1}. {question.quiz_data?.question}
+                                </p>
+                                <p className="text-sm">
+                                  <span className="font-medium">Your answer:</span> {userAnswer?.toUpperCase() || 'Not answered'}
+                                </p>
+                                <p className="text-sm">
+                                  <span className="font-medium">Correct answer:</span> {correctAnswer?.toUpperCase()}
+                                </p>
+                                {question.quiz_data?.explanation && (
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    <span className="font-medium">Explanation:</span> {question.quiz_data.explanation}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {quizScore! < 80 && (
+                          <Button onClick={resetQuiz} variant="outline" className="w-full">
+                            Retake Quiz
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Navigation Buttons */}
@@ -559,7 +799,7 @@ export default function OperatorOnboardingModal({ isOpen, onComplete }: Operator
             onClick={nextStep}
             disabled={loading}
           >
-            {loading ? 'Processing...' : currentStep === 5 ? 'Complete Onboarding' : 'Next'}
+            {loading ? 'Processing...' : currentStep === 6 ? 'Complete Onboarding' : currentStep === 5 ? 'Start Training' : 'Next'}
           </Button>
         </div>
       </DialogContent>

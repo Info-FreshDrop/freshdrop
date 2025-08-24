@@ -892,6 +892,45 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_content: {
+        Row: {
+          content: string | null
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          media_url: string | null
+          quiz_data: Json | null
+          section_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          media_url?: string | null
+          quiz_data?: Json | null
+          section_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          media_url?: string | null
+          quiz_data?: Json | null
+          section_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       operator_applications: {
         Row: {
           address: string
