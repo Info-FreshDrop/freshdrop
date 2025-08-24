@@ -384,8 +384,7 @@ export function OperatorDashboard() {
           dry_temp_preference:laundry_preferences!orders_dry_temp_preference_id_fkey(name),
           soap_preference:laundry_preferences!orders_soap_preference_id_fkey(name)
         `)
-        .eq('status', 'unclaimed') // Only orders with confirmed payment
-        .not('stripe_payment_intent_id', 'is', null) // Must have payment intent (excludes free orders without payment)
+        .eq('status', 'unclaimed') // Only orders ready for pickup
         .in('zip_code', washer.zip_codes)
         .order('created_at', { ascending: true });
 
