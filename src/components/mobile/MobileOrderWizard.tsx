@@ -71,6 +71,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
   const [clientSecret, setClientSecret] = useState('');
   const [orderId, setOrderId] = useState('');
   const [tipAmount, setTipAmount] = useState(0);
+  const [availableReferralCash, setAvailableReferralCash] = useState(0);
   const [formData, setFormData] = useState({
     pickupAddress: '',
     deliveryAddress: '',
@@ -88,6 +89,25 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { getCurrentLocation } = useCapacitor();
+
+  const getAvailableReferralMoney = async () => {
+    if (!user) return 0;
+    
+    try {
+      const { data: wallet } = await supabase
+        .from('wallets')
+        .select('balance_cents')
+        .eq('user_id', user.id)
+        .single();
+      
+      const balance = wallet?.balance_cents || 0;
+      setAvailableReferralCash(balance);
+      return balance;
+    } catch (error) {
+      console.error('Error getting referral cash:', error);
+      return 0;
+    }
+  };
 
   const steps = [
     { number: 1, title: "Service & Area", icon: MapPin, subtitle: "Choose service and location" },
@@ -181,6 +201,12 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
     }, 10000); // Every 10 seconds for testing
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (user && currentStep === 4) {
+      getAvailableReferralMoney();
+    }
+  }, [user, currentStep]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -883,8 +909,11 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="13gal">13-gal ($35)</SelectItem>
-                            <SelectItem value="30gal">30-gal ($60)</SelectItem>
+                            {bagSizes.map((size) => (
+                              <SelectItem key={size.id} value={size.id}>
+                                {size.name} (${(size.price_cents / 100).toFixed(2)})
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1254,6 +1283,23 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                 </p>
               )}
             </div>
+
+            {/* Referral Cash */}
+            {availableReferralCash > 0 && (
+              <div className="space-y-2">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-green-800">Available Referral Cash</h4>
+                      <p className="text-sm text-green-600">Apply to your order</p>
+                    </div>
+                    <span className="text-lg font-bold text-green-700">
+                      ${(availableReferralCash / 100).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Tip Selector */}
             <div className="space-y-4">
