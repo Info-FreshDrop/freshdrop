@@ -13,7 +13,7 @@ export function HeroSection() {
 
       <div className="relative z-10 px-6 max-w-4xl mx-auto">
         {/* Header Text - Left aligned */}
-        <div className="text-left pt-20 pb-4 -ml-4">
+        <div className="text-left pt-40 pb-4 -ml-8">
           <h2 className="text-4xl font-bold text-white drop-shadow-lg mb-4 md:text-4xl">
             Laundry made easy
           </h2>
