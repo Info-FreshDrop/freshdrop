@@ -247,51 +247,51 @@ export function BagSizesManagement({ onBack }: BagSizesManagementProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={onBack}>
-          <ArrowUp className="w-4 h-4 mr-2" />
-          Back to Owner Dashboard
+    <div className="w-full max-w-none lg:max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-4 lg:py-6 space-y-4 lg:space-y-6 overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <Button variant="outline" onClick={onBack} className="w-full sm:w-auto">
+          <ArrowUp className="w-4 h-4 mr-2 flex-shrink-0" />
+          <span className="break-words">Back to Owner Dashboard</span>
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Bag Sizes & Pricing Management</h1>
-          <p className="text-muted-foreground">Manage your laundry bag sizes and pricing</p>
+        <div className="w-full sm:flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold break-words">Bag Sizes & Pricing Management</h1>
+          <p className="text-sm text-muted-foreground break-words">Manage your laundry bag sizes and pricing</p>
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Package className="w-8 h-8 text-primary" />
-              <div>
-                <p className="text-sm text-muted-foreground">Active Bag Sizes</p>
-                <p className="text-2xl font-bold">{totalActiveBagSizes}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+        <Card className="w-full">
+          <CardContent className="p-3 lg:p-4">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <Package className="w-6 h-6 lg:w-8 lg:h-8 text-primary flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs lg:text-sm text-muted-foreground">Active Bag Sizes</p>
+                <p className="text-lg lg:text-2xl font-bold">{totalActiveBagSizes}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <DollarSign className="w-8 h-8 text-green-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">Average Price</p>
-                <p className="text-2xl font-bold">${averagePrice.toFixed(2)}</p>
+        <Card className="w-full">
+          <CardContent className="p-3 lg:p-4">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <DollarSign className="w-6 h-6 lg:w-8 lg:h-8 text-green-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs lg:text-sm text-muted-foreground">Average Price</p>
+                <p className="text-lg lg:text-2xl font-bold">${averagePrice.toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Settings className="w-8 h-8 text-blue-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total Bag Types</p>
-                <p className="text-2xl font-bold">{bagSizes.length}</p>
+        <Card className="w-full sm:col-span-2 lg:col-span-1">
+          <CardContent className="p-3 lg:p-4">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <Settings className="w-6 h-6 lg:w-8 lg:h-8 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs lg:text-sm text-muted-foreground">Total Bag Types</p>
+                <p className="text-lg lg:text-2xl font-bold">{bagSizes.length}</p>
               </div>
             </div>
           </CardContent>
@@ -300,14 +300,14 @@ export function BagSizesManagement({ onBack }: BagSizesManagementProps) {
 
       {/* Add New Bag Size Button */}
       {!showForm && (
-        <Card>
-          <CardContent className="p-6">
+        <Card className="w-full">
+          <CardContent className="p-3 lg:p-6">
             <Button 
               onClick={() => setShowForm(true)}
-              className="w-full md:w-auto"
+              className="w-full sm:w-auto"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Bag Size
+              <Plus className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="break-words">Add New Bag Size</span>
             </Button>
           </CardContent>
         </Card>
@@ -315,29 +315,32 @@ export function BagSizesManagement({ onBack }: BagSizesManagementProps) {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingId ? 'Edit Bag Size' : 'Add New Bag Size'}</CardTitle>
-            <CardDescription>
+        <Card className="w-full">
+          <CardHeader className="pb-3 lg:pb-6">
+            <CardTitle className="text-lg lg:text-xl break-words">
+              {editingId ? 'Edit Bag Size' : 'Add New Bag Size'}
+            </CardTitle>
+            <CardDescription className="text-sm break-words">
               Configure your bag size details and pricing
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 pb-3 lg:px-6 lg:pb-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Bag Size Name *</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="w-full">
+                  <Label htmlFor="name" className="text-sm font-medium">Bag Size Name *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g., Small Bag, Large Bag"
                     required
+                    className="w-full"
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="price">Price (USD) *</Label>
+                <div className="w-full">
+                  <Label htmlFor="price" className="text-sm font-medium">Price (USD) *</Label>
                   <Input
                     id="price"
                     type="number"
@@ -347,13 +350,14 @@ export function BagSizesManagement({ onBack }: BagSizesManagementProps) {
                     onChange={(e) => setFormData({ ...formData, price_cents: e.target.value })}
                     placeholder="35.00"
                     required
+                    className="w-full"
                   />
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="capacity">Capacity (Gallons)</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="w-full">
+                  <Label htmlFor="capacity" className="text-sm font-medium">Capacity (Gallons)</Label>
                   <Input
                     id="capacity"
                     type="number"
@@ -361,38 +365,40 @@ export function BagSizesManagement({ onBack }: BagSizesManagementProps) {
                     value={formData.capacity_gallons}
                     onChange={(e) => setFormData({ ...formData, capacity_gallons: e.target.value })}
                     placeholder="13"
+                    className="w-full"
                   />
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 w-full">
                   <Switch
                     id="active"
                     checked={formData.is_active}
                     onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                   />
-                  <Label htmlFor="active">Active</Label>
+                  <Label htmlFor="active" className="text-sm font-medium">Active</Label>
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="description">Description</Label>
+              <div className="w-full">
+                <Label htmlFor="description" className="text-sm font-medium">Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Perfect for 1-2 people, includes shirts, pants, and undergarments"
-                  className="min-h-[80px]"
+                  className="min-h-[80px] w-full"
                 />
               </div>
 
-              <div className="flex gap-2">
-                <Button type="submit">
-                  <Save className="w-4 h-4 mr-2" />
-                  {editingId ? 'Update' : 'Create'} Bag Size
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
+                <Button type="submit" className="w-full sm:w-auto">
+                  <Save className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="break-words">{editingId ? 'Update' : 'Create'} Bag Size</span>
                 </Button>
                 <Button 
                   type="button" 
                   variant="outline"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     setShowForm(false);
                     setEditingId(null);
@@ -405,8 +411,8 @@ export function BagSizesManagement({ onBack }: BagSizesManagementProps) {
                     });
                   }}
                 >
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel
+                  <X className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="break-words">Cancel</span>
                 </Button>
               </div>
             </form>
@@ -415,84 +421,95 @@ export function BagSizesManagement({ onBack }: BagSizesManagementProps) {
       )}
 
       {/* Bag Sizes List */}
-      <div className="space-y-4">
+      <div className="space-y-3 lg:space-y-4 w-full">
         {bagSizes.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No bag sizes configured</h3>
-              <p className="text-muted-foreground mb-4">
+          <Card className="w-full">
+            <CardContent className="p-6 lg:p-8 text-center">
+              <Package className="w-10 h-10 lg:w-12 lg:h-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-base lg:text-lg font-semibold mb-2 break-words">No bag sizes configured</h3>
+              <p className="text-sm text-muted-foreground mb-4 break-words">
                 Add your first bag size to start offering laundry services.
               </p>
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add First Bag Size
+              <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
+                <Plus className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="break-words">Add First Bag Size</span>
               </Button>
             </CardContent>
           </Card>
         ) : (
           bagSizes.map((bagSize, index) => (
-            <Card key={bagSize.id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold">{bagSize.name}</h3>
-                      <Badge variant={bagSize.is_active ? "default" : "secondary"}>
-                        {bagSize.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                      <Badge variant="outline">
-                        ${(bagSize.price_cents / 100).toFixed(2)}
-                      </Badge>
-                      {bagSize.capacity_gallons && (
-                        <Badge variant="outline">
-                          {bagSize.capacity_gallons} gallons
+            <Card key={bagSize.id} className="w-full">
+              <CardContent className="p-3 lg:p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
+                  <div className="flex-1 min-w-0 w-full">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                      <h3 className="text-base lg:text-lg font-semibold break-words">{bagSize.name}</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant={bagSize.is_active ? "default" : "secondary"} className="text-xs">
+                          {bagSize.is_active ? "Active" : "Inactive"}
                         </Badge>
-                      )}
+                        <Badge variant="outline" className="text-xs">
+                          ${(bagSize.price_cents / 100).toFixed(2)}
+                        </Badge>
+                        {bagSize.capacity_gallons && (
+                          <Badge variant="outline" className="text-xs">
+                            {bagSize.capacity_gallons} gallons
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     {bagSize.description && (
-                      <p className="text-muted-foreground">{bagSize.description}</p>
+                      <p className="text-sm text-muted-foreground break-words">{bagSize.description}</p>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => reorderBagSize(bagSize.id, 'up')}
-                      disabled={index === 0}
-                    >
-                      <ArrowUp className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => reorderBagSize(bagSize.id, 'down')}
-                      disabled={index === bagSizes.length - 1}
-                    >
-                      <ArrowDown className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(bagSize)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant={bagSize.is_active ? "outline" : "default"}
-                      size="sm"
-                      onClick={() => toggleBagSizeStatus(bagSize.id, bagSize.is_active)}
-                    >
-                      {bagSize.is_active ? "Deactivate" : "Activate"}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteBagSize(bagSize.id, bagSize.name)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => reorderBagSize(bagSize.id, 'up')}
+                        disabled={index === 0}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => reorderBagSize(bagSize.id, 'down')}
+                        disabled={index === bagSizes.length - 1}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(bagSize)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <Button
+                        variant={bagSize.is_active ? "outline" : "default"}
+                        size="sm"
+                        onClick={() => toggleBagSizeStatus(bagSize.id, bagSize.is_active)}
+                        className="flex-1 sm:flex-none text-xs"
+                      >
+                        {bagSize.is_active ? "Deactivate" : "Activate"}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteBagSize(bagSize.id, bagSize.name)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
