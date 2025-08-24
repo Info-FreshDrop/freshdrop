@@ -91,6 +91,11 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     loadData();
     loadBagSizes();
     loadReferralCash();
+    // Reload data every 30 seconds to ensure current pricing
+    const interval = setInterval(() => {
+      loadBagSizes();
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadReferralCash = async () => {
@@ -303,7 +308,11 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
 
   const getMinPickupDate = () => {
     const now = new Date();
-    const minDate = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
+    // Set minimum to tomorrow if it's late in the day, or today if early enough
+    const minDate = new Date();
+    if (now.getHours() >= 16) { // After 4 PM, minimum is tomorrow
+      minDate.setDate(now.getDate() + 1);
+    }
     return minDate.toISOString().split('T')[0];
   };
 
@@ -311,8 +320,6 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     if (!formData.pickupDate || !formData.timeWindow) return { valid: true, message: "" };
     
     const now = new Date();
-    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-    
     const selectedDate = new Date(formData.pickupDate);
     let selectedStartTime;
     
@@ -333,12 +340,26 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         return { valid: true, message: "" };
     }
     
-    // Check if the selected time is in the past
-    if (selectedStartTime <= oneHourFromNow) {
-      return { 
-        valid: false, 
-        message: "Pickup time must be at least 1 hour from now. Please select a later date or time window." 
-      };
+    // Check if the selected time is in the past or too soon
+    const minimumAdvanceTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 hours from now
+    
+    if (selectedStartTime <= minimumAdvanceTime) {
+      // Check if it's the same day
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate.getTime() === today.getTime()) {
+        return { 
+          valid: false, 
+          message: "Same-day pickup requires at least 2 hours advance notice. Please select a later time window or choose tomorrow." 
+        };
+      } else {
+        return { 
+          valid: false, 
+          message: "This pickup time has passed. Please select a future date and time." 
+        };
+      }
     }
     
     return { valid: true, message: "" };
