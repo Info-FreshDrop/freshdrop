@@ -13,12 +13,12 @@ export function HeroSection() {
 
       <div className="relative z-10 px-6 max-w-4xl mx-auto">
         {/* Header Text - Left aligned */}
-        <div className="text-left pt-12 pb-4">
-          <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-4 md:text-2xl">
+        <div className="text-left pt-20 pb-4 -ml-4">
+          <h2 className="text-4xl font-bold text-white drop-shadow-lg mb-4 md:text-4xl">
             Laundry made easy
           </h2>
           
-          <p className="text-base text-white/90 drop-shadow-md mb-12 max-w-lg leading-relaxed md:text-sm">Professional laundry service<br />
+          <p className="text-xl text-white/90 drop-shadow-md mb-12 max-w-lg leading-relaxed md:text-lg">Professional laundry service<br />
 with 24-hour turnaround.<br />
 Drop off at any locker or schedule pickup & delivery.
         </p>
