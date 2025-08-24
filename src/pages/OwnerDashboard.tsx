@@ -142,7 +142,7 @@ export default function OwnerDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-wave">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-full lg:max-w-6xl overflow-x-hidden">
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -161,16 +161,16 @@ export default function OwnerDashboard() {
           </p>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mb-6 grid grid-cols-1 gap-4">
           <Card className="border-0 shadow-soft hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/marketing-dashboard')}>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-gradient-primary">
+                <div className="p-3 rounded-lg bg-gradient-primary flex-shrink-0">
                   <TrendingUp className="h-6 w-6 text-white" />
                 </div>
-                <div>
-                  <h3 className="font-semibold">Marketing Dashboard</h3>
-                  <p className="text-sm text-muted-foreground">Manage campaigns & analytics</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-sm sm:text-base">Marketing Dashboard</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Manage campaigns & analytics</p>
                 </div>
               </div>
             </CardContent>
@@ -178,39 +178,45 @@ export default function OwnerDashboard() {
         </div>
 
         <Tabs defaultValue="bags" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-0.5">
-            <TabsTrigger value="bags" className="flex items-center gap-1 px-2 py-2 text-xs">
-              <Package className="h-3 w-3" />
-              Bag Sizes & Pricing
-            </TabsTrigger>
-            <TabsTrigger value="locations" className="flex items-center gap-1 px-2 py-2 text-xs">
-              <MapPin className="h-3 w-3" />
-              Locations
-            </TabsTrigger>
-            <TabsTrigger value="service-areas" onClick={() => setCurrentView('service-areas')} className="flex items-center gap-1 px-2 py-2 text-xs">
-              <BarChart3 className="h-3 w-3" />
-              Service
-            </TabsTrigger>
-            <TabsTrigger value="content" className="flex items-center gap-1 px-2 py-2 text-xs">
-              <FileText className="h-3 w-3" />
-              Content
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="grid grid-cols-4 gap-0.5 min-w-max w-full">
+              <TabsTrigger value="bags" className="flex items-center gap-1 px-2 py-2 text-xs whitespace-nowrap">
+                <Package className="h-3 w-3 flex-shrink-0" />
+                <span className="hidden sm:inline">Bag Sizes & Pricing</span>
+                <span className="sm:hidden">Bags</span>
+              </TabsTrigger>
+              <TabsTrigger value="locations" className="flex items-center gap-1 px-2 py-2 text-xs whitespace-nowrap">
+                <MapPin className="h-3 w-3 flex-shrink-0" />
+                <span className="hidden sm:inline">Locations</span>
+                <span className="sm:hidden">Locations</span>
+              </TabsTrigger>
+              <TabsTrigger value="service-areas" onClick={() => setCurrentView('service-areas')} className="flex items-center gap-1 px-2 py-2 text-xs whitespace-nowrap">
+                <BarChart3 className="h-3 w-3 flex-shrink-0" />
+                <span className="hidden sm:inline">Service Areas</span>
+                <span className="sm:hidden">Service</span>
+              </TabsTrigger>
+              <TabsTrigger value="content" className="flex items-center gap-1 px-2 py-2 text-xs whitespace-nowrap">
+                <FileText className="h-3 w-3 flex-shrink-0" />
+                <span className="hidden sm:inline">Content</span>
+                <span className="sm:hidden">Content</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="bags">
             <Card className="border-0 shadow-soft">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  Bag Sizes & Pricing
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Package className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span className="break-words">Bag Sizes & Pricing</span>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm">
                   Manage your laundry bag sizes, descriptions, and pricing. Changes update across the entire app in real-time.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={() => setCurrentView('bag-sizes')}>
-                  <Package className="w-4 h-4 mr-2" />
+                <Button onClick={() => setCurrentView('bag-sizes')} className="w-full sm:w-auto">
+                  <Package className="w-4 h-4 mr-2 flex-shrink-0" />
                   Manage Bag Sizes & Pricing
                 </Button>
               </CardContent>
@@ -220,73 +226,77 @@ export default function OwnerDashboard() {
           <TabsContent value="locations">
             <div className="space-y-6">
               <Card className="border-0 shadow-soft">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Plus className="h-5 w-5 text-primary" />
-                    Add New Locker Location
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Plus className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="break-words">Add New Locker Location</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="locker-name">Locker Name</Label>
+                      <Label htmlFor="locker-name" className="text-sm font-medium">Locker Name</Label>
                       <Input
                         id="locker-name"
                         placeholder="e.g., Central Park Locker"
                         value={newLocker.name}
                         onChange={(e) => setNewLocker(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="locker-zip">Zip Code</Label>
+                      <Label htmlFor="locker-zip" className="text-sm font-medium">Zip Code</Label>
                       <Input
                         id="locker-zip"
                         placeholder="e.g., 10001"
                         value={newLocker.zip_code}
                         onChange={(e) => setNewLocker(prev => ({ ...prev, zip_code: e.target.value }))}
+                        className="w-full"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="locker-address">Address</Label>
+                    <Label htmlFor="locker-address" className="text-sm font-medium">Address</Label>
                     <Textarea
                       id="locker-address"
                       placeholder="e.g., 123 Central Park West, New York, NY"
                       value={newLocker.address}
                       onChange={(e) => setNewLocker(prev => ({ ...prev, address: e.target.value }))}
+                      className="w-full min-h-[80px]"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="locker-count">Number of Lockers</Label>
+                    <Label htmlFor="locker-count" className="text-sm font-medium">Number of Lockers</Label>
                     <Input
                       id="locker-count"
                       type="number"
                       min="1"
                       value={newLocker.locker_count}
                       onChange={(e) => setNewLocker(prev => ({ ...prev, locker_count: parseInt(e.target.value) }))}
+                      className="w-full"
                     />
                   </div>
                   <Button onClick={addLocker} disabled={isLoading} className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2 flex-shrink-0" />
                     Add Locker
                   </Button>
                 </CardContent>
               </Card>
 
               <Card className="border-0 shadow-soft">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    Existing Locations
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="break-words">Existing Locations</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {lockers.map((locker) => (
-                      <div key={locker.id} className="flex justify-between items-center p-3 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{locker.name}</h4>
-                          <p className="text-sm text-muted-foreground">{locker.address}</p>
+                      <div key={locker.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 border rounded-lg gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm break-words">{locker.name}</h4>
+                          <p className="text-xs text-muted-foreground break-words">{locker.address}</p>
                           <p className="text-xs text-muted-foreground">
                             {locker.locker_count} lockers • {locker.zip_code}
                           </p>
@@ -295,13 +305,14 @@ export default function OwnerDashboard() {
                           variant="outline"
                           size="sm"
                           onClick={() => deleteLocker(locker.id)}
+                          className="flex-shrink-0"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     ))}
                     {lockers.length === 0 && (
-                      <p className="text-center text-muted-foreground py-8">
+                      <p className="text-center text-muted-foreground py-8 text-sm">
                         No lockers added yet
                       </p>
                     )}
