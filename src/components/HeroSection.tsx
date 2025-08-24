@@ -24,13 +24,8 @@ Drop off at any locker or schedule pickup & delivery.
         </p>
         </div>
 
-        {/* Spacer to push content down */}
-        <div style={{
-        height: '40vh'
-      }}></div>
-
         {/* Call to Action Buttons */}
-        <div className="flex flex-col gap-4 justify-start items-start mb-16 px-4">
+        <div className="flex flex-col gap-4 justify-start items-start mb-16 -ml-16">
           <Button variant="hero" size="xl" className="max-w-sm" onClick={() => {
           const authSection = document.querySelector('#auth-section');
           if (authSection) {
