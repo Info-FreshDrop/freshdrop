@@ -259,8 +259,9 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
   const handleApplicationAction = async (applicationId: string, action: 'approved' | 'rejected') => {
     console.log('handleApplicationAction called:', { applicationId, action });
     try {
-      console.log('Starting approval process for:', applicationId);
       if (action === 'approved') {
+        console.log('Starting approval process for:', applicationId);
+        
         // Get the application details first
         const { data: application, error: fetchError } = await supabase
           .from('operator_applications')
@@ -272,151 +273,70 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
           throw new Error('Could not fetch application details');
         }
 
-        let userId: string;
-        let userAlreadyExists = false;
-
-        // Try to create user account with email and phone as password
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: application.email,
-          password: application.phone, // Use phone number as password
-          options: {
-            data: {
-              first_name: application.first_name,
-              last_name: application.last_name,
-              phone: application.phone,
-              address: `${application.address}, ${application.city}, ${application.state}`
-            }
-          }
-        });
-
-        if (authError) {
-          if (authError.message.includes('User already registered') || authError.message.includes('already_exists')) {
-            // User already exists, offer to delete and retry
-            console.log('User already exists with email:', application.email);
-            
-            const shouldDelete = window.confirm(
-              `A user with email "${application.email}" already exists in the system.\n\nWould you like to delete the existing user and create a new one?\n\nThis will permanently remove their account and all associated data.`
-            );
-
-            if (shouldDelete) {
-              const deleted = await handleDeleteUser(application.email);
-              if (deleted) {
-                // Retry the signup after deletion
-                const { data: retryAuthData, error: retryAuthError } = await supabase.auth.signUp({
-                  email: application.email,
-                  password: application.phone,
-                  options: {
-                    data: {
-                      first_name: application.first_name,
-                      last_name: application.last_name,
-                      phone: application.phone,
-                      address: `${application.address}, ${application.city}, ${application.state}`
-                    }
-                  }
-                });
-
-                if (retryAuthError) throw retryAuthError;
-                if (!retryAuthData.user) throw new Error('Failed to create user account after deletion');
-                
-                userId = retryAuthData.user.id;
-                console.log('Created new user after deletion:', userId);
-              } else {
-                return; // Failed to delete, abort the process
-              }
-            } else {
-              throw new Error(`User with email "${application.email}" already exists. Operation cancelled.`);
-            }
-          } else {
-            throw authError;
-          }
-        } else {
-          if (!authData.user) {
-            throw new Error('Failed to create user account');
-          }
-          userId = authData.user.id;
-          console.log('Created new user:', userId);
-        }
-
-        // Check if user already has a washer record
-        const { data: existingWasher, error: washerCheckError } = await supabase
-          .from('washers')
-          .select('id')
-          .eq('user_id', userId)
+        // Check if user already exists via profiles table (simpler approach)
+        const { data: existingProfile, error: profileCheckError } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('email', application.email)
           .maybeSingle();
 
-        if (washerCheckError) {
-          throw new Error(`Failed to check existing washer record: ${washerCheckError.message}`);
-        }
+        if (existingProfile) {
+          const shouldDelete = window.confirm(
+            `A user with email "${application.email}" already exists.\n\nDelete existing user and approve application?`
+          );
 
-        if (existingWasher) {
-          throw new Error(`User ${application.email} is already registered as an operator. Please check the operators list.`);
-        }
-
-        // Assign operator role using secure function (only if not already assigned)
-        const { data: roleSuccess, error: roleError } = await supabase.rpc('change_user_role', {
-          target_user_id: userId,
-          new_role: 'operator',
-          reason: `Approved application ${applicationId} - auto-assigned operator role`
-        });
-
-        if (roleError) {
-          console.error('Role assignment error:', roleError);
-          // Don't throw error if role already exists
-          if (!roleError.message.includes('already') && !roleError.message.includes('exists')) {
-            throw new Error(`Failed to assign operator role: ${roleError.message}`);
+          if (shouldDelete) {
+            const deleted = await handleDeleteUser(application.email);
+            if (!deleted) return;
+          } else {
+            throw new Error(`User already exists. Operation cancelled.`);
           }
         }
 
-        // Create operator record in washers table
-        const { error: washerError } = await supabase
-          .from('washers')
-          .insert([{
-            user_id: userId,
-            approval_status: 'approved',
-            is_active: true,
-            zip_codes: [application.zip_code], // Use their zip code
-            locker_access: [] // Can be updated later by admin
-          }]);
+        // Update application status to approved - this triggers the database function
+        const { error: updateError } = await supabase
+          .from('operator_applications')
+          .update({ 
+            status: 'approved',
+            approved_at: new Date().toISOString()
+          })
+          .eq('id', applicationId);
 
-        if (washerError) throw washerError;
-
-        const successMessage = userAlreadyExists 
-          ? `Application approved! ${application.first_name} ${application.last_name} (existing user) is now an operator. They can sign in with their existing credentials.`
-          : `Application approved! ${application.first_name} ${application.last_name} is now an operator. They can sign in with email: ${application.email} and password: ${application.phone}`;
+        if (updateError) throw updateError;
 
         toast({
           title: "Application Approved!",
-          description: successMessage,
+          description: `${application.first_name} ${application.last_name} will receive an email with login instructions.`,
         });
-      }
+      } else {
+        // Handle rejection
+        const { error: updateError } = await supabase
+          .from('operator_applications')
+          .update({ 
+            status: 'rejected',
+            rejected_at: new Date().toISOString()
+          })
+          .eq('id', applicationId);
 
-      // Update application status
-      const { error } = await supabase
-        .from('operator_applications')
-        .update({ 
-          status: action,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', applicationId);
+        if (updateError) throw updateError;
 
-      if (error) throw error;
-
-      if (action === 'rejected') {
         toast({
           title: "Application Rejected",
-          description: "Application has been rejected and moved to the rejected applications tab for future review.",
+          description: "The application has been rejected.",
         });
       }
 
-      loadData(); // Reload data to update the UI
+      // Refresh applications list
+      loadData();
     } catch (error) {
       console.error('Error updating application status:', error);
       console.error('Error details:', error.message);
       console.error('Error stack:', error.stack);
+      
       toast({
         title: "Error",
         description: `Failed to update application status: ${error.message}`,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
