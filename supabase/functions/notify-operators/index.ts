@@ -185,7 +185,7 @@ serve(async (req) => {
           `;
 
           const emailResponse = await resend.emails.send({
-            from: 'FreshDrop <orders@freshdrop.com>',
+            from: 'FreshDrop <onboarding@resend.dev>',
             to: [operator.profiles.email],
             subject: emailSubject,
             html: emailBody,
