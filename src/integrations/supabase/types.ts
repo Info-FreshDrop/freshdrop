@@ -934,6 +934,7 @@ export type Database = {
       operator_applications: {
         Row: {
           address: string
+          approved_at: string | null
           availability: string
           city: string
           created_at: string
@@ -961,6 +962,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          approved_at?: string | null
           availability: string
           city: string
           created_at?: string
@@ -988,6 +990,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          approved_at?: string | null
           availability?: string
           city?: string
           created_at?: string
