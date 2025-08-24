@@ -5,7 +5,7 @@ export function HeroSection() {
   return <section className="relative min-h-screen flex flex-col justify-start bg-gradient-hero overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 bg-contain bg-top bg-no-repeat" style={{
-      backgroundImage: `url('/lovable-uploads/efb21ff1-6eb6-47f0-b000-a1e8ee6ff1e2.png')`
+      backgroundImage: `url('/lovable-uploads/876c111c-7235-405f-a56c-e9ddb449bf39.png')`
     }} />
       
       {/* Overlay for better text readability */}
