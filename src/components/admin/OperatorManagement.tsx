@@ -231,6 +231,31 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
     }
   };
 
+  const handleDeleteUser = async (email: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-user-account', {
+        body: { email }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "User Deleted",
+        description: `User ${email} has been removed from the system`,
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Error",
+        description: `Failed to delete user: ${error.message}`,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   const handleApplicationAction = async (applicationId: string, action: 'approved' | 'rejected') => {
     console.log('handleApplicationAction called:', { applicationId, action });
     try {
@@ -266,17 +291,41 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
 
         if (authError) {
           if (authError.message.includes('User already registered') || authError.message.includes('already_exists')) {
-            // User already exists, we need to handle this differently
+            // User already exists, offer to delete and retry
             console.log('User already exists with email:', application.email);
             
-            // For now, show a clear error message to the admin
-            throw new Error(`A user with email "${application.email}" already exists in the system. This could mean:
-            
-1. They already have an account - ask them to log in and check if they need operator access
-2. A previous approval attempt partially succeeded - check the operators list
-3. They signed up but didn't complete operator onboarding
+            const shouldDelete = window.confirm(
+              `A user with email "${application.email}" already exists in the system.\n\nWould you like to delete the existing user and create a new one?\n\nThis will permanently remove their account and all associated data.`
+            );
 
-Please verify their status before approving again, or contact support to resolve this conflict.`);
+            if (shouldDelete) {
+              const deleted = await handleDeleteUser(application.email);
+              if (deleted) {
+                // Retry the signup after deletion
+                const { data: retryAuthData, error: retryAuthError } = await supabase.auth.signUp({
+                  email: application.email,
+                  password: application.phone,
+                  options: {
+                    data: {
+                      first_name: application.first_name,
+                      last_name: application.last_name,
+                      phone: application.phone,
+                      address: `${application.address}, ${application.city}, ${application.state}`
+                    }
+                  }
+                });
+
+                if (retryAuthError) throw retryAuthError;
+                if (!retryAuthData.user) throw new Error('Failed to create user account after deletion');
+                
+                userId = retryAuthData.user.id;
+                console.log('Created new user after deletion:', userId);
+              } else {
+                return; // Failed to delete, abort the process
+              }
+            } else {
+              throw new Error(`User with email "${application.email}" already exists. Operation cancelled.`);
+            }
           } else {
             throw authError;
           }
