@@ -116,6 +116,33 @@ serve(async (req) => {
       }
     }
 
+    // Notify operators about the new paid order
+    try {
+      console.log("Notifying operators about paid order:", orderId);
+      await supabaseService.functions.invoke('notify-operators', {
+        body: {
+          type: 'new_order',
+          zipCodes: [updatedOrder.zip_code],
+          orderId: orderId,
+          title: 'New Order Available!',
+          message: `${updatedOrder.service_type} in ${updatedOrder.zip_code} - $${(updatedOrder.total_amount_cents / 100).toFixed(2)}${updatedOrder.is_express ? ' (Express)' : ''}`,
+          orderData: {
+            zipCode: updatedOrder.zip_code,
+            serviceName: updatedOrder.service_type,
+            totalAmount: updatedOrder.total_amount_cents,
+            operatorEarnings: Math.floor(updatedOrder.total_amount_cents * 0.5), // Assuming 50% split
+            isExpress: updatedOrder.is_express,
+            customerName: null,
+            pickupAddress: updatedOrder.pickup_address
+          }
+        }
+      });
+      console.log("Operators notified successfully");
+    } catch (notifyError) {
+      console.error("Error notifying operators:", notifyError);
+      // Don't fail the payment confirmation if notification fails
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 

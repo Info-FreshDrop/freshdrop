@@ -170,6 +170,33 @@ serve(async (req) => {
         }
       }
 
+      // Notify operators about the new order
+      try {
+        console.log("Notifying operators about new order:", order.id);
+        await supabaseService.functions.invoke('notify-operators', {
+          body: {
+            type: 'new_order',
+            zipCodes: [orderData.zip_code],
+            orderId: order.id,
+            title: 'New Order Available!',
+            message: `${orderData.service_type} in ${orderData.zip_code} - $${(orderData.total_amount_cents / 100).toFixed(2)}${orderData.is_express ? ' (Express)' : ''}`,
+            orderData: {
+              zipCode: orderData.zip_code,
+              serviceName: orderData.service_type,
+              totalAmount: orderData.total_amount_cents,
+              operatorEarnings: Math.floor(orderData.total_amount_cents * 0.5), // Assuming 50% split
+              isExpress: orderData.is_express,
+              customerName: null,
+              pickupAddress: orderData.pickup_address
+            }
+          }
+        });
+        console.log("Operators notified successfully");
+      } catch (notifyError) {
+        console.error("Error notifying operators:", notifyError);
+        // Don't fail the order creation if notification fails
+      }
+
       console.log("$0 order created successfully:", order.id);
 
       return new Response(
