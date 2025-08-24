@@ -133,27 +133,8 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
     }
   };
 
-  const loadBagSizes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('bag_sizes')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-
-      if (error) throw error;
-      setBagSizes(data || []);
-      
-      // Keep existing bags structure for now - will update in future iteration
-    } catch (error) {
-      console.error('Error loading bag sizes:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load bag sizes. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Note: Dynamic bag sizes will be implemented in future iteration
+  // For now, keeping hardcoded pricing for mobile compatibility
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -832,10 +813,10 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                       <div className="space-y-2">
                         <Label className="text-sm">Size</Label>
                         <Select 
-                          value={bag.bagSizeId} 
+                          value={bag.size} 
                           onValueChange={(value) => {
                             const newBags = [...formData.bags];
-                            newBags[index] = { ...newBags[index], bagSizeId: value };
+                            newBags[index] = { ...newBags[index], size: value };
                             setFormData(prev => ({ ...prev, bags: newBags }));
                           }}
                         >
@@ -843,11 +824,8 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {bagSizes.map((bagSize) => (
-                              <SelectItem key={bagSize.id} value={bagSize.id}>
-                                {bagSize.name} (${(bagSize.price_cents / 100).toFixed(2)})
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="13gal">13-gal ($35)</SelectItem>
+                            <SelectItem value="30gal">30-gal ($60)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -875,10 +853,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                       </div>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Total: ${(() => {
-                        const bagSize = bagSizes.find(b => b.id === bag.bagSizeId);
-                        return bagSize ? ((bagSize.price_cents / 100) * bag.count).toFixed(2) : '0.00';
-                      })()}
+                      Total: ${((bag.size === '30gal' ? 60 : 35) * bag.count).toFixed(2)}
                     </div>
                   </div>
                 </Card>
@@ -887,10 +862,9 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
               <Button
                 variant="outline"
                 onClick={() => {
-                  const firstBagSize = bagSizes.length > 0 ? bagSizes[0].id : '';
                   setFormData(prev => ({
                     ...prev,
-                    bags: [...prev.bags, { bagSizeId: firstBagSize, count: 1 }]
+                    bags: [...prev.bags, { size: '13gal', count: 1 }]
                   }));
                 }}
                 className="w-full"
