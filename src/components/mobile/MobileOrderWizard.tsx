@@ -62,6 +62,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
   const [clothesItems, setClothesItems] = useState<any[]>([]);
   const [serviceAreas, setServiceAreas] = useState<any[]>([]);
   const [laundryPreferences, setLaundryPreferences] = useState<any[]>([]);
+  const [bagSizes, setBagSizes] = useState<any[]>([]);
   const [selectedShopItems, setSelectedShopItems] = useState<ShopItem[]>([]);
   const [showShopModal, setShowShopModal] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -73,7 +74,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
     deliveryAddress: '',
     zipCode: '',
     specialInstructions: '',
-    bags: [{ size: '13gal', count: 1 }], // Array of bag objects
+    bags: [{ bagSizeId: '', count: 1 }], // Array of bag objects
     timeWindow: '',
     pickupDate: '',
     soapPreference: '',
@@ -133,8 +134,37 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
     }
   };
 
-  // Note: Dynamic bag sizes will be implemented in future iteration
-  // For now, keeping hardcoded pricing for mobile compatibility
+  const loadBagSizes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bag_sizes')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setBagSizes(data || []);
+      
+      // Set first bag size as default if available
+      if (data && data.length > 0 && formData.bags[0].bagSizeId === '') {
+        setFormData(prev => ({
+          ...prev,
+          bags: [{ bagSizeId: data[0].id, count: 1 }]
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading bag sizes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load bag sizes. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    loadBagSizes();
+  }, []);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -300,7 +330,8 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
     
     // Calculate bag costs
     formData.bags.forEach(bag => {
-      const pricePerBag = bag.size === '30gal' ? 6000 : 3500; // $60 for 30gal, $35 for 13gal
+      const bagSize = bagSizes.find(b => b.id === bag.bagSizeId);
+      const pricePerBag = bagSize ? bagSize.price_cents : 0;
       total += bag.count * pricePerBag;
     });
     
@@ -436,7 +467,8 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
       
       // Calculate bag costs
       formData.bags.forEach(bag => {
-        const pricePerBag = bag.size === '30gal' ? 6000 : 3500;
+        const bagSize = bagSizes.find(b => b.id === bag.bagSizeId);
+        const pricePerBag = bagSize ? bagSize.price_cents : 0;
         baseTotal += bag.count * pricePerBag;
       });
       
@@ -813,10 +845,10 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                       <div className="space-y-2">
                         <Label className="text-sm">Size</Label>
                         <Select 
-                          value={bag.size} 
+                          value={bag.bagSizeId} 
                           onValueChange={(value) => {
                             const newBags = [...formData.bags];
-                            newBags[index] = { ...newBags[index], size: value };
+                            newBags[index] = { ...newBags[index], bagSizeId: value };
                             setFormData(prev => ({ ...prev, bags: newBags }));
                           }}
                         >
@@ -853,7 +885,10 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                       </div>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Total: ${((bag.size === '30gal' ? 60 : 35) * bag.count).toFixed(2)}
+                      Total: ${(() => {
+                        const bagSize = bagSizes.find(b => b.id === bag.bagSizeId);
+                        return bagSize ? ((bagSize.price_cents / 100) * bag.count).toFixed(2) : '0.00';
+                      })()}
                     </div>
                   </div>
                 </Card>
@@ -862,12 +897,14 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
               <Button
                 variant="outline"
                 onClick={() => {
+                  const firstBagSize = bagSizes.length > 0 ? bagSizes[0].id : '';
                   setFormData(prev => ({
                     ...prev,
-                    bags: [...prev.bags, { size: '13gal', count: 1 }]
+                    bags: [...prev.bags, { bagSizeId: firstBagSize, count: 1 }]
                   }));
                 }}
                 className="w-full"
+                disabled={bagSizes.length === 0}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Another Bag
@@ -1113,11 +1150,14 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
               <div className="flex justify-between text-sm">
                 <span>Bags:</span>
                 <div className="text-right">
-                  {formData.bags.map((bag, index) => (
-                    <div key={index} className="font-medium">
-                      {bag.count} × {bag.size === '30gal' ? '30-gal ($60)' : '13-gal ($35)'} = ${((bag.size === '30gal' ? 60 : 35) * bag.count).toFixed(2)}
-                    </div>
-                  ))}
+                  {formData.bags.map((bag, index) => {
+                    const bagSize = bagSizes.find(b => b.id === bag.bagSizeId);
+                    return (
+                      <div key={index} className="font-medium">
+                        {bag.count} × {bagSize?.name || 'Unknown'} (${((bagSize?.price_cents || 0) / 100).toFixed(2)}) = ${(((bagSize?.price_cents || 0) / 100) * bag.count).toFixed(2)}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               {isExpress && (

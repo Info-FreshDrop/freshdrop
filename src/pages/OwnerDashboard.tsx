@@ -35,10 +35,7 @@ export default function OwnerDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [lockers, setLockers] = useState<any[]>([]);
   const [currentView, setCurrentView] = useState<'dashboard' | 'service-areas' | 'bag-sizes'>('dashboard');
-  const [prices, setPrices] = useState({
-    bagPrice: 3500, // $35.00 in cents
-    expressPrice: 2000 // $20.00 in cents
-  });
+  // Removed separate pricing state - now managed through bag sizes
   const [newLocker, setNewLocker] = useState({
     name: '',
     address: '',
@@ -130,13 +127,7 @@ export default function OwnerDashboard() {
     }
   };
 
-  const updatePrices = async () => {
-    // This would update a settings table or similar
-    toast({
-      title: "Success",
-      description: "Prices updated successfully",
-    });
-  };
+  // Pricing now managed through bag sizes management
 
   if (currentView === 'service-areas') {
     return <ServiceAreasManagement onBack={() => setCurrentView('dashboard')} />;
@@ -186,11 +177,11 @@ export default function OwnerDashboard() {
           </Card>
         </div>
 
-        <Tabs defaultValue="pricing" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-0.5">
-            <TabsTrigger value="pricing" className="flex items-center gap-1 px-2 py-2 text-xs">
-              <DollarSign className="h-3 w-3" />
-              Pricing
+        <Tabs defaultValue="bags" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-0.5">
+            <TabsTrigger value="bags" className="flex items-center gap-1 px-2 py-2 text-xs">
+              <Package className="h-3 w-3" />
+              Bag Sizes & Pricing
             </TabsTrigger>
             <TabsTrigger value="locations" className="flex items-center gap-1 px-2 py-2 text-xs">
               <MapPin className="h-3 w-3" />
@@ -204,55 +195,23 @@ export default function OwnerDashboard() {
               <FileText className="h-3 w-3" />
               Content
             </TabsTrigger>
-            <TabsTrigger value="bags" className="flex items-center gap-1 px-2 py-2 text-xs">
-              <Package className="h-3 w-3" />
-              Bag Sizes
-            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="pricing">
+          <TabsContent value="bags">
             <Card className="border-0 shadow-soft">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-primary" />
-                  Pricing Settings
+                  <Package className="h-5 w-5 text-primary" />
+                  Bag Sizes & Pricing
                 </CardTitle>
                 <CardDescription>
-                  Update your service pricing
+                  Manage your laundry bag sizes, descriptions, and pricing. Changes update across the entire app in real-time.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bag-price">Price per Bag ($)</Label>
-                    <Input
-                      id="bag-price"
-                      type="number"
-                      step="0.01"
-                      value={prices.bagPrice / 100}
-                      onChange={(e) => setPrices(prev => ({ 
-                        ...prev, 
-                        bagPrice: Math.round(parseFloat(e.target.value) * 100) 
-                      }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="express-price">Express Fee ($)</Label>
-                    <Input
-                      id="express-price"
-                      type="number"
-                      step="0.01"
-                      value={prices.expressPrice / 100}
-                      onChange={(e) => setPrices(prev => ({ 
-                        ...prev, 
-                        expressPrice: Math.round(parseFloat(e.target.value) * 100) 
-                      }))}
-                    />
-                  </div>
-                </div>
-                <Button onClick={updatePrices} className="w-full">
-                  <Save className="h-4 w-4 mr-2" />
-                  Update Prices
+              <CardContent>
+                <Button onClick={() => setCurrentView('bag-sizes')}>
+                  <Package className="w-4 h-4 mr-2" />
+                  Manage Bag Sizes & Pricing
                 </Button>
               </CardContent>
             </Card>
@@ -356,25 +315,6 @@ export default function OwnerDashboard() {
             <ContentManagement />
           </TabsContent>
 
-          <TabsContent value="bags">
-            <Card className="border-0 shadow-soft">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  Bag Sizes & Pricing
-                </CardTitle>
-                <CardDescription>
-                  Manage your laundry bag sizes, descriptions, and pricing
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => setCurrentView('bag-sizes')}>
-                  <Package className="w-4 h-4 mr-2" />
-                  Manage Bag Sizes
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
         </Tabs>
       </div>
