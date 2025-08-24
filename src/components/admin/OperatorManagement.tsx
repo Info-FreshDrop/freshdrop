@@ -232,7 +232,9 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
   };
 
   const handleApplicationAction = async (applicationId: string, action: 'approved' | 'rejected') => {
+    console.log('handleApplicationAction called:', { applicationId, action });
     try {
+      console.log('Starting approval process for:', applicationId);
       if (action === 'approved') {
         // Get the application details first
         const { data: application, error: fetchError } = await supabase
@@ -317,6 +319,8 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
       loadData(); // Reload data to update the UI
     } catch (error) {
       console.error('Error updating application status:', error);
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
       toast({
         title: "Error",
         description: `Failed to update application status: ${error.message}`,
