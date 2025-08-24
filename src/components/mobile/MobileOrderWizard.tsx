@@ -14,6 +14,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '@/lib/stripe';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
 import { LaundryInstructionsModal } from '../orders/LaundryInstructionsModal';
+import { PrePaymentTipSelector } from '@/components/customer/PrePaymentTipSelector';
 import { IOSHeader } from '@/components/ui/ios-navigation';
 import { IOSPrimaryButton, IOSSecondaryButton, HapticButton } from '@/components/ui/haptic-button';
 import { IOSInput, IOSSelect, IOSTextarea, IOSFormSection } from '@/components/ui/ios-form';
@@ -69,6 +70,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
   const [showInstructions, setShowInstructions] = useState(true);
   const [clientSecret, setClientSecret] = useState('');
   const [orderId, setOrderId] = useState('');
+  const [tipAmount, setTipAmount] = useState(0);
   const [formData, setFormData] = useState({
     pickupAddress: '',
     deliveryAddress: '',
@@ -136,21 +138,28 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
 
   const loadBagSizes = async () => {
     try {
+      console.log('Loading bag sizes...');
       const { data, error } = await supabase
         .from('bag_sizes')
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading bag sizes:', error);
+        throw error;
+      }
+      
+      console.log('Bag sizes loaded:', data);
       setBagSizes(data || []);
       
-      // Set first bag size as default if available
-      if (data && data.length > 0 && formData.bags[0].bagSizeId === '') {
+      // Set first bag size as default if available and none selected
+      if (data && data.length > 0 && (!formData.bags[0]?.bagSizeId || formData.bags[0].bagSizeId === '')) {
         setFormData(prev => ({
           ...prev,
           bags: [{ bagSizeId: data[0].id, count: 1 }]
         }));
+        console.log('Auto-selected bag size:', data[0].id);
       }
     } catch (error) {
       console.error('Error loading bag sizes:', error);
@@ -163,7 +172,14 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
   };
 
   useEffect(() => {
+    loadData();
     loadBagSizes();
+    // Reload bag sizes more frequently to ensure current pricing
+    const interval = setInterval(() => {
+      loadBagSizes();
+      console.log('Auto-refreshing bag sizes...');
+    }, 10000); // Every 10 seconds for testing
+    return () => clearInterval(interval);
   }, []);
 
   const handleInputChange = (field: string, value: any) => {
@@ -795,14 +811,25 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
             {/* Pickup Date */}
             <div className="space-y-2">
               <Label>Pickup Date</Label>
-              <Input
-                type="date"
-                value={formData.pickupDate}
-                onChange={(e) => handleInputChange('pickupDate', e.target.value)}
-                min={new Date(Date.now() + 60 * 60 * 1000).toISOString().split('T')[0]}
-                className="h-12"
-                required
-              />
+                <Input
+                  type="date"
+                  value={formData.pickupDate}
+                  onChange={(e) => handleInputChange('pickupDate', e.target.value)}
+                  min={(() => {
+                    const now = new Date();
+                    const minDate = new Date();
+                    // After 6 PM, minimum is next day
+                    if (now.getHours() >= 18) {
+                      minDate.setDate(now.getDate() + 1);
+                    } else {
+                      // Need at least 2 hours advance notice
+                      minDate.setTime(now.getTime() + 2 * 60 * 60 * 1000);
+                    }
+                    return minDate.toISOString().split('T')[0];
+                  })()}
+                  className="h-12"
+                  required
+                />
             </div>
 
             {/* Time Window */}
@@ -1136,6 +1163,22 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                 </div>
               </div>
             )}
+
+            {/* Pre-Payment Tip Selector */}
+            {calculateTotal() > 0 && (
+              <div className="space-y-4 mt-6">
+                <hr className="my-4" />
+                <h3 className="text-lg font-semibold">Add Tip for Your Operator</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Show appreciation for excellent service (you can change this on the next step)
+                </p>
+                <PrePaymentTipSelector
+                  subtotal={calculateTotal()}
+                  onTipChange={setTipAmount}
+                  selectedTip={tipAmount}
+                />
+              </div>
+            )}
           </div>
         );
 
@@ -1212,6 +1255,20 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
               )}
             </div>
 
+            {/* Tip Selector */}
+            <div className="space-y-4">
+              <hr className="my-4" />
+              <h3 className="text-lg font-semibold">Add Tip for Your Operator</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Show appreciation for excellent service
+              </p>
+              <PrePaymentTipSelector
+                subtotal={calculateTotal()}
+                onTipChange={setTipAmount}
+                selectedTip={tipAmount}
+              />
+            </div>
+
             {/* Special Instructions */}
             <div className="space-y-2">
               <Label>Special Instructions (Optional)</Label>
@@ -1227,8 +1284,13 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
             <div className="border-t pt-4">
               <div className="flex justify-between font-bold text-lg">
                 <span>Total:</span>
-                <span className="text-primary">${(calculateTotal() / 100).toFixed(2)}</span>
+                <span className="text-primary">${((calculateTotal() + tipAmount) / 100).toFixed(2)}</span>
               </div>
+              {tipAmount > 0 && (
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Includes ${(tipAmount / 100).toFixed(2)} tip</span>
+                </div>
+              )}
             </div>
           </div>
         );
