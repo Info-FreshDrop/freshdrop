@@ -161,46 +161,9 @@ export function useOperatorNotifications() {
     }
 
     try {
-      // Call backend notification service for SMS and email
-      console.log('Calling notify-operators function with data:', {
-        type: 'new_order',
-        zipCodes: [orderData.zipCode],
-        orderId: orderData.orderId,
-        title: 'New Order Available!',
-        message: 'A new order is available in your area!',
-        orderData: {
-          zipCode: orderData.zipCode,
-          serviceName: orderData.serviceName,
-          totalAmount: orderData.totalAmount,
-          operatorEarnings: operatorEarnings,
-          isExpress: orderData.isExpress,
-          pickupAddress: orderData.pickupAddress
-        }
-      });
-
-      const { data: notificationResult, error: notificationError } = await supabase.functions.invoke('notify-operators', {
-        body: {
-          type: 'new_order',
-          zipCodes: [orderData.zipCode],
-          orderId: orderData.orderId,
-          title: 'New Order Available!',
-          message: 'A new order is available in your area!',
-          orderData: {
-            zipCode: orderData.zipCode,
-            serviceName: orderData.serviceName,
-            totalAmount: orderData.totalAmount,
-            operatorEarnings: operatorEarnings,
-            isExpress: orderData.isExpress,
-            pickupAddress: orderData.pickupAddress
-          }
-        }
-      });
-
-      if (notificationError) {
-        console.error('Error calling notify-operators function:', notificationError);
-      } else {
-        console.log('Notification function called successfully:', notificationResult);
-      }
+      // Don't call the notify-operators function from here - that's handled by the order creation process
+      // This function is just for showing local notifications to the current operator
+      console.log('Showing local notification for order:', orderData.orderId);
 
       if (isNative && permissions.notifications) {
         // Show native notification
