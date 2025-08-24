@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Save, Play, Image as ImageIcon, FileText, HelpCircle, MoveUp, MoveDown } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, Play, Image as ImageIcon, FileText, HelpCircle, MoveUp, MoveDown, Upload, Link, Video } from 'lucide-react';
 
 interface OnboardingContentItem {
   id: string;
@@ -32,6 +32,8 @@ export default function OnboardingContentManagement() {
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<OnboardingContentItem | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [newItem, setNewItem] = useState<Partial<OnboardingContentItem>>({
     section_type: 'training_text',
@@ -196,6 +198,49 @@ export default function OnboardingContentManagement() {
     });
   };
 
+  const handleFileUpload = async (file: File, sectionType: string) => {
+    try {
+      setUploading(true);
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `training/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('content-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('content-images')
+        .getPublicUrl(filePath);
+
+      setNewItem(prev => ({ ...prev, media_url: data.publicUrl }));
+      toast.success('File uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Failed to upload file');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const isYouTubeUrl = (url: string) => {
+    return url.includes('youtube.com/watch') || url.includes('youtu.be/');
+  };
+
+  const getYouTubeEmbedUrl = (url: string) => {
+    if (url.includes('youtube.com/watch')) {
+      const videoId = url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    } else if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    return url;
+  };
+
   const ContentForm = ({ item, onSave, onCancel }: { 
     item: Partial<OnboardingContentItem>, 
     onSave: (item: Partial<OnboardingContentItem>) => void,
@@ -251,13 +296,73 @@ export default function OnboardingContentManagement() {
               </div>
 
               {(item.section_type === 'training_video' || item.section_type === 'training_image') && (
-                <div>
-                  <Label>Media URL</Label>
-                  <Input
-                    value={item.media_url || ''}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, media_url: e.target.value }))}
-                    placeholder="URL to video or image"
-                  />
+                <div className="space-y-4">
+                  <div>
+                    <Label>Media URL or Upload File</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={item.media_url || ''}
+                        onChange={(e) => setNewItem(prev => ({ ...prev, media_url: e.target.value }))}
+                        placeholder={item.section_type === 'training_video' ? "YouTube URL or video file URL" : "Image URL"}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploading ? 'Uploading...' : 'Upload'}
+                      </Button>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept={item.section_type === 'training_video' ? "video/*" : "image/*"}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleFileUpload(file, item.section_type!);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {/* Media Preview */}
+                  {item.media_url && (
+                    <div className="border rounded-lg p-4">
+                      <Label className="text-sm font-medium">Preview:</Label>
+                      {item.section_type === 'training_video' && (
+                        <div className="mt-2">
+                          {isYouTubeUrl(item.media_url) ? (
+                            <iframe
+                              src={getYouTubeEmbedUrl(item.media_url)}
+                              width="100%"
+                              height="200"
+                              frameBorder="0"
+                              allowFullScreen
+                              className="rounded"
+                            />
+                          ) : (
+                            <video
+                              src={item.media_url}
+                              controls
+                              className="w-full max-h-48 rounded"
+                            />
+                          )}
+                        </div>
+                      )}
+                      {item.section_type === 'training_image' && (
+                        <img
+                          src={item.media_url}
+                          alt="Preview"
+                          className="mt-2 max-h-48 w-auto rounded"
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -402,10 +507,27 @@ export default function OnboardingContentManagement() {
           </div>
         </div>
       </CardHeader>
-      {(item.content || item.quiz_data) && (
+      {(item.content || item.quiz_data || item.media_url) && (
         <CardContent className="pt-0">
           {item.content && <p className="text-sm text-muted-foreground">{item.content.substring(0, 100)}...</p>}
           {item.quiz_data && <p className="text-sm text-muted-foreground">{item.quiz_data.question}</p>}
+          {item.media_url && (
+            <div className="mt-2">
+              {item.section_type === 'training_video' && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Video className="h-3 w-3" />
+                  {isYouTubeUrl(item.media_url) ? 'YouTube Video' : 'Video File'}
+                </div>
+              )}
+              {item.section_type === 'training_image' && (
+                <img
+                  src={item.media_url}
+                  alt="Preview"
+                  className="w-16 h-16 object-cover rounded"
+                />
+              )}
+            </div>
+          )}
         </CardContent>
       )}
     </Card>
