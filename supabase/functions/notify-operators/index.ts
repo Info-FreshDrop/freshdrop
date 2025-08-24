@@ -53,7 +53,7 @@ serve(async (req) => {
           user_id,
           push_notification_token,
           notifications_enabled,
-          profiles(first_name, last_name, phone, opt_in_sms, email)
+          profiles!inner(first_name, last_name, phone, opt_in_sms, email)
         `)
         .eq('is_active', true)
         .overlaps('zip_codes', zipCodes)
