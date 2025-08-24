@@ -23,16 +23,18 @@ import {
   Users,
   TrendingUp,
   FileText,
-  Calculator
+  Calculator,
+  Package
 } from "lucide-react";
 import { ServiceAreasManagement } from "@/components/admin/ServiceAreasManagement";
 import { ContentManagement } from "@/components/admin/ContentManagement";
+import { BagSizesManagement } from "@/components/admin/BagSizesManagement";
 
 
 export default function OwnerDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [lockers, setLockers] = useState<any[]>([]);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'service-areas'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'service-areas' | 'bag-sizes'>('dashboard');
   const [prices, setPrices] = useState({
     bagPrice: 3500, // $35.00 in cents
     expressPrice: 2000 // $20.00 in cents
@@ -139,6 +141,10 @@ export default function OwnerDashboard() {
   if (currentView === 'service-areas') {
     return <ServiceAreasManagement onBack={() => setCurrentView('dashboard')} />;
   }
+
+  if (currentView === 'bag-sizes') {
+    return <BagSizesManagement onBack={() => setCurrentView('dashboard')} />;
+  }
   const handleExitDashboard = () => {
     navigate('/');
   };
@@ -181,7 +187,7 @@ export default function OwnerDashboard() {
         </div>
 
         <Tabs defaultValue="pricing" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-0.5">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-0.5">
             <TabsTrigger value="pricing" className="flex items-center gap-1 px-2 py-2 text-xs">
               <DollarSign className="h-3 w-3" />
               Pricing
@@ -197,6 +203,10 @@ export default function OwnerDashboard() {
             <TabsTrigger value="content" className="flex items-center gap-1 px-2 py-2 text-xs">
               <FileText className="h-3 w-3" />
               Content
+            </TabsTrigger>
+            <TabsTrigger value="bags" className="flex items-center gap-1 px-2 py-2 text-xs">
+              <Package className="h-3 w-3" />
+              Bag Sizes
             </TabsTrigger>
           </TabsList>
 
@@ -344,6 +354,26 @@ export default function OwnerDashboard() {
 
           <TabsContent value="content">
             <ContentManagement />
+          </TabsContent>
+
+          <TabsContent value="bags">
+            <Card className="border-0 shadow-soft">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-primary" />
+                  Bag Sizes & Pricing
+                </CardTitle>
+                <CardDescription>
+                  Manage your laundry bag sizes, descriptions, and pricing
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setCurrentView('bag-sizes')}>
+                  <Package className="w-4 h-4 mr-2" />
+                  Manage Bag Sizes
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
         </Tabs>

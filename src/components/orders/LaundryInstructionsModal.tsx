@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Package, MapPin, AlertTriangle, FileText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LaundryInstructionsModalProps {
   isOpen: boolean;
@@ -9,6 +11,27 @@ interface LaundryInstructionsModalProps {
 }
 
 export function LaundryInstructionsModal({ isOpen, onClose, onContinue }: LaundryInstructionsModalProps) {
+  const [bagSizes, setBagSizes] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadBagSizes();
+  }, []);
+
+  const loadBagSizes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bag_sizes')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setBagSizes(data || []);
+    } catch (error) {
+      console.error('Error loading bag sizes:', error);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -45,11 +68,15 @@ export function LaundryInstructionsModal({ isOpen, onClose, onContinue }: Laundr
                 <Package className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
                 <div className="text-gray-700">
                   <p className="mb-2">
-                    All laundry will need to be placed in one of our two bag sizes:
+                    All laundry will need to be placed in one of our available bag sizes:
                   </p>
                   <ul className="list-disc list-inside ml-4 space-y-1">
-                    <li><strong>13-gallon bag: $35</strong> - Perfect for smaller loads or individual items</li>
-                    <li><strong>30-gallon bag: $60</strong> - Ideal for larger loads or family laundry</li>
+                    {bagSizes.map((bagSize) => (
+                      <li key={bagSize.id}>
+                        <strong>{bagSize.name}{bagSize.capacity_gallons && ` (${bagSize.capacity_gallons}-gallon)`}: ${(bagSize.price_cents / 100).toFixed(2)}</strong>
+                        {bagSize.description && ` - ${bagSize.description}`}
+                      </li>
+                    ))}
                   </ul>
                   <p className="mt-2">
                     If you have multiple bags, please make sure to select the appropriate 

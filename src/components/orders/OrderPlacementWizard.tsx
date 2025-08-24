@@ -55,6 +55,8 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(true);
+  const [bagSizes, setBagSizes] = useState<any[]>([]);
+  const [selectedBagSizeId, setSelectedBagSizeId] = useState<string>('');
   const [formData, setFormData] = useState({
     pickupAddress: '',
     deliveryAddress: '',
@@ -85,6 +87,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
 
   useEffect(() => {
     loadData();
+    loadBagSizes();
     loadReferralCash();
   }, []);
 
@@ -124,6 +127,31 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
       toast({
         title: "Error",
         description: "Failed to load order options. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadBagSizes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bag_sizes')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setBagSizes(data || []);
+      
+      // Auto-select first bag size if available
+      if (data && data.length > 0 && !selectedBagSizeId) {
+        setSelectedBagSizeId(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading bag sizes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load bag sizes. Please try again.",
         variant: "destructive",
       });
     }
@@ -315,7 +343,9 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
   };
 
   const calculateTotal = () => {
-    let total = formData.bagCount * 3500; // $35 per bag
+    // Get selected bag size price
+    const selectedBagSize = bagSizes.find(b => b.id === selectedBagSizeId);
+    let total = selectedBagSize ? selectedBagSize.price_cents * formData.bagCount : 0;
     
     if (isExpress) {
       total += 2000; // $20 express fee
@@ -457,6 +487,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         locker_id: orderType === 'locker' ? formData.lockerId : null,
         special_instructions: sanitizeInput(formData.specialInstructions),
         bag_count: formData.bagCount,
+        bag_size_id: selectedBagSizeId,
         items: [{ time_window: formData.timeWindow, shop_items: selectedShopItems }],
         total_amount_cents: calculateTotal(),
         referral_cash_used: formData.useReferralCash ? Math.min(availableReferralCash, calculateTotal() + availableReferralCash) : 0,
@@ -723,9 +754,43 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         )}
       </div>
 
+      {/* Bag Size Selection */}
+      <div className="space-y-3">
+        <Label>Select Bag Size</Label>
+        <div className="grid gap-3">
+          {bagSizes.map((bagSize) => (
+            <Card 
+              key={bagSize.id} 
+              className={`cursor-pointer transition-all ${selectedBagSizeId === bagSize.id ? 'ring-2 ring-primary' : ''}`}
+              onClick={() => setSelectedBagSizeId(bagSize.id)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">{bagSize.name}</h4>
+                    {bagSize.description && (
+                      <p className="text-sm text-muted-foreground">{bagSize.description}</p>
+                    )}
+                    {bagSize.capacity_gallons && (
+                      <p className="text-xs text-muted-foreground">Capacity: {bagSize.capacity_gallons} gallons</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold">${(bagSize.price_cents / 100).toFixed(2)}</p>
+                    <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                      {selectedBagSizeId === bagSize.id && <div className="w-2 h-2 bg-primary rounded-full" />}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
       {/* Bag Count */}
       <div className="space-y-2">
-        <Label htmlFor="bag-count">Number of Bags ($35 each)</Label>
+        <Label htmlFor="bag-count">Number of Bags</Label>
         <Select 
           value={formData.bagCount.toString()} 
           onValueChange={(value) => handleInputChange('bagCount', parseInt(value))}
@@ -734,11 +799,15 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {[1,2,3,4,5].map(num => (
-              <SelectItem key={num} value={num.toString()}>
-                {num} bag{num > 1 ? 's' : ''} - ${(num * 35).toFixed(2)}
-              </SelectItem>
-            ))}
+            {[1,2,3,4,5].map(num => {
+              const selectedBagSize = bagSizes.find(b => b.id === selectedBagSizeId);
+              const price = selectedBagSize ? selectedBagSize.price_cents * num / 100 : 0;
+              return (
+                <SelectItem key={num} value={num.toString()}>
+                  {num} bag{num > 1 ? 's' : ''} - ${price.toFixed(2)}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>
@@ -895,7 +964,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
           </div>
           <div className="flex justify-between">
             <span>Number of Bags:</span>
-            <span>{formData.bagCount} × $35.00 = ${(formData.bagCount * 35).toFixed(2)}</span>
+            <span>{formData.bagCount} × ${bagSizes.find(b => b.id === selectedBagSizeId)?.price_cents ? (bagSizes.find(b => b.id === selectedBagSizeId)!.price_cents / 100).toFixed(2) : '0.00'} = ${bagSizes.find(b => b.id === selectedBagSizeId) ? (bagSizes.find(b => b.id === selectedBagSizeId)!.price_cents * formData.bagCount / 100).toFixed(2) : '0.00'}</span>
           </div>
           {isExpress && (
             <div className="flex justify-between">
