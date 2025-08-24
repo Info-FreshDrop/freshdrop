@@ -92,10 +92,11 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     loadData();
     loadBagSizes();
     loadReferralCash();
-    // Reload data every 30 seconds to ensure current pricing
+    // Reload data more frequently to ensure current pricing
     const interval = setInterval(() => {
       loadBagSizes();
-    }, 30000);
+      console.log('Auto-refreshing bag sizes...');
+    }, 10000); // Every 10 seconds for testing
     return () => clearInterval(interval);
   }, []);
 
@@ -142,18 +143,25 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
 
   const loadBagSizes = async () => {
     try {
+      console.log('Loading bag sizes...');
       const { data, error } = await supabase
         .from('bag_sizes')
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading bag sizes:', error);
+        throw error;
+      }
+      
+      console.log('Bag sizes loaded:', data);
       setBagSizes(data || []);
       
-      // Auto-select first bag size if available
+      // Auto-select first bag size if available and none selected
       if (data && data.length > 0 && !selectedBagSizeId) {
         setSelectedBagSizeId(data[0].id);
+        console.log('Auto-selected bag size:', data[0].id);
       }
     } catch (error) {
       console.error('Error loading bag sizes:', error);
@@ -309,9 +317,9 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
 
   const getMinPickupDate = () => {
     const now = new Date();
-    // Set minimum to tomorrow if it's late in the day, or today if early enough
+    // At 7:51 PM (19:51), we should require next day pickup
     const minDate = new Date();
-    if (now.getHours() >= 16) { // After 4 PM, minimum is tomorrow
+    if (now.getHours() >= 18) { // After 6 PM, minimum is next day
       minDate.setDate(now.getDate() + 1);
     }
     return minDate.toISOString().split('T')[0];
@@ -923,7 +931,8 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
   );
 
   const renderClothesShop = () => (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Shop Items Section */}
       <div className="text-center py-8">
         <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
         <h3 className="text-lg font-semibold mb-2">Add Shop Items (Optional)</h3>
@@ -942,6 +951,22 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
               <span>${((item.price_cents * item.quantity) / 100).toFixed(2)}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Pre-Payment Tip Selector - Show early so user can plan total cost */}
+      {calculateTotal() > 0 && (
+        <div className="space-y-4">
+          <hr className="my-4" />
+          <h3 className="text-lg font-semibold">Add Tip for Your Operator</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Show appreciation for excellent service (you can change this on the next step)
+          </p>
+          <PrePaymentTipSelector
+            subtotal={calculateTotal()}
+            onTipChange={setTipAmount}
+            selectedTip={tipAmount}
+          />
         </div>
       )}
     </div>
