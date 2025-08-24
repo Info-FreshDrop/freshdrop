@@ -66,3 +66,6 @@ verify_jwt = false
 
 [functions.notify-new-operator-application]
 verify_jwt = true
+
+[functions.operator-approval-notification]
+verify_jwt = true

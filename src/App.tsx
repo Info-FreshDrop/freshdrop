@@ -19,6 +19,8 @@ import TermsOfService from "./pages/TermsOfService";
 import Support from "./pages/Support";
 import { ProfileCompletionPrompt } from "./components/ProfileCompletionPrompt";
 import { useProfileCompletion } from "./hooks/useProfileCompletion";
+import { useOperatorOnboarding } from "./hooks/useOperatorOnboarding";
+import OperatorOnboardingModal from "./components/operator/OperatorOnboardingModal";
 
 import "./App.css";
 
@@ -27,6 +29,7 @@ const queryClient = new QueryClient();
 // Create a separate component that uses the profile completion hook
 function AppContent() {
   const { shouldShowPrompt, markPromptCompleted, dismissPrompt } = useProfileCompletion();
+  const { needsOnboarding, userRole, completeOnboarding } = useOperatorOnboarding();
 
   return (
     <>
@@ -44,12 +47,22 @@ function AppContent() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       
+      {/* Operator Onboarding Modal */}
+      {userRole === 'operator' && (
+        <OperatorOnboardingModal
+          isOpen={needsOnboarding}
+          onComplete={completeOnboarding}
+        />
+      )}
+      
       {/* Profile Completion Prompt */}
-      <ProfileCompletionPrompt
-        isOpen={shouldShowPrompt}
-        onComplete={markPromptCompleted}
-        onSkip={dismissPrompt}
-      />
+      {!needsOnboarding && (
+        <ProfileCompletionPrompt
+          isOpen={shouldShowPrompt}
+          onComplete={markPromptCompleted}
+          onSkip={dismissPrompt}
+        />
+      )}
     </>
   );
 }
