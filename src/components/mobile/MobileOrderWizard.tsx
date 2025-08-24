@@ -538,7 +538,19 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
         }
       }
 
+      
       const totalAmountCents = Math.max(0, baseTotal - discountAmountCents);
+      
+      // ADD TIP TO THE FINAL TOTAL FOR STRIPE PAYMENT
+      const finalAmountWithTip = totalAmountCents + tipAmount;
+      
+      console.log('Payment calculation:', {
+        baseTotal,
+        discountAmountCents,
+        totalAmountCents,
+        tipAmount,
+        finalAmountWithTip
+      });
 
       const orderData = {
         pickup_type: orderType,
@@ -568,8 +580,16 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
 
       // Create order and payment intent
       console.log('Creating order with payment data:', orderData);
+      console.log('Final amount with tip for Stripe:', finalAmountWithTip);
+      
       const { data, error } = await supabase.functions.invoke('create-order-with-payment', {
-        body: { orderData }
+        body: { 
+          orderData: {
+            ...orderData,
+            total_amount_cents: finalAmountWithTip // Include tip in Stripe payment
+          },
+          tipAmount // Pass tip separately for order tracking
+        }
       });
 
       console.log('Payment response:', { data, error });
