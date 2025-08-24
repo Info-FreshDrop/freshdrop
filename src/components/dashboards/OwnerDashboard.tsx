@@ -332,7 +332,36 @@ export function OwnerDashboard() {
   }
 
   if (currentView === 'notification-testing') {
-    return <NotificationTesting />;
+    const TestOperatorNotifications = lazy(() => import('@/components/admin/TestOperatorNotifications'));
+    return (
+      <div className="min-h-screen bg-gradient-wave">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentView('dashboard')}
+              className="p-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Test Operator Notifications
+            </h1>
+            <p className="text-muted-foreground">
+              Test the new template system for operator notifications
+            </p>
+          </div>
+
+          <Suspense fallback={<div>Loading...</div>}>
+            <TestOperatorNotifications />
+          </Suspense>
+        </div>
+      </div>
+    );
   }
 
   if (currentView === 'operator-payments') {

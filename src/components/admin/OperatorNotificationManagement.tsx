@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ArrowLeft, Edit, Eye, RotateCcw, Save } from 'lucide-react';
@@ -293,6 +293,9 @@ FreshDrop Team`
                           <DialogContent className="max-w-2xl">
                             <DialogHeader>
                               <DialogTitle>Preview {template.channel.toUpperCase()} Template</DialogTitle>
+                              <DialogDescription>
+                                See how this template will look when sent to operators
+                              </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
                               <div>
@@ -333,6 +336,9 @@ FreshDrop Team`
                           <DialogContent className="max-w-2xl">
                             <DialogHeader>
                               <DialogTitle>Edit {template.channel.toUpperCase()} Template</DialogTitle>
+                              <DialogDescription>
+                                Customize the notification template sent to operators
+                              </DialogDescription>
                             </DialogHeader>
                             {editingTemplate && editingTemplate.id === template.id && (
                               <div className="space-y-4">
