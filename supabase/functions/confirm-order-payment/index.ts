@@ -72,7 +72,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Update order status to unclaimed (ready for operator pickup)
+    // Update order status from pending_payment to unclaimed (ready for operator pickup)
     const { data: updatedOrder, error: updateError } = await supabaseService
       .from("orders")
         .update({ 
@@ -81,6 +81,7 @@ serve(async (req) => {
         })
       .eq('id', orderId)
       .eq('stripe_payment_intent_id', paymentIntentId)
+      .eq('status', 'pending_payment') // Only update orders that are pending payment
       .select()
       .single();
 

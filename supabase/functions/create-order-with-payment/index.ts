@@ -100,7 +100,7 @@ serve(async (req) => {
       dry_temp_preference_id: orderData.dry_temp_preference_id,
       special_instructions: orderData.special_instructions,
       items: orderData.items,
-      status: orderData.total_amount_cents === 0 ? 'placed' : 'placed', // Both free and paid orders start as 'placed'
+      status: orderData.total_amount_cents === 0 ? 'placed' : 'pending_payment', // Free orders are placed, paid orders need payment confirmation
       promo_code: orderData.promoCode,
       discount_amount_cents: (orderData.discount_amount_cents || 0) + (orderData.referral_cash_used || 0),
       total_amount_cents: orderData.total_amount_cents,
