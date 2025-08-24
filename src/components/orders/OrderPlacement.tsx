@@ -353,7 +353,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
     let total = formData.bagCount * 3500; // $35 per bag
     
     if (isExpress) {
-      total += 2000; // $20 express fee
+      total += 1500; // $15 express fee
     }
     
     // Add laundry preference costs
@@ -794,7 +794,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                       size="sm"
                       onClick={() => setIsExpress(!isExpress)}
                     >
-                      {isExpress ? "Selected" : "Add +$20"}
+                      {isExpress ? "Selected" : "Add +$15"}
                     </Button>
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -1067,7 +1067,7 @@ export function OrderPlacement({ onBack }: OrderPlacementProps) {
                 {isExpress && (
                   <div className="flex justify-between">
                     <span>Express Service:</span>
-                    <span>$20.00</span>
+                    <span>$15.00</span>
                   </div>
                 )}
                 {formData.fragranceFree && (

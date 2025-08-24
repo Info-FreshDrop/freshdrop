@@ -16,6 +16,7 @@ import { stripePromise } from '@/lib/stripe';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
 import { LaundryInstructionsModal } from './LaundryInstructionsModal';
 import { ClothesShop } from "@/components/customer/ClothesShop";
+import { PrePaymentTipSelector } from "@/components/customer/PrePaymentTipSelector";
 import { 
   ArrowLeft,
   ArrowRight,
@@ -57,6 +58,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
   const [showInstructions, setShowInstructions] = useState(true);
   const [bagSizes, setBagSizes] = useState<any[]>([]);
   const [selectedBagSizeId, setSelectedBagSizeId] = useState<string>('');
+  const [tipAmount, setTipAmount] = useState(0);
   const [formData, setFormData] = useState({
     pickupAddress: '',
     deliveryAddress: '',
@@ -348,7 +350,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     let total = selectedBagSize ? selectedBagSize.price_cents * formData.bagCount : 0;
     
     if (isExpress) {
-      total += 2000; // $20 express fee
+      total += 1500; // $15 express fee
     }
     
     // Add laundry preference costs
@@ -373,6 +375,10 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
     }
     
     return total;
+  };
+
+  const calculateTotalWithTip = () => {
+    return calculateTotal() + tipAmount;
   };
 
   const getAvailableReferralMoney = async () => {
@@ -489,7 +495,8 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
         bag_count: formData.bagCount,
         bag_size_id: selectedBagSizeId,
         items: [{ time_window: formData.timeWindow, shop_items: selectedShopItems }],
-        total_amount_cents: calculateTotal(),
+        total_amount_cents: calculateTotalWithTip(),
+        tip_amount_cents: tipAmount,
         referral_cash_used: formData.useReferralCash ? Math.min(availableReferralCash, calculateTotal() + availableReferralCash) : 0,
         soap_preference_id: formData.soapPreference,
         wash_temp_preference_id: formData.washTempPreference,
@@ -818,7 +825,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-medium">Express Service (+$20)</h4>
+                <h4 className="font-medium">Express Service (+$15)</h4>
                 <p className="text-sm text-muted-foreground">Same-day service (order by 12 PM)</p>
               </div>
               <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
@@ -926,7 +933,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">Complete Your Payment</h3>
             <p className="text-muted-foreground mb-4">
-              Total: ${(calculateTotal() / 100).toFixed(2)}
+              Total: ${(calculateTotalWithTip() / 100).toFixed(2)}
             </p>
           </div>
           
@@ -969,7 +976,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
           {isExpress && (
             <div className="flex justify-between">
               <span>Express Service:</span>
-              <span>$20.00</span>
+              <span>$15.00</span>
             </div>
           )}
           {selectedShopItems.map((item, index) => (
@@ -1039,6 +1046,13 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
           />
         </div>
 
+        {/* Pre-Payment Tip Selector */}
+        <PrePaymentTipSelector
+          subtotal={calculateTotal()}
+          onTipChange={setTipAmount}
+          selectedTip={tipAmount}
+        />
+
         <hr className="my-4" />
         
         {/* Order Total Breakdown */}
@@ -1047,6 +1061,12 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
             <span>Subtotal:</span>
             <span>${((calculateTotal() + (formData.useReferralCash ? availableReferralCash : 0)) / 100).toFixed(2)}</span>
           </div>
+          {tipAmount > 0 && (
+            <div className="flex justify-between text-primary">
+              <span>Tip:</span>
+              <span>+${(tipAmount / 100).toFixed(2)}</span>
+            </div>
+          )}
           {formData.useReferralCash && availableReferralCash > 0 && (
             <div className="flex justify-between text-green-600">
               <span>Referral Cash:</span>
@@ -1056,7 +1076,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
           <hr className="my-2" />
           <div className="flex justify-between font-bold text-lg">
             <span>Total:</span>
-            <span>${(calculateTotal() / 100).toFixed(2)}</span>
+            <span>${(calculateTotalWithTip() / 100).toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -1136,7 +1156,7 @@ export function OrderPlacementWizard({ onBack }: OrderPlacementWizardProps) {
               disabled={isLoading}
               className="flex-1"
             >
-              {isLoading ? "Processing..." : `Pay Now - $${(calculateTotal() / 100).toFixed(2)}`}
+              {isLoading ? "Processing..." : `Pay Now - $${(calculateTotalWithTip() / 100).toFixed(2)}`}
             </Button>
           )}
         </div>
