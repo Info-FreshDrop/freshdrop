@@ -247,7 +247,10 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
           throw new Error('Could not fetch application details');
         }
 
-        // Create user account with email and phone as password
+        let userId: string;
+        let userAlreadyExists = false;
+
+        // Try to create user account with email and phone as password
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: application.email,
           password: application.phone, // Use phone number as password
@@ -261,29 +264,65 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
           }
         });
 
-        if (authError) throw authError;
+        if (authError) {
+          if (authError.message.includes('User already registered') || authError.message.includes('already_exists')) {
+            // User already exists, we need to handle this differently
+            console.log('User already exists with email:', application.email);
+            
+            // For now, show a clear error message to the admin
+            throw new Error(`A user with email "${application.email}" already exists in the system. This could mean:
+            
+1. They already have an account - ask them to log in and check if they need operator access
+2. A previous approval attempt partially succeeded - check the operators list
+3. They signed up but didn't complete operator onboarding
 
-        if (!authData.user) {
-          throw new Error('Failed to create user account');
+Please verify their status before approving again, or contact support to resolve this conflict.`);
+          } else {
+            throw authError;
+          }
+        } else {
+          if (!authData.user) {
+            throw new Error('Failed to create user account');
+          }
+          userId = authData.user.id;
+          console.log('Created new user:', userId);
         }
 
-        // Assign operator role using secure function
+        // Check if user already has a washer record
+        const { data: existingWasher, error: washerCheckError } = await supabase
+          .from('washers')
+          .select('id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (washerCheckError) {
+          throw new Error(`Failed to check existing washer record: ${washerCheckError.message}`);
+        }
+
+        if (existingWasher) {
+          throw new Error(`User ${application.email} is already registered as an operator. Please check the operators list.`);
+        }
+
+        // Assign operator role using secure function (only if not already assigned)
         const { data: roleSuccess, error: roleError } = await supabase.rpc('change_user_role', {
-          target_user_id: authData.user.id,
+          target_user_id: userId,
           new_role: 'operator',
           reason: `Approved application ${applicationId} - auto-assigned operator role`
         });
 
         if (roleError) {
           console.error('Role assignment error:', roleError);
-          throw new Error(`Failed to assign operator role: ${roleError.message}`);
+          // Don't throw error if role already exists
+          if (!roleError.message.includes('already') && !roleError.message.includes('exists')) {
+            throw new Error(`Failed to assign operator role: ${roleError.message}`);
+          }
         }
 
         // Create operator record in washers table
         const { error: washerError } = await supabase
           .from('washers')
           .insert([{
-            user_id: authData.user.id,
+            user_id: userId,
             approval_status: 'approved',
             is_active: true,
             zip_codes: [application.zip_code], // Use their zip code
@@ -292,9 +331,13 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
 
         if (washerError) throw washerError;
 
+        const successMessage = userAlreadyExists 
+          ? `Application approved! ${application.first_name} ${application.last_name} (existing user) is now an operator. They can sign in with their existing credentials.`
+          : `Application approved! ${application.first_name} ${application.last_name} is now an operator. They can sign in with email: ${application.email} and password: ${application.phone}`;
+
         toast({
           title: "Application Approved!",
-          description: `${application.first_name} ${application.last_name} is now an operator. They can sign in with email: ${application.email} and password: ${application.phone}`,
+          description: successMessage,
         });
       }
 
