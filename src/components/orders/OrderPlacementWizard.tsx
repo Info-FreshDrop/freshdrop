@@ -31,7 +31,8 @@ import {
   Package,
   ShoppingBag,
   CreditCard,
-  Settings
+  Settings,
+  DollarSign
 } from "lucide-react";
 import { sanitizeInput, validateZipCode } from "@/utils/inputValidation";
 
