@@ -191,6 +191,8 @@ serve(async (req) => {
             html: emailBody,
           });
 
+          console.log("Email response:", emailResponse);
+
           if (emailResponse.error) {
             console.error('Email sending error:', emailResponse.error);
             await supabase.from('notification_logs').insert({

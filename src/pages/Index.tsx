@@ -1,7 +1,6 @@
 import { Homepage } from "@/components/Homepage";
 import { MobileApp } from "@/components/mobile/MobileApp";
 import { AppStoreAssets } from "@/components/mobile/AppStoreAssets";
-import { TestEmail } from "@/components/TestEmail";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect } from "react";
@@ -46,13 +45,6 @@ const Index = () => {
               Dashboard
             </button>
           </Link>
-        </div>
-      )}
-      
-      {/* Test Email Button for Debugging */}
-      {user && userRole === 'owner' && (
-        <div className="absolute top-16 right-4 z-10">
-          <TestEmail />
         </div>
       )}
       
