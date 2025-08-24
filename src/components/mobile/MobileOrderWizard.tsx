@@ -840,18 +840,33 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
                 <Input
                   type="date"
                   value={formData.pickupDate}
-                  onChange={(e) => handleInputChange('pickupDate', e.target.value)}
+                  onChange={(e) => {
+                    console.log('Date selected:', e.target.value);
+                    console.log('Current date:', new Date().toISOString().split('T')[0]);
+                    handleInputChange('pickupDate', e.target.value);
+                  }}
                   min={(() => {
                     const now = new Date();
-                    const minDate = new Date();
-                    // After 6 PM, minimum is next day
-                    if (now.getHours() >= 18) {
-                      minDate.setDate(now.getDate() + 1);
-                    } else {
-                      // Need at least 2 hours advance notice
-                      minDate.setTime(now.getTime() + 2 * 60 * 60 * 1000);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Reset to start of day
+                    const currentHour = now.getHours();
+                    
+                    console.log('Current hour:', currentHour);
+                    console.log('Current date/time:', now.toISOString());
+                    
+                    // If it's after 6 PM, require next day pickup  
+                    if (currentHour >= 18) {
+                      const tomorrow = new Date(today);
+                      tomorrow.setDate(today.getDate() + 1);
+                      const minDate = tomorrow.toISOString().split('T')[0];
+                      console.log('After 6 PM - min date (tomorrow):', minDate);
+                      return minDate;
                     }
-                    return minDate.toISOString().split('T')[0];
+                    
+                    // Before 6 PM, allow today but not past dates
+                    const minDate = today.toISOString().split('T')[0];
+                    console.log('Before 6 PM - min date (today):', minDate);
+                    return minDate;
                   })()}
                   className="h-12"
                   required
@@ -1193,21 +1208,7 @@ export function MobileOrderWizard({ onBack }: MobileOrderWizardProps) {
               </div>
             )}
 
-            {/* Pre-Payment Tip Selector */}
-            {calculateTotal() > 0 && (
-              <div className="space-y-4 mt-6">
-                <hr className="my-4" />
-                <h3 className="text-lg font-semibold">Add Tip for Your Operator</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Show appreciation for excellent service (you can change this on the next step)
-                </p>
-                <PrePaymentTipSelector
-                  subtotal={calculateTotal()}
-                  onTipChange={setTipAmount}
-                  selectedTip={tipAmount}
-                />
-              </div>
-            )}
+            {/* Tip removed from Step 3 - only available on Step 4 */}
           </div>
         );
 
