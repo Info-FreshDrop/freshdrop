@@ -1062,6 +1062,39 @@ export type Database = {
           },
         ]
       }
+      operator_notification_templates: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          is_active: boolean
+          message: string
+          notification_type: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message: string
+          notification_type: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          notification_type?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_content: {
         Row: {
           content_key: string

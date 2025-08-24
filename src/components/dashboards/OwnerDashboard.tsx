@@ -18,7 +18,9 @@ import { OperatorPaymentManagement } from "@/components/admin/OperatorPaymentMan
 import { BusinessCutManagement } from "@/components/admin/BusinessCutManagement";
 import { NotificationTesting } from "@/components/admin/NotificationTesting";
 import NotificationTemplateManagement from "@/components/admin/NotificationTemplateManagement";
+import { NotificationSystem } from "@/components/admin/NotificationSystem";
 import { CustomerManagement } from "@/components/admin/CustomerManagement";
+import { lazy, Suspense } from "react";
 import { AuthForms } from "@/components/AuthForms";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -40,7 +42,7 @@ import {
 export function OwnerDashboard() {
   const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'order-history' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'customer-management' | 'operator-payments' | 'business-cut'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'operators' | 'service-areas' | 'shop' | 'analytics' | 'promo-codes' | 'promo-analytics' | 'live-orders' | 'order-history' | 'all-operators' | 'live-order-management' | 'order-issues' | 'workload-balance' | 'user-management' | 'notifications' | 'notification-templates' | 'notification-system' | 'operator-notifications' | 'notification-testing' | 'customer-management' | 'operator-payments' | 'business-cut'>('dashboard');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [liveOrders, setLiveOrders] = useState<any[]>([]);
   const [completedOrders, setCompletedOrders] = useState<any[]>([]);
@@ -314,6 +316,23 @@ export function OwnerDashboard() {
 
   if (currentView === 'notification-templates') {
     return <NotificationTemplateManagement onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'operator-notifications') {
+    const OperatorNotificationManagement = lazy(() => import('@/components/admin/OperatorNotificationManagement'));
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <OperatorNotificationManagement onBack={() => setCurrentView('dashboard')} />
+      </Suspense>
+    );
+  }
+
+  if (currentView === 'notification-system') {
+    return <NotificationSystem onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'notification-testing') {
+    return <NotificationTesting />;
   }
 
   if (currentView === 'operator-payments') {
@@ -889,15 +908,18 @@ export function OwnerDashboard() {
             <CardContent>
               <div className="space-y-2">
                 <Button 
-                  variant="hero" 
+                  variant="outline" 
                   className="w-full"
                   onClick={() => setCurrentView('notification-templates')}
                 >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Edit Templates
+                  Customer Templates
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Preview Messages
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setCurrentView('operator-notifications')}
+                >
+                  Operator Templates
                 </Button>
               </div>
             </CardContent>
