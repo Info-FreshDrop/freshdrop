@@ -202,16 +202,18 @@ serve(async (req) => {
               status: 'failed',
               message_content: emailBody,
               recipient: operator.profiles.email,
-              error_message: emailResponse.error.message
+              error_message: JSON.stringify(emailResponse.error)
             });
           } else {
+            console.log('Email sent successfully:', emailResponse.data);
             await supabase.from('notification_logs').insert({
               notification_type: 'email',
               customer_id: operator.user_id,
               order_id: orderId,
               status: 'sent',
               message_content: emailBody,
-              recipient: operator.profiles.email
+              recipient: operator.profiles.email,
+              sent_at: new Date().toISOString()
             });
             notifications.push('email');
             console.log(`Email sent to operator ${operator.user_id}: ${operator.profiles.email}`);
