@@ -41,58 +41,114 @@ const handler = async (req: Request): Promise<Response> => {
     // Initialize Supabase client with service role
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Create auth user account with phone number as temporary password
-    console.log("Creating auth user account...");
-    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-      email: approval_data.email,
-      password: approval_data.phone, // Phone number as initial password
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        first_name: approval_data.first_name,
-        last_name: approval_data.last_name,
-        phone: approval_data.phone,
-        application_id: approval_data.application_id,
-        needs_onboarding: true
-      }
-    });
-
-    if (authError) {
-      console.error("Auth user creation failed:", authError);
-      return new Response(
-        JSON.stringify({ error: "Failed to create user account", details: authError }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
+    // First, check if user already exists
+    console.log("Checking if user already exists...");
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const existingUser = existingUsers.users?.find(user => user.email === approval_data.email);
+    
+    let userId: string;
+    
+    if (existingUser) {
+      console.log("User already exists:", existingUser.id);
+      userId = existingUser.id;
+      
+      // Update existing user metadata
+      const { error: updateError } = await supabase.auth.admin.updateUserById(existingUser.id, {
+        user_metadata: {
+          ...existingUser.user_metadata,
+          first_name: approval_data.first_name,
+          last_name: approval_data.last_name,
+          phone: approval_data.phone,
+          application_id: approval_data.application_id,
+          needs_onboarding: true
         }
-      );
+      });
+      
+      if (updateError) {
+        console.error("Failed to update existing user metadata:", updateError);
+      } else {
+        console.log("Updated existing user metadata successfully");
+      }
+    } else {
+      // Create new auth user account with phone number as temporary password
+      console.log("Creating new auth user account...");
+      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+        email: approval_data.email,
+        password: approval_data.phone, // Phone number as initial password
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          first_name: approval_data.first_name,
+          last_name: approval_data.last_name,
+          phone: approval_data.phone,
+          application_id: approval_data.application_id,
+          needs_onboarding: true
+        }
+      });
+
+      if (authError) {
+        console.error("Auth user creation failed:", authError);
+        return new Response(
+          JSON.stringify({ error: "Failed to create user account", details: authError }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+
+      userId = authUser.user!.id;
+      console.log("New auth user created successfully:", userId);
     }
 
-    console.log("Auth user created successfully:", authUser.user?.id);
-
-    // Add operator role
-    const { error: roleError } = await supabase
+    // Add operator role (check if not already exists)
+    const { data: existingRole } = await supabase
       .from('user_roles')
-      .insert({
-        user_id: authUser.user!.id,
-        role: 'operator'
-      });
+      .select('id')
+      .eq('user_id', userId)
+      .eq('role', 'operator')
+      .single();
 
-    if (roleError) {
-      console.error("Role assignment failed:", roleError);
+    if (!existingRole) {
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: 'operator'
+        });
+
+      if (roleError) {
+        console.error("Role assignment failed:", roleError);
+      } else {
+        console.log("Operator role assigned successfully");
+      }
+    } else {
+      console.log("User already has operator role");
     }
 
-    // Create washer profile
-    const { error: washerError } = await supabase
+    // Create washer profile (check if not already exists)
+    const { data: existingWasher } = await supabase
       .from('washers')
-      .insert({
-        user_id: authUser.user!.id,
-        zip_codes: [approval_data.zip_code],
-        is_active: true,
-        is_verified: false // Will be set to true after onboarding completion
-      });
+      .select('id')
+      .eq('user_id', userId)
+      .single();
 
-    if (washerError) {
-      console.error("Washer profile creation failed:", washerError);
+    if (!existingWasher) {
+      const { error: washerError } = await supabase
+        .from('washers')
+        .insert({
+          user_id: userId,
+          zip_codes: [approval_data.zip_code],
+          is_active: true,
+          is_verified: false // Will be set to true after onboarding completion
+        });
+
+      if (washerError) {
+        console.error("Washer profile creation failed:", washerError);
+      } else {
+        console.log("Washer profile created successfully");
+      }
+    } else {
+      console.log("User already has washer profile");
     }
 
     const emailSubject = `🎉 Congratulations! Your FreshDrop Application Has Been Approved`;
@@ -191,7 +247,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ 
         success: true, 
         message: "Operator approved and notification sent",
-        user_id: authUser.user?.id,
+        user_id: userId,
         email_id: emailResponse.data?.id 
       }),
       {
