@@ -28,6 +28,7 @@ interface Operator {
   signup_token: string | null;
   signup_expires_at: string | null;
   created_at: string;
+  needs_onboarding?: boolean;
   profiles?: {
     first_name: string;
     last_name: string;
@@ -128,7 +129,7 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
 
       if (operatorsError) throw operatorsError;
 
-      // Load profiles separately and map them
+      // Load profiles separately and map them, including user metadata
       const operatorsWithProfiles = await Promise.all(
         (operatorsData || []).map(async (operator) => {
           if (operator.user_id && operator.user_id !== '00000000-0000-0000-0000-000000000000') {
@@ -138,9 +139,16 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
               .eq('user_id', operator.user_id)
               .maybeSingle();
             
-            return { ...operator, profiles: profileData };
+            // Get user metadata to check onboarding status
+            const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(operator.user_id);
+            
+            return { 
+              ...operator, 
+              profiles: profileData,
+              needs_onboarding: user?.user_metadata?.needs_onboarding || false
+            };
           }
-          return { ...operator, profiles: null };
+          return { ...operator, profiles: null, needs_onboarding: false };
         })
       );
 
@@ -455,7 +463,8 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
   const rejectedApplications = applications.filter(app => app.status === 'rejected');
   const rejectedCount = rejectedApplications.length;
   const pendingOperators = operators.filter(op => op.approval_status === 'pending');
-  const activeOperators = operators.filter(op => op.approval_status === 'approved');
+  const onboardingOperators = operators.filter(op => op.approval_status === 'approved' && op.needs_onboarding);
+  const activeOperators = operators.filter(op => op.approval_status === 'approved' && !op.needs_onboarding);
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
@@ -787,6 +796,46 @@ export const OperatorManagement: React.FC<OperatorManagementProps> = ({ onBack }
                             <UserX className="h-4 w-4 mr-1" />
                             Reject
                           </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Pending Onboarding */}
+            {onboardingOperators.length > 0 && (
+              <Card className="border-blue-200 bg-blue-50 mb-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-800">
+                    <Clock className="h-5 w-5" />
+                    Pending Onboarding ({onboardingOperators.length})
+                  </CardTitle>
+                  <CardDescription>Operators who are approved but haven't completed onboarding yet</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {onboardingOperators.map((operator) => (
+                      <div key={operator.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                        <div>
+                          <h4 className="font-medium">
+                            {operator.profiles ? 
+                              `${operator.profiles.first_name} ${operator.profiles.last_name}` : 
+                              'Pending Name Entry'
+                            }
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            Service Areas: {operator.zip_codes?.join(', ') || 'None'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Approved: {new Date(operator.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-blue-100 text-blue-800 border-blue-300">
+                            Waiting for Onboarding
+                          </Badge>
                         </div>
                       </div>
                     ))}

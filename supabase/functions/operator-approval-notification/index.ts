@@ -183,7 +183,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${supabaseUrl.replace('supabase.co', 'lovable.app')}" 
+            <a href="${supabaseUrl.replace('supabase.co', 'lovable.app')}/auth" 
                style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
               Complete Your Onboarding →
             </a>
