@@ -16,6 +16,7 @@ import OperatorSignup from "./pages/OperatorSignup";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import Auth from "./pages/Auth";
 import Support from "./pages/Support";
 import { ProfileCompletionPrompt } from "./components/ProfileCompletionPrompt";
 import { useProfileCompletion } from "./hooks/useProfileCompletion";
@@ -35,6 +36,7 @@ function AppContent() {
     <>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
         <Route path="/owner-dashboard" element={<OwnerDashboard />} />
         <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
@@ -71,17 +73,13 @@ const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <SecurityProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <AppContent />
-              </BrowserRouter>
-            </TooltipProvider>
-          </SecurityProvider>
-        </AuthProvider>
+        <SecurityProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <AppContent />
+          </TooltipProvider>
+        </SecurityProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
