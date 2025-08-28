@@ -224,7 +224,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending approval email to:", approval_data.email);
 
     const emailResponse = await resend.emails.send({
-      from: "FreshDrop Team <welcome@freshdroplaundry.com>",
+      from: "FreshDrop Team <onboarding@resend.dev>",
       to: [approval_data.email],
       subject: emailSubject,
       html: emailBody,
