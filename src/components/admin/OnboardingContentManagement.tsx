@@ -306,6 +306,82 @@ export default function OnboardingContentManagement() {
                 />
               </div>
 
+              {/* Media Upload Section - Always Available */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">🎥🖼️ Add Media (Optional)</Label>
+                
+                <div className="bg-muted/30 p-4 rounded-lg space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm">Upload Video or Image</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={item.media_url || ''}
+                        onChange={(e) => setNewItem(prev => ({ ...prev, media_url: e.target.value }))}
+                        placeholder="Paste YouTube URL, video URL, or image URL..."
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="shrink-0"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploading ? 'Uploading...' : 'Upload File'}
+                      </Button>
+                    </div>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="video/*,image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleFileUpload(file, 'media');
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Upload videos (MP4, etc.) or images (JPG, PNG, etc.), or paste YouTube URLs
+                    </p>
+                  </div>
+
+                  {/* Media Preview */}
+                  {item.media_url && (
+                    <div className="border rounded-lg p-3">
+                      <Label className="text-sm font-medium">Preview:</Label>
+                      <div className="mt-2">
+                        {isYouTubeUrl(item.media_url) ? (
+                          <iframe
+                            src={getYouTubeEmbedUrl(item.media_url)}
+                            width="100%"
+                            height="200"
+                            frameBorder="0"
+                            allowFullScreen
+                            className="rounded"
+                          />
+                        ) : item.media_url.match(/\.(mp4|webm|ogg)$/i) ? (
+                          <video
+                            src={item.media_url}
+                            controls
+                            className="w-full max-h-48 rounded"
+                          />
+                        ) : (
+                          <img
+                            src={item.media_url}
+                            alt="Preview"
+                            className="max-h-48 w-auto rounded"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Links Section */}
               <div className="space-y-2">
                 <Label className="text-base font-semibold">🔗 Add Links</Label>
@@ -321,95 +397,6 @@ export default function OnboardingContentManagement() {
                   </p>
                 </div>
               </div>
-
-              {/* Media Upload Section */}
-              {(item.section_type === 'video' || item.section_type === 'image') && (
-                <div className="space-y-4">
-                  <Label className="text-base font-semibold">
-                    {item.section_type === 'video' ? '🎥 Video Content' : '🖼️ Image Content'}
-                  </Label>
-                  
-                  <div className="bg-muted/30 p-4 rounded-lg space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm">
-                        {item.section_type === 'video' ? 'Video URL or Upload' : 'Image URL or Upload'}
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={item.media_url || ''}
-                          onChange={(e) => setNewItem(prev => ({ ...prev, media_url: e.target.value }))}
-                          placeholder={item.section_type === 'video' 
-                            ? "Paste YouTube URL or video file URL..." 
-                            : "Paste image URL..."}
-                          className="flex-1"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={uploading}
-                          className="shrink-0"
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          {uploading ? 'Uploading...' : 'Upload File'}
-                        </Button>
-                      </div>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept={item.section_type === 'video' ? "video/*" : "image/*"}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            handleFileUpload(file, item.section_type!);
-                          }
-                        }}
-                        className="hidden"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {item.section_type === 'video' 
-                          ? "You can paste a YouTube URL, upload a video file, or paste a direct video link"
-                          : "You can upload an image file or paste a direct image link"
-                        }
-                      </p>
-                    </div>
-
-                    {/* Media Preview */}
-                    {item.media_url && (
-                      <div className="border rounded-lg p-3">
-                        <Label className="text-sm font-medium">Preview:</Label>
-                        {item.section_type === 'video' && (
-                          <div className="mt-2">
-                            {isYouTubeUrl(item.media_url) ? (
-                              <iframe
-                                src={getYouTubeEmbedUrl(item.media_url)}
-                                width="100%"
-                                height="200"
-                                frameBorder="0"
-                                allowFullScreen
-                                className="rounded"
-                              />
-                            ) : (
-                              <video
-                                src={item.media_url}
-                                controls
-                                className="w-full max-h-48 rounded"
-                              />
-                            )}
-                          </div>
-                        )}
-                        {item.section_type === 'image' && (
-                          <img
-                            src={item.media_url}
-                            alt="Preview"
-                            className="mt-2 max-h-48 w-auto rounded"
-                          />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 

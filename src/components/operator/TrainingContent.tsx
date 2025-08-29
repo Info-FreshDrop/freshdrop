@@ -218,17 +218,42 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
       case 'text':
         return (
           <div className="space-y-4">
+            {/* Show media if available (videos, images, etc.) */}
             {currentModule.media_url && (
               <div className="rounded-lg overflow-hidden">
-                <img 
-                  src={currentModule.media_url} 
-                  alt={currentModule.title}
-                  className="w-full max-h-96 object-cover"
-                />
+                {isYouTubeUrl(currentModule.media_url) ? (
+                  <iframe
+                    src={getYouTubeEmbedUrl(currentModule.media_url)}
+                    className="w-full aspect-video"
+                    frameBorder="0"
+                    allowFullScreen
+                  />
+                ) : currentModule.media_url.match(/\.(mp4|webm|ogg)$/i) ? (
+                  <video 
+                    controls 
+                    className="w-full max-h-96"
+                    onEnded={handleVideoComplete}
+                  >
+                    <source src={currentModule.media_url} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <img 
+                    src={currentModule.media_url} 
+                    alt={currentModule.title}
+                    className="w-full max-h-96 object-cover"
+                  />
+                )}
               </div>
             )}
+            {/* Text content with working links */}
             <div className="prose max-w-none prose-a:text-primary prose-a:underline">
-              <div dangerouslySetInnerHTML={{ __html: currentModule.content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>') }} />
+              <div dangerouslySetInnerHTML={{ 
+                __html: currentModule.content.replace(
+                  /\[([^\]]+)\]\(([^)]+)\)/g, 
+                  '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80">$1</a>'
+                ) 
+              }} />
             </div>
             <Button onClick={() => markModuleComplete(currentModule.id)}>
               Mark as Read
@@ -325,20 +350,18 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
       {currentModule && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                {currentModule.section_type === 'video' && <Play className="h-5 w-5" />}
-                {currentModule.section_type === 'text' && <FileText className="h-5 w-5" />}
-                {currentModule.section_type === 'quiz' && <GraduationCap className="h-5 w-5" />}
-                {currentModule.title}
-              </CardTitle>
-              {completedModules.includes(currentModule.id) && (
-                <Badge className="bg-green-100 text-green-800">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Completed
-                </Badge>
-              )}
-            </div>
+            <CardTitle className="flex items-center gap-2">
+              {currentModule.section_type === 'video' && <Play className="h-5 w-5" />}
+              {currentModule.section_type === 'text' && <FileText className="h-5 w-5" />}
+              {currentModule.section_type === 'quiz' && <GraduationCap className="h-5 w-5" />}
+              {currentModule.title}
+            </CardTitle>
+            {completedModules.includes(currentModule.id) && (
+              <Badge className="bg-green-100 text-green-800 w-fit">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Completed
+              </Badge>
+            )}
           </CardHeader>
           <CardContent>
             {renderModuleContent()}
