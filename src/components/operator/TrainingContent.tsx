@@ -253,7 +253,7 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="text-center space-y-2">
         <GraduationCap className="h-12 w-12 mx-auto text-primary" />
         <h2 className="text-2xl font-semibold">Training & Certification</h2>
@@ -268,84 +268,90 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Module List */}
-        <div className="space-y-3">
-          {modules.map((module, index) => {
-            const isCompleted = completedModules.includes(module.id);
-            const isCurrent = currentModule?.id === module.id;
-            
-            return (
-              <Card 
-                key={module.id}
-                className={`cursor-pointer transition-all ${
-                  isCurrent ? 'ring-2 ring-primary' : ''
-                } ${isCompleted ? 'border-green-200 bg-green-50' : ''}`}
-                onClick={() => setCurrentModule(module)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${
-                      isCompleted 
-                        ? 'bg-green-100 text-green-600'
-                        : isCurrent 
-                        ? 'bg-primary/10 text-primary'
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {isCompleted ? (
-                        <CheckCircle className="h-4 w-4" />
-                      ) : module.section_type === 'video' ? (
-                        <Play className="h-4 w-4" />
-                      ) : module.section_type === 'quiz' ? (
-                        <GraduationCap className="h-4 w-4" />
-                      ) : (
-                        <FileText className="h-4 w-4" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-sm">{module.title}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {module.section_type}
-                        </Badge>
-                        {isCompleted && (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                            Complete
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+      {/* Navigation Controls */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={() => {
+            const currentIndex = modules.findIndex(m => m.id === currentModule?.id);
+            if (currentIndex > 0) {
+              setCurrentModule(modules[currentIndex - 1]);
+            }
+          }}
+          disabled={!currentModule || modules.findIndex(m => m.id === currentModule.id) === 0}
+        >
+          ← Previous
+        </Button>
+        
+        <div className="text-sm text-muted-foreground">
+          {currentModule ? modules.findIndex(m => m.id === currentModule.id) + 1 : 0} of {modules.length}
         </div>
+        
+        <Button
+          variant="outline"
+          onClick={() => {
+            const currentIndex = modules.findIndex(m => m.id === currentModule?.id);
+            if (currentIndex < modules.length - 1) {
+              setCurrentModule(modules[currentIndex + 1]);
+            }
+          }}
+          disabled={!currentModule || modules.findIndex(m => m.id === currentModule.id) === modules.length - 1}
+        >
+          Next →
+        </Button>
+      </div>
 
-        {/* Module Content */}
-        <div className="lg:col-span-3">
-          {currentModule && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {currentModule.section_type === 'video' && <Play className="h-5 w-5" />}
-                  {currentModule.section_type === 'text' && <FileText className="h-5 w-5" />}
-                  {currentModule.section_type === 'quiz' && <GraduationCap className="h-5 w-5" />}
-                  {currentModule.title}
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{currentModule.section_type}</Badge>
-                  {completedModules.includes(currentModule.id) && (
-                    <Badge className="bg-green-100 text-green-800">Completed</Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {renderModuleContent()}
-              </CardContent>
-            </Card>
-          )}
-        </div>
+      {/* Current Module Content */}
+      {currentModule && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                {currentModule.section_type === 'video' && <Play className="h-5 w-5" />}
+                {currentModule.section_type === 'text' && <FileText className="h-5 w-5" />}
+                {currentModule.section_type === 'quiz' && <GraduationCap className="h-5 w-5" />}
+                {currentModule.title}
+              </CardTitle>
+              {completedModules.includes(currentModule.id) && (
+                <Badge className="bg-green-100 text-green-800">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Completed
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {renderModuleContent()}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Module Progress Overview */}
+      <div className="grid grid-cols-5 gap-2 md:grid-cols-10">
+        {modules.map((module, index) => {
+          const isCompleted = completedModules.includes(module.id);
+          const isCurrent = currentModule?.id === module.id;
+          
+          return (
+            <button
+              key={module.id}
+              onClick={() => setCurrentModule(module)}
+              className={`aspect-square rounded-lg border-2 flex items-center justify-center text-sm font-medium transition-all ${
+                isCurrent 
+                  ? 'border-primary bg-primary text-primary-foreground' 
+                  : isCompleted 
+                  ? 'border-green-500 bg-green-100 text-green-700' 
+                  : 'border-muted bg-muted text-muted-foreground hover:border-muted-foreground'
+              }`}
+            >
+              {isCompleted ? (
+                <CheckCircle className="h-4 w-4" />
+              ) : (
+                index + 1
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {completedModules.length === modules.length && (
