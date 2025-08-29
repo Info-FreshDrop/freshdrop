@@ -275,10 +275,10 @@ export default function OnboardingContentManagement() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="text">Text Content</SelectItem>
-                <SelectItem value="video">Video Content</SelectItem>
-                <SelectItem value="image">Image Content</SelectItem>
-                <SelectItem value="quiz">Quiz Question</SelectItem>
+                <SelectItem value="text">📝 Text Content</SelectItem>
+                <SelectItem value="video">🎥 Video Content</SelectItem>
+                <SelectItem value="image">🖼️ Image Content</SelectItem>
+                <SelectItem value="quiz">❓ Quiz Question</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -293,97 +293,124 @@ export default function OnboardingContentManagement() {
           </div>
 
           {item.section_type !== 'quiz' && (
-            <>
-              <div>
-                <Label>Content</Label>
+            <div className="space-y-6">
+              {/* Text Content Section */}
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">📝 Text Content</Label>
                 <Textarea
                   value={item.content || ''}
                   onChange={(e) => setNewItem(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="Training content text - you can include links using standard markdown format [Link Text](URL)"
-                  rows={4}
+                  placeholder="Enter your training content here..."
+                  rows={6}
+                  className="min-h-[120px]"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  You can add links using markdown format: [Link Text](https://example.com)
-                </p>
               </div>
 
+              {/* Links Section */}
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">🔗 Add Links</Label>
+                <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Add clickable links in your content using this format:
+                  </p>
+                  <code className="text-xs bg-muted px-2 py-1 rounded">
+                    [Link Text](https://example.com)
+                  </code>
+                  <p className="text-xs text-muted-foreground">
+                    Example: [Visit our website](https://freshdroplaundry.com)
+                  </p>
+                </div>
+              </div>
+
+              {/* Media Upload Section */}
               {(item.section_type === 'video' || item.section_type === 'image') && (
                 <div className="space-y-4">
-                  <div>
-                    <Label>Media URL or Upload File</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={item.media_url || ''}
-                        onChange={(e) => setNewItem(prev => ({ ...prev, media_url: e.target.value }))}
-                        placeholder={item.section_type === 'video' ? "YouTube URL, video file URL, or upload" : "Image URL or upload"}
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        {uploading ? 'Uploading...' : 'Upload'}
-                      </Button>
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept={item.section_type === 'video' ? "video/*" : "image/*"}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          handleFileUpload(file, item.section_type!);
-                        }
-                      }}
-                      className="hidden"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {item.section_type === 'video' 
-                        ? "Paste YouTube URL, video file URL, or upload a video file"
-                        : "Paste image URL or upload an image file"
-                      }
-                    </p>
-                  </div>
-
-                  {/* Media Preview */}
-                  {item.media_url && (
-                    <div className="border rounded-lg p-4">
-                      <Label className="text-sm font-medium">Preview:</Label>
-                      {item.section_type === 'video' && (
-                        <div className="mt-2">
-                          {isYouTubeUrl(item.media_url) ? (
-                            <iframe
-                              src={getYouTubeEmbedUrl(item.media_url)}
-                              width="100%"
-                              height="200"
-                              frameBorder="0"
-                              allowFullScreen
-                              className="rounded"
-                            />
-                          ) : (
-                            <video
-                              src={item.media_url}
-                              controls
-                              className="w-full max-h-48 rounded"
-                            />
-                          )}
-                        </div>
-                      )}
-                      {item.section_type === 'image' && (
-                        <img
-                          src={item.media_url}
-                          alt="Preview"
-                          className="mt-2 max-h-48 w-auto rounded"
+                  <Label className="text-base font-semibold">
+                    {item.section_type === 'video' ? '🎥 Video Content' : '🖼️ Image Content'}
+                  </Label>
+                  
+                  <div className="bg-muted/30 p-4 rounded-lg space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm">
+                        {item.section_type === 'video' ? 'Video URL or Upload' : 'Image URL or Upload'}
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={item.media_url || ''}
+                          onChange={(e) => setNewItem(prev => ({ ...prev, media_url: e.target.value }))}
+                          placeholder={item.section_type === 'video' 
+                            ? "Paste YouTube URL or video file URL..." 
+                            : "Paste image URL..."}
+                          className="flex-1"
                         />
-                      )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading}
+                          className="shrink-0"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          {uploading ? 'Uploading...' : 'Upload File'}
+                        </Button>
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept={item.section_type === 'video' ? "video/*" : "image/*"}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleFileUpload(file, item.section_type!);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {item.section_type === 'video' 
+                          ? "You can paste a YouTube URL, upload a video file, or paste a direct video link"
+                          : "You can upload an image file or paste a direct image link"
+                        }
+                      </p>
                     </div>
-                  )}
+
+                    {/* Media Preview */}
+                    {item.media_url && (
+                      <div className="border rounded-lg p-3">
+                        <Label className="text-sm font-medium">Preview:</Label>
+                        {item.section_type === 'video' && (
+                          <div className="mt-2">
+                            {isYouTubeUrl(item.media_url) ? (
+                              <iframe
+                                src={getYouTubeEmbedUrl(item.media_url)}
+                                width="100%"
+                                height="200"
+                                frameBorder="0"
+                                allowFullScreen
+                                className="rounded"
+                              />
+                            ) : (
+                              <video
+                                src={item.media_url}
+                                controls
+                                className="w-full max-h-48 rounded"
+                              />
+                            )}
+                          </div>
+                        )}
+                        {item.section_type === 'image' && (
+                          <img
+                            src={item.media_url}
+                            alt="Preview"
+                            className="mt-2 max-h-48 w-auto rounded"
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {item.section_type === 'quiz' && (
