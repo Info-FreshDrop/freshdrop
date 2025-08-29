@@ -283,9 +283,9 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
           ← Previous
         </Button>
         
-        <div className="text-sm text-muted-foreground">
+        <span className="text-sm font-medium text-muted-foreground">
           {currentModule ? modules.findIndex(m => m.id === currentModule.id) + 1 : 0} of {modules.length}
-        </div>
+        </span>
         
         <Button
           variant="outline"
@@ -326,33 +326,6 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
         </Card>
       )}
 
-      {/* Module Progress Overview */}
-      <div className="grid grid-cols-5 gap-2 md:grid-cols-10">
-        {modules.map((module, index) => {
-          const isCompleted = completedModules.includes(module.id);
-          const isCurrent = currentModule?.id === module.id;
-          
-          return (
-            <button
-              key={module.id}
-              onClick={() => setCurrentModule(module)}
-              className={`aspect-square rounded-lg border-2 flex items-center justify-center text-sm font-medium transition-all ${
-                isCurrent 
-                  ? 'border-primary bg-primary text-primary-foreground' 
-                  : isCompleted 
-                  ? 'border-green-500 bg-green-100 text-green-700' 
-                  : 'border-muted bg-muted text-muted-foreground hover:border-muted-foreground'
-              }`}
-            >
-              {isCompleted ? (
-                <CheckCircle className="h-4 w-4" />
-              ) : (
-                index + 1
-              )}
-            </button>
-          );
-        })}
-      </div>
 
       {completedModules.length === modules.length && (
         <Card className="border-green-200 bg-green-50">
