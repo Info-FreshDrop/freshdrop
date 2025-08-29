@@ -56,26 +56,29 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
 
   const loadTrainingContent = async () => {
     try {
+      console.log('Loading training content...');
       const { data, error } = await supabase
         .from('onboarding_content')
         .select('*')
         .eq('is_active', true)
-        .neq('section_type', 'quiz')
         .order('display_order');
 
       if (error) throw error;
+
+      console.log('Raw training data:', data);
 
       const trainingModules = data?.map(item => ({
         id: item.id,
         title: item.title,
         content: item.content || '',
         media_url: item.media_url,
-        section_type: item.section_type.includes('video') ? 'video' as const : 
-                    item.section_type.includes('quiz') ? 'quiz' as const : 'text' as const,
+        section_type: item.section_type === 'quiz' ? 'quiz' as const : 
+                    item.section_type === 'video' ? 'video' as const : 'text' as const,
         display_order: item.display_order,
         quiz_data: item.quiz_data
       })) || [];
 
+      console.log('Processed training modules:', trainingModules);
       setModules(trainingModules);
       if (trainingModules.length > 0) {
         setCurrentModule(trainingModules[0]);

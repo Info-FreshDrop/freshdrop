@@ -50,19 +50,25 @@ export default function OnboardingContentManagement() {
   });
 
   useEffect(() => {
+    console.log('OnboardingContentManagement mounted');
     loadContent();
   }, []);
 
   const loadContent = async () => {
     try {
+      console.log('Loading admin content...');
       const { data } = await supabase
         .from('onboarding_content')
         .select('*')
         .order('display_order');
 
+      console.log('Admin content data:', data);
+
       if (data) {
         const training = data.filter(item => item.section_type !== 'quiz');
         const quiz = data.filter(item => item.section_type === 'quiz');
+        console.log('Filtered training:', training);
+        console.log('Filtered quiz:', quiz);
         setTrainingContent(training);
         setQuizQuestions(quiz);
       }
