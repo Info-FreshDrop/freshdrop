@@ -580,7 +580,7 @@ export default function OnboardingContentManagement() {
               ))}
             {trainingContent.length === 0 && (
               <p className="text-muted-foreground text-center py-8">
-                No training materials yet. Add some content to get started.
+                No training materials yet. Add text content, videos, or images to get started.
               </p>
             )}
           </div>
