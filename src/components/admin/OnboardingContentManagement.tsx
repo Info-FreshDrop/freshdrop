@@ -206,14 +206,17 @@ export default function OnboardingContentManagement() {
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `training/${fileName}`;
 
+      // Choose appropriate bucket based on file type
+      const bucketName = sectionType === 'video' ? 'content-images' : 'content-images';
+
       const { error: uploadError } = await supabase.storage
-        .from('content-images')
+        .from(bucketName)
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage
-        .from('content-images')
+        .from(bucketName)
         .getPublicUrl(filePath);
 
       setNewItem(prev => ({ ...prev, media_url: data.publicUrl }));
@@ -290,9 +293,12 @@ export default function OnboardingContentManagement() {
                 <Textarea
                   value={item.content || ''}
                   onChange={(e) => setNewItem(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="Training content text"
+                  placeholder="Training content text - you can include links using standard markdown format [Link Text](URL)"
                   rows={4}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  You can add links using markdown format: [Link Text](https://example.com)
+                </p>
               </div>
 
               {(item.section_type === 'video' || item.section_type === 'image') && (
@@ -303,7 +309,7 @@ export default function OnboardingContentManagement() {
                       <Input
                         value={item.media_url || ''}
                         onChange={(e) => setNewItem(prev => ({ ...prev, media_url: e.target.value }))}
-                        placeholder={item.section_type === 'video' ? "YouTube URL or video file URL" : "Image URL"}
+                        placeholder={item.section_type === 'video' ? "YouTube URL, video file URL, or upload" : "Image URL or upload"}
                         className="flex-1"
                       />
                       <Button
@@ -316,7 +322,7 @@ export default function OnboardingContentManagement() {
                         {uploading ? 'Uploading...' : 'Upload'}
                       </Button>
                     </div>
-                      <input
+                    <input
                       ref={fileInputRef}
                       type="file"
                       accept={item.section_type === 'video' ? "video/*" : "image/*"}
@@ -328,6 +334,12 @@ export default function OnboardingContentManagement() {
                       }}
                       className="hidden"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {item.section_type === 'video' 
+                        ? "Paste YouTube URL, video file URL, or upload a video file"
+                        : "Paste image URL or upload an image file"
+                      }
+                    </p>
                   </div>
 
                   {/* Media Preview */}

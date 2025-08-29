@@ -35,6 +35,23 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
 
   useEffect(() => {
     loadTrainingContent();
+    
+    // Set up real-time subscription for training content updates
+    const channel = supabase
+      .channel('onboarding-content-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'onboarding_content'
+      }, (payload) => {
+        console.log('Training content updated:', payload);
+        loadTrainingContent(); // Reload content when changes occur
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadTrainingContent = async () => {
@@ -198,7 +215,7 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
       case 'text':
         return (
           <div className="space-y-4">
-            {currentModule.media_url && currentModule.media_url.includes('image') && (
+            {currentModule.media_url && (
               <div className="rounded-lg overflow-hidden">
                 <img 
                   src={currentModule.media_url} 
@@ -207,8 +224,8 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
                 />
               </div>
             )}
-            <div className="prose max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: currentModule.content }} />
+            <div className="prose max-w-none prose-a:text-primary prose-a:underline">
+              <div dangerouslySetInnerHTML={{ __html: currentModule.content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>') }} />
             </div>
             <Button onClick={() => markModuleComplete(currentModule.id)}>
               Mark as Read
