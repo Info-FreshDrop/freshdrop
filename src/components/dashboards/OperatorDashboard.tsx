@@ -50,6 +50,7 @@ import { useOperatorNotifications } from '@/hooks/useOperatorNotifications';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 import { ProfileCompletionPrompt } from '@/components/ProfileCompletionPrompt';
 import { ContractorCompletionPrompt } from '@/components/operator/ContractorCompletionPrompt';
+import { OperatorOnboarding } from '@/components/operator/OperatorOnboarding';
 
 // Simple map component for navigation
 function NavigationMap({ destination }: { destination?: string }) {
@@ -194,6 +195,11 @@ export function OperatorDashboard() {
     needsContractorSetup,
     refreshProfile 
   } = useProfileCompletion();
+  
+  // Check if operator needs onboarding
+  const [needsOnboarding, setNeedsOnboarding] = useState(true);
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  
   const [activeTab, setActiveTab] = useState("live-orders");
   const [selectedOrderForMessaging, setSelectedOrderForMessaging] = useState<Order | null>(null);
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
@@ -223,19 +229,80 @@ export function OperatorDashboard() {
 
   useEffect(() => {
     if (user) {
-      loadDashboardData();
-      getCurrentOperatorLocation();
-      // Set operator as online when dashboard loads
-      setOperatorOnlineStatus(true);
-      // Check if contractor setup is needed
-      checkContractorSetup();
+      checkOnboardingStatus();
     }
+  }, [user]);
+
+  const checkOnboardingStatus = async () => {
+    if (!user) return;
     
+    try {
+      // Check if user has operator role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (roleData?.role !== 'operator') {
+        // Not an operator, redirect or show access denied
+        setCheckingOnboarding(false);
+        return;
+      }
+
+      // Check onboarding status
+      const needsOnboardingFromMeta = user.user_metadata?.needs_onboarding === true;
+      
+      // Check if operator setup is complete
+      const { data: washerData } = await supabase
+        .from('washers')
+        .select('ach_verified, approval_status')
+        .eq('user_id', user.id)
+        .single();
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('w9_completed, is_contractor, training_completed')
+        .eq('user_id', user.id)
+        .single();
+
+      const needsOnboarding = needsOnboardingFromMeta || 
+                             !washerData?.ach_verified || 
+                             !profileData?.w9_completed ||
+                             !profileData?.is_contractor ||
+                             !(profileData as any)?.training_completed;
+
+      setNeedsOnboarding(needsOnboarding);
+      
+      if (!needsOnboarding) {
+        // Load dashboard data if onboarding is complete
+        loadDashboardData();
+        getCurrentOperatorLocation();
+        setOperatorOnlineStatus(true);
+        checkContractorSetup();
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+    } finally {
+      setCheckingOnboarding(false);
+    }
+  };
+
+  const handleOnboardingComplete = () => {
+    setNeedsOnboarding(false);
+    // Load dashboard data after onboarding
+    loadDashboardData();
+    getCurrentOperatorLocation();
+    setOperatorOnlineStatus(true);
+    checkContractorSetup();
+  };
+
+  useEffect(() => {
     // Set operator as offline when component unmounts
     return () => {
       setOperatorOnlineStatus(false);
     };
-  }, [user, setOperatorOnlineStatus]);
+  }, [setOperatorOnlineStatus]);
 
   const checkContractorSetup = async () => {
     if (!user) return;
@@ -914,6 +981,22 @@ export function OperatorDashboard() {
     }
   };
 
+  if (checkingOnboarding) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Checking operator status...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show onboarding flow if operator needs onboarding
+  if (needsOnboarding) {
+    return <OperatorOnboarding onComplete={handleOnboardingComplete} />;
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -925,21 +1008,11 @@ export function OperatorDashboard() {
   if (!user || !washerData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center py-8">
-              <h3 className="text-lg font-medium mb-2">Access Denied</h3>
-              <p className="text-muted-foreground mb-4">You need operator privileges to access this dashboard.</p>
-              <Button onClick={async () => {
-                await setOperatorOnlineStatus(false);
-                await signOut();
-                navigate('/');
-              }} variant="outline">
-                Sign Out
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">Access Denied</h2>
+          <p className="text-muted-foreground">You need operator privileges to access this dashboard.</p>
+          <Button onClick={signOut}>Sign Out</Button>
+        </div>
       </div>
     );
   }

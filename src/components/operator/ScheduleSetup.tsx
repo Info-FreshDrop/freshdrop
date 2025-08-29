@@ -93,7 +93,7 @@ export const ScheduleSetup: React.FC<ScheduleSetupProps> = ({ onComplete }) => {
         setServiceRadius(data.service_radius_miles || 10);
         
         if (data.availability_schedule) {
-          setSchedule(data.availability_schedule as Schedule);
+          setSchedule(data.availability_schedule as unknown as Schedule);
         }
       }
     } catch (error) {
@@ -160,7 +160,7 @@ export const ScheduleSetup: React.FC<ScheduleSetupProps> = ({ onComplete }) => {
       const { error } = await supabase
         .from('washers')
         .update({
-          availability_schedule: schedule,
+          availability_schedule: schedule as any,
           zip_codes: serviceAreas,
           max_orders_per_day: maxOrdersPerDay,
           service_radius_miles: serviceRadius

@@ -1644,6 +1644,7 @@ export type Database = {
           phone: string | null
           tax_address: Json | null
           tax_id: string | null
+          training_completed: boolean | null
           updated_at: string
           user_id: string
           w9_completed: boolean | null
@@ -1665,6 +1666,7 @@ export type Database = {
           phone?: string | null
           tax_address?: Json | null
           tax_id?: string | null
+          training_completed?: boolean | null
           updated_at?: string
           user_id: string
           w9_completed?: boolean | null
@@ -1686,6 +1688,7 @@ export type Database = {
           phone?: string | null
           tax_address?: Json | null
           tax_id?: string | null
+          training_completed?: boolean | null
           updated_at?: string
           user_id?: string
           w9_completed?: boolean | null

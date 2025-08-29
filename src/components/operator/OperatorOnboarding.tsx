@@ -95,8 +95,8 @@ export const OperatorOnboarding: React.FC<OperatorOnboardingProps> = ({ onComple
         .eq('user_id', user.id)
         .single();
 
-      // Check training completion (you can add a training_completed field to profiles)
-      const trainingCompleted = profile?.training_completed || false;
+      // Check training completion
+      const trainingCompleted = (profile as any)?.training_completed || false;
 
       setSteps(prev => prev.map(step => {
         switch (step.id) {
@@ -166,10 +166,10 @@ export const OperatorOnboarding: React.FC<OperatorOnboardingProps> = ({ onComple
 
       if (error) throw error;
 
-      // Update washer profile
+      // Update washer profile - remove is_verified since it doesn't exist
       await supabase
         .from('washers')
-        .update({ is_verified: true })
+        .update({ ach_verified: true })
         .eq('user_id', user.id);
 
       toast({
