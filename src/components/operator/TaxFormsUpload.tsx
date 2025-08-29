@@ -54,13 +54,13 @@ export const TaxFormsUpload: React.FC<TaxFormsUploadProps> = ({ onComplete }) =>
     const fileName = `${user?.id}/w9-${Date.now()}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
-      .from('content-images')
+      .from('tax-documents')
       .upload(fileName, file);
 
     if (uploadError) throw uploadError;
 
     const { data } = supabase.storage
-      .from('content-images')
+      .from('tax-documents')
       .getPublicUrl(fileName);
 
     return data.publicUrl;
