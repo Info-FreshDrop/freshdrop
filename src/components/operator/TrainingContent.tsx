@@ -43,6 +43,7 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
         .from('onboarding_content')
         .select('*')
         .eq('is_active', true)
+        .neq('section_type', 'quiz')
         .order('display_order');
 
       if (error) throw error;
@@ -52,7 +53,8 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
         title: item.title,
         content: item.content || '',
         media_url: item.media_url,
-        section_type: item.section_type as 'video' | 'text' | 'quiz',
+        section_type: item.section_type.includes('video') ? 'video' as const : 
+                    item.section_type.includes('quiz') ? 'quiz' as const : 'text' as const,
         display_order: item.display_order,
         quiz_data: item.quiz_data
       })) || [];
@@ -136,20 +138,45 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
   const renderModuleContent = () => {
     if (!currentModule) return null;
 
+    const isYouTubeUrl = (url: string) => {
+      return url.includes('youtube.com/watch') || url.includes('youtu.be/');
+    };
+
+    const getYouTubeEmbedUrl = (url: string) => {
+      if (url.includes('youtube.com/watch')) {
+        const videoId = url.split('v=')[1]?.split('&')[0];
+        return `https://www.youtube.com/embed/${videoId}`;
+      } else if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      return url;
+    };
+
     switch (currentModule.section_type) {
       case 'video':
         return (
           <div className="space-y-4">
             {currentModule.media_url ? (
               <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                <video 
-                  controls 
-                  className="w-full h-full"
-                  onEnded={handleVideoComplete}
-                >
-                  <source src={currentModule.media_url} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+                {isYouTubeUrl(currentModule.media_url) ? (
+                  <iframe
+                    src={getYouTubeEmbedUrl(currentModule.media_url)}
+                    className="w-full h-full"
+                    frameBorder="0"
+                    allowFullScreen
+                    onLoad={handleVideoComplete}
+                  />
+                ) : (
+                  <video 
+                    controls 
+                    className="w-full h-full"
+                    onEnded={handleVideoComplete}
+                  >
+                    <source src={currentModule.media_url} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                )}
               </div>
             ) : (
               <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
@@ -160,15 +187,26 @@ export const TrainingContent: React.FC<TrainingContentProps> = ({ onComplete }) 
                 </div>
               </div>
             )}
-            <div className="prose max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: currentModule.content }} />
-            </div>
+            {currentModule.content && (
+              <div className="prose max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: currentModule.content }} />
+              </div>
+            )}
           </div>
         );
 
       case 'text':
         return (
           <div className="space-y-4">
+            {currentModule.media_url && currentModule.media_url.includes('image') && (
+              <div className="rounded-lg overflow-hidden">
+                <img 
+                  src={currentModule.media_url} 
+                  alt={currentModule.title}
+                  className="w-full max-h-96 object-cover"
+                />
+              </div>
+            )}
             <div className="prose max-w-none">
               <div dangerouslySetInnerHTML={{ __html: currentModule.content }} />
             </div>

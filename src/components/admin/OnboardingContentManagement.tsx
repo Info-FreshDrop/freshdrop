@@ -36,7 +36,7 @@ export default function OnboardingContentManagement() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [newItem, setNewItem] = useState<Partial<OnboardingContentItem>>({
-    section_type: 'training_text',
+    section_type: 'text',
     title: '',
     content: '',
     media_url: '',
@@ -61,8 +61,8 @@ export default function OnboardingContentManagement() {
         .order('display_order');
 
       if (data) {
-        const training = data.filter(item => item.section_type !== 'quiz_question');
-        const quiz = data.filter(item => item.section_type === 'quiz_question');
+        const training = data.filter(item => item.section_type !== 'quiz');
+        const quiz = data.filter(item => item.section_type === 'quiz');
         setTrainingContent(training);
         setQuizQuestions(quiz);
       }
@@ -184,7 +184,7 @@ export default function OnboardingContentManagement() {
 
   const resetNewItem = () => {
     setNewItem({
-      section_type: 'training_text',
+      section_type: 'text',
       title: '',
       content: '',
       media_url: '',
@@ -266,10 +266,10 @@ export default function OnboardingContentManagement() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="training_text">Training Text</SelectItem>
-                <SelectItem value="training_video">Training Video</SelectItem>
-                <SelectItem value="training_image">Training Image</SelectItem>
-                <SelectItem value="quiz_question">Quiz Question</SelectItem>
+                <SelectItem value="text">Text Content</SelectItem>
+                <SelectItem value="video">Video Content</SelectItem>
+                <SelectItem value="image">Image Content</SelectItem>
+                <SelectItem value="quiz">Quiz Question</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -283,7 +283,7 @@ export default function OnboardingContentManagement() {
             />
           </div>
 
-          {item.section_type !== 'quiz_question' && (
+          {item.section_type !== 'quiz' && (
             <>
               <div>
                 <Label>Content</Label>
@@ -295,7 +295,7 @@ export default function OnboardingContentManagement() {
                 />
               </div>
 
-              {(item.section_type === 'training_video' || item.section_type === 'training_image') && (
+              {(item.section_type === 'video' || item.section_type === 'image') && (
                 <div className="space-y-4">
                   <div>
                     <Label>Media URL or Upload File</Label>
@@ -303,7 +303,7 @@ export default function OnboardingContentManagement() {
                       <Input
                         value={item.media_url || ''}
                         onChange={(e) => setNewItem(prev => ({ ...prev, media_url: e.target.value }))}
-                        placeholder={item.section_type === 'training_video' ? "YouTube URL or video file URL" : "Image URL"}
+                        placeholder={item.section_type === 'video' ? "YouTube URL or video file URL" : "Image URL"}
                         className="flex-1"
                       />
                       <Button
@@ -316,10 +316,10 @@ export default function OnboardingContentManagement() {
                         {uploading ? 'Uploading...' : 'Upload'}
                       </Button>
                     </div>
-                    <input
+                      <input
                       ref={fileInputRef}
                       type="file"
-                      accept={item.section_type === 'training_video' ? "video/*" : "image/*"}
+                      accept={item.section_type === 'video' ? "video/*" : "image/*"}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
@@ -334,7 +334,7 @@ export default function OnboardingContentManagement() {
                   {item.media_url && (
                     <div className="border rounded-lg p-4">
                       <Label className="text-sm font-medium">Preview:</Label>
-                      {item.section_type === 'training_video' && (
+                      {item.section_type === 'video' && (
                         <div className="mt-2">
                           {isYouTubeUrl(item.media_url) ? (
                             <iframe
@@ -354,7 +354,7 @@ export default function OnboardingContentManagement() {
                           )}
                         </div>
                       )}
-                      {item.section_type === 'training_image' && (
+                      {item.section_type === 'image' && (
                         <img
                           src={item.media_url}
                           alt="Preview"
@@ -368,7 +368,7 @@ export default function OnboardingContentManagement() {
             </>
           )}
 
-          {item.section_type === 'quiz_question' && (
+          {item.section_type === 'quiz' && (
             <div className="space-y-4">
               <div>
                 <Label>Question</Label>
@@ -468,10 +468,10 @@ export default function OnboardingContentManagement() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {item.section_type === 'training_video' && <Play className="h-4 w-4" />}
-            {item.section_type === 'training_image' && <ImageIcon className="h-4 w-4" />}
-            {item.section_type === 'training_text' && <FileText className="h-4 w-4" />}
-            {item.section_type === 'quiz_question' && <HelpCircle className="h-4 w-4" />}
+            {item.section_type === 'video' && <Play className="h-4 w-4" />}
+            {item.section_type === 'image' && <ImageIcon className="h-4 w-4" />}
+            {item.section_type === 'text' && <FileText className="h-4 w-4" />}
+            {item.section_type === 'quiz' && <HelpCircle className="h-4 w-4" />}
             <CardTitle className="text-sm">{item.title}</CardTitle>
           </div>
           <div className="flex items-center gap-2">
@@ -513,13 +513,13 @@ export default function OnboardingContentManagement() {
           {item.quiz_data && <p className="text-sm text-muted-foreground">{item.quiz_data.question}</p>}
           {item.media_url && (
             <div className="mt-2">
-              {item.section_type === 'training_video' && (
+              {item.section_type === 'video' && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Video className="h-3 w-3" />
                   {isYouTubeUrl(item.media_url) ? 'YouTube Video' : 'Video File'}
                 </div>
               )}
-              {item.section_type === 'training_image' && (
+              {item.section_type === 'image' && (
                 <img
                   src={item.media_url}
                   alt="Preview"
